@@ -38,6 +38,9 @@
   const shuffle = (a) => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
   const pct = (x) => Math.round(x * 100);
   function toast(msg) { const t = document.getElementById("toast"); t.textContent = msg; t.classList.add("show"); clearTimeout(toast._t); toast._t = setTimeout(() => t.classList.remove("show"), 2600); }
+  function copyText(txt, msg) {
+    try { navigator.clipboard.writeText(txt).then(() => toast(msg), () => toast(txt)); } catch (e) { toast(txt); }
+  }
   function link(url, text) { return `<a href="${esc(url)}" target="_blank" rel="noopener noreferrer">${esc(text)}</a>`; }
 
   // Österreichischer Notenschlüssel (Beispiel – jede LV legt ihren eigenen fest)
@@ -73,19 +76,15 @@
     const firstAuthor = (b.authors || "").split(/[,&;]/)[0].trim().split(/\s+/)[0];
     return (b.title.replace(/[:.–-].*$/, "").trim() + " " + firstAuthor).trim();
   }
-  async function openLib(libId, q) {
-    const lib = PP.libraries.find((l) => l.id === libId);
-    const tpl = libTemplate(lib);
-    if (tpl) { window.open(tpl.replace("{q}", encodeURIComponent(q)), "_blank", "noopener"); return; }
-    try { await navigator.clipboard.writeText(q); toast(`„${q}“ kopiert – im Katalog einfügen (Strg+V).`); } catch (e) { toast(`Suchbegriff: ${q}`); }
-    window.open(lib.home, "_blank", "noopener");
-  }
+  // Bibliotheken ohne Such-URL: Link zur Startseite, Suchbegriff wird beim Klick kopiert
+  function libHref(lib, q) { const tpl = libTemplate(lib); return tpl ? tpl.replace("{q}", encodeURIComponent(q)) : lib.home; }
   function libButtons(b) {
     const q = bookQuery(b);
     const prim = ["kit", "ubw", "bw", "worldcat", "springer"];
     return `<div class="lib-btns">` + prim.map((id) => {
       const l = PP.libraries.find((x) => x.id === id);
-      return `<button class="btn small" data-lib="${id}" data-q="${esc(q)}" title="${esc(l.name)}">${esc(l.short)}</button>`;
+      const direct = !!libTemplate(l);
+      return `<a class="btn small" href="${esc(libHref(l, q))}" target="_blank" rel="noopener noreferrer" ${direct ? "" : `data-libcopy="${esc(q)}"`} title="${esc(l.name)}${direct ? "" : " – Suchbegriff wird kopiert"}">${esc(l.short)}</a>`;
     }).join("") + `<button class="btn small" data-copy="${esc(citation(b, true))}" title="Quellenangabe kopieren">APA kopieren</button></div>`;
   }
   function citation(b, plain) {
@@ -203,7 +202,7 @@
     h += `<div class="card"><h3>Dein Stand</h3><div class="progress"><span style="width:${pct(p)}%"></span></div>
       <p class="small">Selbsteinschätzung ${pct(compScore(m))} % · bestes Quiz ${state.quiz[m.id] ? pct(state.quiz[m.id].best) + " %" : "–"} · beste Prüfung ${state.exam[m.id] ? pct(state.exam[m.id].best) + " %" : "–"}</p>
       <label><input type="checkbox" id="doneToggle" data-mod="${m.id}" ${state.done[m.id] ? "checked" : ""}> Modul abgeschlossen</label></div>`;
-    h += `<div class="btn-row"><a class="btn primary" href="#/modul/${m.id}/lernpfad">Lernpfad starten</a><a class="btn" href="#/modul/${m.id}/quiz">Quiz</a><a class="btn" href="#/modul/${m.id}/pruefung">Prüfungssimulation</a><button class="btn" onclick="window.print()">Drucken / PDF</button></div>`;
+    h += `<div class="btn-row"><a class="btn primary" href="#/modul/${m.id}/lernpfad">Lernpfad starten</a><a class="btn" href="#/modul/${m.id}/quiz">Quiz</a><a class="btn" href="#/modul/${m.id}/pruefung">Prüfungssimulation</a></div>`;
     return h;
   }
 
@@ -450,7 +449,9 @@
         <td>${pct(compScore(m))} %</td><td>${state.quiz[m.id] ? pct(state.quiz[m.id].best) + " %" : "–"}</td><td>${state.exam[m.id] ? pct(state.exam[m.id].best) + " %" : "–"}</td><td>${state.done[m.id] ? "✓" : ""}</td></tr>`;
     });
     h += `</tbody></table></div><h2>Sichern & Übertragen</h2><p>Alle Daten liegen nur in diesem Browser. Exportiere sie regelmäßig.</p>
-      <div class="btn-row"><button class="btn primary" data-act="export">Fortschritt exportieren (JSON)</button><label class="btn">Importieren <input type="file" id="importFile" accept="application/json" hidden></label><button class="btn" data-act="reset">Alles zurücksetzen</button></div>`;
+      <div class="btn-row"><button class="btn primary" data-act="export">Als Datei exportieren (JSON)</button><button class="btn" data-act="copyState">In Zwischenablage kopieren</button><label class="btn">Datei importieren <input type="file" id="importFile" accept="application/json" hidden></label><button class="btn" data-act="reset">Alles zurücksetzen</button></div>
+      <p class="small muted">Oder exportierten Text hier einfügen und übernehmen:</p><textarea id="importText" placeholder="{ … exportierter Fortschritt … }" style="min-height:80px"></textarea>
+      <div class="btn-row"><button class="btn" data-act="importText">Eingefügten Fortschritt übernehmen</button></div>`;
     return h;
   }
 
@@ -517,11 +518,12 @@
 
   // ---------- Events (Delegation) ----------
   document.addEventListener("click", (ev) => {
-    const t = ev.target.closest("button, [data-lib]"); if (!t) return;
+    const lc = ev.target.closest("[data-libcopy]");
+    if (lc) { copyText(lc.dataset.libcopy, `„${lc.dataset.libcopy}“ kopiert – im Katalog einfügen.`); return; }
+    const t = ev.target.closest("button"); if (!t) return;
     const d = t.dataset;
     const cur = (location.hash.split("/")[2] || "") && byId(decodeURIComponent(location.hash.split("/")[2]));
-    if (d.lib) { openLib(d.lib, d.q); return; }
-    if (d.copy) { navigator.clipboard.writeText(d.copy).then(() => toast("Quellenangabe kopiert."), () => toast(d.copy)); return; }
+    if (d.copy) { copyText(d.copy, "Quellenangabe kopiert."); return; }
     if (d.comp) { state.comp[d.comp] = state.comp[d.comp] || {}; state.comp[d.comp][d.i] = +d.lv; save(); keep(route); return; }
     if (d.expand) { document.querySelectorAll("details.topic").forEach((x) => x.open = d.expand === "1"); return; }
     if (d.qa !== undefined && cur) { answerQuiz(cur, +d.qa, +d.k); keep(route); return; }
@@ -544,7 +546,10 @@
         const mcIdx = shuffle(cur.quiz.map((_, i) => i)).slice(0, nMc);
         const optOrder = {}; mcIdx.forEach((qi) => optOrder[qi] = shuffle(cur.quiz[qi].o.map((_, k) => k)));
         exam = { mod: cur.id, phase: "run", mcIdx, optOrder, openIdx: shuffle((cur.exam || []).map((_, i) => i)).slice(0, nOp), mcAns: {}, openAns: {}, selfScore: {}, end: Date.now() + mins * 60000 };
-      } else if (d.exam === "submit") { if (!confirm("Prüfung jetzt abgeben?")) return; exam.phase = "result"; clearInterval(startTimer._i); }
+      } else if (d.exam === "submit") {
+        if (!exam.confirmSubmit) { exam.confirmSubmit = true; t.textContent = "Wirklich abgeben? Erneut klicken"; return; }
+        exam.phase = "result"; clearInterval(startTimer._i);
+      }
       else if (d.exam === "abort") { exam = null; clearInterval(startTimer._i); }
       else if (d.exam === "new") { exam = null; }
       else if (d.exam === "save") {
@@ -560,7 +565,15 @@
       const blob = new Blob([JSON.stringify(state, null, 2)], { type: "application/json" });
       const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "psychopfad-fortschritt.json"; a.click(); return;
     }
-    if (d.act === "reset") { if (confirm("Wirklich ALLE Fortschritte, Notizen und Einstellungen löschen?")) { state = emptyState(); save(); route(); } return; }
+    if (d.act === "copyState") { copyText(JSON.stringify(state), "Fortschritt kopiert – z. B. in einer Notiz sichern."); return; }
+    if (d.act === "importText") {
+      try { state = Object.assign(emptyState(), JSON.parse(document.getElementById("importText").value)); save(); applyTheme(); route(); toast("Import erfolgreich."); } catch (e) { toast("Text ist kein gültiger Export."); }
+      return;
+    }
+    if (d.act === "reset") {
+      if (!t.dataset.armed) { t.dataset.armed = "1"; t.textContent = "Wirklich alles löschen? Erneut klicken"; return; }
+      state = emptyState(); save(); applyTheme(); route(); toast("Alles zurückgesetzt."); return;
+    }
     if (d.act === "saveLibs") {
       document.querySelectorAll("[data-libtpl]").forEach((i) => {
         const lib = PP.libraries.find((l) => l.id === i.dataset.libtpl);

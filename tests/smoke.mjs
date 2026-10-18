@@ -33,7 +33,7 @@ await page.evaluate((h) => { location.hash = h; }, `#/modul/${ids[1]}/pruefung`)
 await page.waitForTimeout(30);
 await page.click('[data-exam="start"]');
 page.on("dialog", (d) => d.accept());
-await page.click('[data-exam="submit"]');
+await page.click('[data-exam="submit"]'); await page.click('[data-exam="submit"]');
 const exRes = await page.evaluate(() => document.querySelector(".score-big")?.innerText);
 if (!exRes) errors.push("Prüfungsergebnis fehlt");
 if (shotDir) {
