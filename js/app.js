@@ -64,7 +64,7 @@
     const e = state.exam[m.id] ? state.exam[m.id].best : 0;
     return 0.4 * compScore(m) + 0.3 * q + 0.3 * e;
   }
-  function ectsDone() { return PP.modules.filter((m) => state.done[m.id]).reduce((s, m) => s + (m.ects || 0), 0); }
+  function ectsDone() { return Math.min(PP.meta.ects, PP.modules.filter((m) => state.done[m.id]).reduce((s, m) => s + (m.ects || 0), 0)); }
 
   // ---------- Bibliothekssuche ----------
   function libTemplate(lib) { const o = state.settings.libTemplates[lib.id]; return o != null && o !== "" ? o : lib.template; }

@@ -1,1 +1,267 @@
-/* folgt */
+/* Pflichtmodulgruppe E – Psychologische Diagnostik (13 ECTS) */
+PP.addModule({
+  id: "E1",
+  group: "E",
+  title: "Theorie und Techniken psychologischen Diagnostizierens",
+  short: "Diagnostik: Theorie & Techniken",
+  ects: 7,
+  semester: "4",
+  lvs: [{ type: "VO (ggf. mit UE)", title: "Theorie und Techniken psychologischen Diagnostizierens", pi: false }],
+  summary:
+    "**Psychologische Diagnostik** ist die regelgeleitete Erhebung und Integration von Informationen über Personen (oder Gruppen, Situationen, Institutionen) zur Beantwortung einer **Fragestellung** und zur Vorbereitung von **Entscheidungen**. Das Modul vermittelt den **diagnostischen Prozess**, entscheidungstheoretische Grundlagen, Urteilsbildung (klinisch vs. statistisch), die wichtigsten **Verfahrensgruppen** (Leistungstests, Persönlichkeitsfragebögen, objektive Persönlichkeitstests, klinische Skalen, Interviews, Verhaltensbeobachtung), Qualitätsstandards (DIN 33430, Testbeurteilung) sowie rechtliche und ethische Rahmenbedingungen in Österreich.\n\n" +
+    "Die Wiener Diagnostik-Tradition (u. a. Klaus D. Kubinger – „Psychologische Diagnostik: Theorie und Praxis psychologischen Diagnostizierens“) betont probabilistische Testmodelle, objektive Persönlichkeitstests und computergestützte Diagnostik.",
+  goals: [
+    "Den diagnostischen Prozess von der Fragestellung bis zur Entscheidung beschreiben",
+    "Diagnostische Zielsetzungen und Strategien (Status/Prozess, Selektion/Modifikation, norm-/kriteriumsorientiert) unterscheiden",
+    "Entscheidungstheoretische Konzepte (Grundquote, Selektionsquote, Trefferquoten, Nutzen) anwenden",
+    "Klinische und statistische Urteilsbildung vergleichen und Urteilsfehler kennen",
+    "Testverfahren nach Gütekriterien auswählen und beurteilen",
+    "Interview, Anamnese und Verhaltensbeobachtung als diagnostische Methoden einsetzen",
+    "Rechtliche und ethische Standards der Diagnostik einhalten"
+  ],
+  exam_info: "Schriftliche Prüfung über Theorie und Verfahrenskunde (MC und offene Fragen, ggf. Rechenaufgaben zu Entscheidungstheorie und Messfehlern).",
+  tips: [
+    "Den diagnostischen Prozess als Flussdiagramm auswendig zeichnen können.",
+    "Vierfeldertafel der Entscheidungen (richtig/falsch positiv/negativ) mit Kennwerten (Sensitivität, Spezifität, PPV, NPV) üben.",
+    "Für die wichtigsten Testverfahren Steckbriefe anlegen: Konstrukt, Altersbereich, Dauer, Normen, Reliabilität, Besonderheiten."
+  ],
+  prerequisites: ["D2 (Gütekriterien, KTT, IRT, Normierung)", "C3 (Persönlichkeit, Intelligenz)", "D1 (Bayes, Wahrscheinlichkeit)"],
+  competencies: [
+    "Ich kann Diagnostik definieren und die Phasen des diagnostischen Prozesses beschreiben.",
+    "Ich kann Status- und Prozessdiagnostik, Selektions- und Modifikationsdiagnostik unterscheiden.",
+    "Ich kann eine psychologische Fragestellung in prüfbare Hypothesen übersetzen.",
+    "Ich kann Sensitivität, Spezifität, positiven und negativen prädiktiven Wert berechnen.",
+    "Ich kann die Taylor-Russell-Logik (Grundquote, Selektionsquote, Validität) erklären.",
+    "Ich kann sequenzielle und einstufige Entscheidungsstrategien sowie kompensatorische und konjunktive Regeln vergleichen.",
+    "Ich kann die Debatte klinische vs. statistische Urteilsbildung (Meehl) darstellen.",
+    "Ich kann Urteilsfehler in der Diagnostik (Bestätigungsfehler, Anker, Basisratenvernachlässigung) benennen.",
+    "Ich kann Verfahrensgruppen nennen und je zwei Beispiele mit Einsatzbereich angeben.",
+    "Ich kann strukturierte klinische Interviews und Anamnese beschreiben.",
+    "Ich kann Testbeurteilungskriterien (TBS-DTK, DIN 33430) anwenden.",
+    "Ich kann rechtliche Grundlagen (Psychologengesetz 2013, Verschwiegenheit, Datenschutz) erläutern."
+  ],
+  skills: ["Testauswahl nach Gütekriterien", "Hypothesengeleitete Untersuchungsplanung", "Berechnung diagnostischer Kennwerte", "Testrezensionen lesen"],
+  topics: [
+    { title: "Was ist psychologische Diagnostik?",
+      text: "Diagnostik dient der **Beschreibung, Klassifikation, Erklärung, Prognose und Evaluation** im Hinblick auf Entscheidungen (z. B. Personalauswahl, Schullaufbahn, Therapieindikation, Fahreignung). Grundannahme: Merkmale sind hinreichend stabil und messbar; Verhalten ist (teilweise) vorhersagbar.\n\nUnterscheidungen:\n- **Statusdiagnostik** (Ist-Zustand) vs. **Prozessdiagnostik** (Veränderung, Verlauf)\n- **Selektionsdiagnostik** (Person → Bedingung passend auswählen; Personen- vs. Bedingungsselektion) vs. **Modifikationsdiagnostik** (Verhalten oder Bedingungen verändern; Interventionsplanung)\n- **Normorientiert** vs. **kriteriumsorientiert**\n- **Eigenschafts-** vs. **Verhaltensdiagnostik** (Trait vs. State, „signs vs. samples“)\n- **Einzelfall-** vs. **Gruppen-/Institutionsdiagnostik**\n\nAnwendungsfelder: klinisch, pädagogisch/schulisch, Arbeit & Organisation (Eignungsdiagnostik), Verkehr, Forensik, Neuropsychologie, Gesundheit.",
+      concepts: ["Status- vs. Prozessdiagnostik", "Selektion vs. Modifikation", "norm- vs. kriteriumsorientiert", "Trait vs. State", "signs vs. samples"] },
+    { title: "Der diagnostische Prozess",
+      text: "Typischer Ablauf (z. B. nach Westhoff & Kluck, Jäger, Kubinger):\n\n1. **Fragestellung** des Auftraggebers klären (Auftragsklärung: Ist sie psychologisch beantwortbar? Ethisch vertretbar? Eigene Kompetenz?)\n2. Übersetzung in **psychologische Fragen/Hypothesen** (Anforderungsprofil bzw. Verhaltensgleichung: Verhalten = f(Umgebung, Organismus, Kognition, Emotion, Motivation, Soziales))\n3. **Untersuchungsplan**: Auswahl der Informationsquellen und Verfahren (multimodal: Tests, Fragebögen, Interview, Beobachtung, Akten)\n4. **Durchführung** unter standardisierten Bedingungen\n5. **Auswertung und Interpretation** (Normen, Konfidenzintervalle, kritische Differenzen)\n6. **Integration** der Informationen zu einem Befund\n7. Beantwortung der Fragestellung, **Gutachten/Bericht**, ggf. Empfehlungen\n8. **Rückmeldung** und Evaluation der Entscheidung\n\nPrinzip: **hypothesengeleitet** statt „Testbatterie nach Schema“.",
+      concepts: ["Auftragsklärung", "psychologische Fragen", "Verhaltensgleichung", "Untersuchungsplan", "multimodal", "Integration", "Gutachten", "Rückmeldung"] },
+    { title: "Entscheidungstheorie und Nutzen",
+      text: "Diagnostische Entscheidungen lassen sich in einer **Vierfeldertafel** darstellen: richtig positiv, falsch positiv, richtig negativ, falsch negativ. Kennwerte: **Sensitivität** = RP/(RP + FN), **Spezifität** = RN/(RN + FP), **positiver prädiktiver Wert** = RP/(RP + FP), **negativer prädiktiver Wert** = RN/(RN + FN). PPV und NPV hängen von der **Basisrate/Grundquote** ab. Verschieben des **Cut-off** tauscht Sensitivität gegen Spezifität (ROC-Kurve, AUC).\n\n**Taylor-Russell-Tafeln**: Der Anteil geeigneter Personen unter den Ausgewählten (Erfolgsquote) hängt ab von **Grundquote** (Anteil Geeigneter in Bewerberpopulation), **Selektionsquote** (Anteil Ausgewählter) und **Validität**. Auch geringe Validität kann bei niedriger Selektionsquote nützlich sein. **Cronbach & Gleser** (1965): Entscheidungstheoretischer Ansatz mit Kosten und Nutzen; Brogden-Cronbach-Gleser-Nutzenmodell (monetärer Nutzen der Personalauswahl).\n\nStrategien: **einstufig** vs. **sequenziell** (Vorauswahl → genauere Diagnostik; Pre-reject/Pre-accept); Entscheidungsregeln: **kompensatorisch** (Schwächen durch Stärken ausgleichbar, z. B. gewichtete Summe) vs. **konjunktiv** (Mindestanforderung in jedem Merkmal, multiple cut-off) vs. **disjunktiv**.",
+      concepts: ["Vierfeldertafel", "Sensitivität", "Spezifität", "PPV/NPV", "Cut-off", "ROC/AUC", "Grundquote", "Selektionsquote", "Taylor-Russell", "Cronbach & Gleser", "sequenzielle Strategie", "kompensatorisch/konjunktiv"] },
+    { title: "Klinische vs. statistische Urteilsbildung",
+      text: "**Meehl (1954)** „Clinical versus Statistical Prediction“: Mechanische (statistische, aktuarische) Kombination von Daten ist der intuitiven Kombination durch Expert:innen in der Regel **gleich oder überlegen**; bestätigt durch Metaanalysen (Grove et al., 2000). Gründe: Menschen gewichten inkonsistent, vernachlässigen Basisraten, überschätzen Einzelinformationen, lassen sich von Ankern und Bestätigungsfehlern leiten.\n\n**Urteilsfehler in der Diagnostik**: Bestätigungsfehler (nur hypothesenkonforme Information suchen), **Ankereffekt**, **Halo-Effekt**, **Illusorische Korrelationen** (Chapman & Chapman: Draw-a-Person-Test), **Overconfidence**, **Barnum-Effekt** (Akzeptanz allgemeiner Beschreibungen). Gegenmaßnahmen: strukturierte Verfahren, explizite Entscheidungsregeln, Basisraten beachten, Alternativhypothesen prüfen, Vier-Augen-Prinzip, Feedback über Trefferquoten.",
+      concepts: ["Meehl 1954", "aktuarische Urteilsbildung", "Grove et al. 2000", "Bestätigungsfehler", "illusorische Korrelation", "Barnum-Effekt", "Overconfidence"] },
+    { title: "Leistungs- und Intelligenzdiagnostik",
+      text: "**Intelligenztests**: Wechsler-Skalen (**WAIS-IV**, **WISC-V** – Indizes wie Sprachverständnis, visuell-räumliche Verarbeitung, fluides Schlussfolgern, Arbeitsgedächtnis, Verarbeitungsgeschwindigkeit), **Intelligenz-Struktur-Test (I-S-T 2000 R)**, **Raven-Matrizen** (SPM/APM, sprachfrei), **CFT 20-R** (Grundintelligenz), **AID 3** (Adaptives Intelligenz Diagnostikum; Kubinger, Wien – adaptiv, Rasch-basiert), **KABC-II**. **Aufmerksamkeits- und Konzentrationstests**: d2-R, Testbatterie zur Aufmerksamkeitsprüfung (TAP), Verfahren des **Wiener Testsystems** (Schuhfried; z. B. Determinationstest, Cognitrone). **Schulleistungstests** (Lesen, Rechtschreibung, Rechnen), Entwicklungstests (Bayley, ET 6-6-R).\n\nInterpretation: Profilanalyse nur mit **kritischen Differenzen**, Konfidenzintervalle, Testfairness (Sprache, Kultur), Testangst, Motivation (Leistungsbereitschaft) berücksichtigen.",
+      concepts: ["WAIS-IV/WISC-V", "I-S-T 2000 R", "Raven", "CFT 20-R", "AID 3", "d2-R", "Wiener Testsystem", "kritische Differenz", "Profilanalyse"] },
+    { title: "Persönlichkeits- und klinische Fragebögen",
+      text: "**Persönlichkeitsfragebögen**: **NEO-PI-R/NEO-FFI** (Big Five), **BFI-2**, **HEXACO-PI-R**, **FPI-R** (Freiburger Persönlichkeitsinventar), **16PF**, **MMPI-2** (klinisch, mit Validitätsskalen L, F, K), **PSSI** (Persönlichkeitsstile). **Klinische Screening- und Symptomskalen**: **BDI-II** (Depression), **PHQ-9**, **SCL-90-R/BSI** (Symptombelastung), **STAI** (State-Trait-Angst), **GAD-7**, **AUDIT** (Alkohol), **Y-BOCS** (Zwang). Interessen: Holland-Typen (RIASEC), AIST-R.\n\nProbleme: **Verfälschbarkeit** (Selbstdarstellung in Selektionssituationen, Simulation in Begutachtungen) → Validitätsskalen, Forced-Choice, objektive Tests, Symptomvalidierungstests. Selbst- vs. Fremdbeurteilung kombinieren.",
+      concepts: ["NEO-PI-R", "FPI-R", "MMPI-2", "Validitätsskalen", "BDI-II", "PHQ-9", "SCL-90-R", "STAI", "RIASEC", "Verfälschbarkeit", "Symptomvalidierung"] },
+    { title: "Objektive Persönlichkeitstests, projektive und implizite Verfahren",
+      text: "**Objektive Persönlichkeitstests** (Cattell; in Wien durch Kubinger weiterentwickelt): Verhalten in standardisierten Leistungssituationen wird als Indikator für Persönlichkeitsmerkmale genutzt, ohne dass die Messintention offensichtlich ist (z. B. Risikobereitschaft, Anspruchsniveau, Impulsivität, Frustrationstoleranz) – geringe Verfälschbarkeit, aber oft moderate Validität und Situationsspezifität.\n\n**Projektive Verfahren** (Rorschach, TAT, Sceno-Test, Familie in Tieren): Annahme, dass mehrdeutiges Material eigene Konflikte „projiziert“. Kritik: geringe Objektivität und Reliabilität, fragliche Validität, Gefahr illusorischer Korrelationen; das **Rorschach Comprehensive System/R-PAS** verbesserte Standardisierung teilweise. **Implizite Verfahren** (IAT) für Individualdiagnostik nicht ausreichend reliabel.",
+      concepts: ["objektive Persönlichkeitstests", "Anspruchsniveau", "projektive Verfahren", "Rorschach", "TAT", "R-PAS", "IAT"] },
+    { title: "Diagnostisches Interview, Anamnese und Beobachtung",
+      text: "**Anamnese/Exploration**: Lebensgeschichte, Entwicklung, aktuelle Situation, Beschwerden, bisherige Behandlungen; Fremdanamnese (Angehörige). **Interviewformen**: unstrukturiert, halbstrukturiert, **standardisiert**. Klinisch: **SKID/SCID-5** (Strukturiertes Klinisches Interview für DSM-5), **DIPS** (Diagnostisches Interview bei psychischen Störungen; Margraf), **CIDI**; Kinder: Kinder-DIPS. Strukturierte Interviews erhöhen die **Interrater-Reliabilität** von Diagnosen erheblich.\n\nIn der Eignungsdiagnostik: **multimodales Interview** (Schuler), situative und biografische Fragen (STAR-Technik). **Verhaltensbeobachtung** in natürlichen oder standardisierten Situationen (Rollenspiele, Arbeitsproben, Assessment Center). Gesprächsführungskompetenz (vgl. G1) ist Voraussetzung.",
+      concepts: ["Anamnese", "Fremdanamnese", "SKID/SCID-5", "DIPS", "CIDI", "multimodales Interview", "biografische/situative Fragen", "Arbeitsprobe"] },
+    { title: "Qualitätsstandards: Testbeurteilung und DIN 33430",
+      text: "Bei der **Testauswahl** prüfen: Konstrukt- und Fragestellungsbezug, theoretische Fundierung, Objektivität, Reliabilität, Validität (für den konkreten Zweck!), Aktualität und Repräsentativität der Normen, Fairness, Ökonomie, Zumutbarkeit, Testmanual. Hilfen: **Testbeurteilungssystem des Diagnostik- und Testkuratoriums (TBS-DTK)**, Testrezensionen (z. B. in Fachzeitschriften und bei der Testzentrale), Open Test Archive, ITC-Guidelines (International Test Commission).\n\n**DIN 33430** (2002, Neufassung 2016): Anforderungen an berufsbezogene Eignungsdiagnostik – Anforderungsanalyse, Verfahrensauswahl, Durchführung, Auswertung, Qualifikation der beteiligten Personen. Obwohl eine deutsche Norm, wird sie auch in Österreich als Qualitätsstandard herangezogen.",
+      concepts: ["Testauswahl", "TBS-DTK", "Testrezension", "ITC-Guidelines", "DIN 33430", "Anforderungsanalyse"] },
+    { title: "Recht und Ethik der Diagnostik in Österreich",
+      text: "Das **Psychologengesetz 2013** regelt die Berufsbezeichnungen und Tätigkeitsvorbehalte für **Klinische Psycholog:innen** und **Gesundheitspsycholog:innen** (u. a. klinisch-psychologische Diagnostik ist Klinischen Psycholog:innen vorbehalten), Berufspflichten wie **Verschwiegenheit**, Dokumentation, Fortbildung und Aufklärung. Weiter relevant: **DSGVO** und Datenschutzgesetz (Gesundheitsdaten als besondere Kategorie), Einsichtsrechte, Aufbewahrungsfristen, ethische Richtlinien des **BÖP**.\n\nEthische Prinzipien: Einwilligung nach Aufklärung, Transparenz über Zweck und Empfänger der Ergebnisse, Fairness, Kompetenzgrenzen (Tests nur bei Qualifikation einsetzen; Testmaterial-Schutz), Rückmeldung in verständlicher Form, Vermeidung von Etikettierung/Stigmatisierung.",
+      concepts: ["Psychologengesetz 2013", "Tätigkeitsvorbehalt", "Verschwiegenheit", "Dokumentationspflicht", "DSGVO", "BÖP-Ethikrichtlinien", "Testmaterialschutz"] }
+  ],
+  materials: [
+    { title: "Open Test Archive (ZPID) – frei nutzbare Tests mit Dokumentation", url: "https://www.testarchiv.eu/", type: "Testsammlung", lang: "DE/EN" },
+    { title: "Testzentrale (Hogrefe) – Testbeschreibungen und Rezensionen", url: "https://www.testzentrale.de/", type: "Verlag/Katalog", lang: "DE" },
+    { title: "Schuhfried – Wiener Testsystem (Verfahrensbeschreibungen)", url: "https://www.schuhfried.com/", type: "Hersteller", lang: "DE/EN" },
+    { title: "International Test Commission – Guidelines", url: "https://www.intestcom.org/", type: "Richtlinie", lang: "EN" },
+    { title: "Rechtsinformationssystem (RIS) – Psychologengesetz 2013 (Suche)", url: "https://www.ris.bka.gv.at/", type: "Gesetz", lang: "DE" },
+    { title: "Berufsverband Österreichischer PsychologInnen (BÖP) – Berufsethik", url: "https://www.boep.or.at/", type: "Berufsverband", lang: "DE" },
+    { title: "Grove et al. (2000): Clinical versus mechanical prediction: A meta-analysis – Volltext suchen", url: "https://scholar.google.com/scholar?q=Grove+2000+Clinical+versus+mechanical+prediction+meta-analysis", type: "Artikel", lang: "EN" },
+    { title: "Noba Project – Modul „Personality Assessment“", url: "https://nobaproject.com/", type: "Lehrbuch (OER)", lang: "EN" }
+  ],
+  lectures: [
+    { title: "Psychologische Diagnostik – Vorlesung (YouTube-Suche)", url: "https://www.youtube.com/results?search_query=Psychologische+Diagnostik+Vorlesung", provider: "YouTube", lang: "DE" },
+    { title: "Paul Meehl – Philosophical Psychology Lectures (Univ. Minnesota, 1989)", url: "https://www.youtube.com/results?search_query=Paul+Meehl+philosophical+psychology+lectures", provider: "YouTube", lang: "EN", note: "Legendäre Vorlesungsreihe – u. a. zu klinischer vs. statistischer Vorhersage." },
+    { title: "Sensitivity, Specificity, PPV erklärt (StatQuest, YouTube-Suche)", url: "https://www.youtube.com/results?search_query=StatQuest+sensitivity+specificity+ROC", provider: "YouTube", lang: "EN" },
+    { title: "Crash Course Psychology – Measuring Personality / Intelligence", url: "https://www.youtube.com/results?search_query=Crash+Course+Psychology+measuring+personality", provider: "YouTube", lang: "EN" }
+  ],
+  literature: [
+    { authors: "Kubinger, K. D.", year: 2019, title: "Psychologische Diagnostik: Theorie und Praxis psychologischen Diagnostizierens", ed: "3. Aufl.", publisher: "Hogrefe", tag: "Standard", lang: "DE", note: "Wiener Standardwerk – deckt E1 und E2 ab." },
+    { authors: "Schmidt-Atzert, L., Krumm, S. & Amelang, M.", year: 2021, title: "Psychologische Diagnostik", ed: "6. Aufl.", publisher: "Springer", tag: "Standard", lang: "DE", ebook: true },
+    { authors: "Pospeschill, M. & Spinath, F. M.", year: 2009, title: "Psychologische Diagnostik", publisher: "Reinhardt (UTB)", tag: "Einstieg", lang: "DE" },
+    { authors: "Westhoff, K. & Kluck, M.-L.", year: 2014, title: "Psychologische Gutachten schreiben und beurteilen", ed: "6. Aufl.", publisher: "Springer", tag: "Standard", lang: "DE", ebook: true },
+    { authors: "Brähler, E., Holling, H., Leutner, D. & Petermann, F. (Hrsg.)", year: 2002, title: "Brickenkamp Handbuch psychologischer und pädagogischer Tests", ed: "3. Aufl.", publisher: "Hogrefe", tag: "Nachschlagen", lang: "DE" },
+    { authors: "Kanning, U. P.", year: 2004, title: "Standards der Personaldiagnostik", publisher: "Hogrefe", tag: "Vertiefung", lang: "DE" },
+    { authors: "Meehl, P. E.", year: 1954, title: "Clinical versus Statistical Prediction", publisher: "University of Minnesota Press", tag: "Klassiker", lang: "EN" },
+    { authors: "Bühner, M.", year: 2021, title: "Einführung in die Test- und Fragebogenkonstruktion", publisher: "Pearson", tag: "Nachschlagen", lang: "DE" }
+  ],
+  quiz: [
+    { q: "Was unterscheidet Prozessdiagnostik von Statusdiagnostik?", o: ["Prozessdiagnostik nutzt nur Interviews", "Prozessdiagnostik erfasst Veränderungen über die Zeit", "Statusdiagnostik ist immer klinisch", "Es gibt keinen Unterschied"], a: 1, e: "Z. B. Therapieverlaufsmessung." },
+    { q: "Ziel der Modifikationsdiagnostik ist …", o: ["die Auswahl geeigneter Bewerber:innen", "die Planung und Evaluation von Veränderungen (Interventionen)", "die Normierung von Tests", "die Klassifikation nach ICD"], a: 1, e: "Gegenstück zur Selektionsdiagnostik." },
+    { q: "Ein Screening erkennt 45 von 50 Erkrankten. Wie hoch ist die Sensitivität?", o: ["45 %", "90 %", "50 %", "10 %"], a: 1, e: "45/50 = .90." },
+    { q: "Von 950 Gesunden werden 855 korrekt als gesund erkannt. Spezifität?", o: ["85,5 %", "90 %", "95 %", "10 %"], a: 1, e: "855/950 = .90." },
+    { q: "Wovon hängt der positive prädiktive Wert eines Tests – neben Sensitivität und Spezifität – entscheidend ab?", o: ["Von der Testdauer", "Von der Basisrate", "Von der Reliabilität allein", "Von der Testerin"], a: 1, e: "Bei niedriger Basisrate sinkt der PPV stark." },
+    { q: "Wird der Cut-off eines Screenings gesenkt (mehr positive Befunde), dann …", o: ["steigen Sensitivität und Spezifität", "steigt die Sensitivität, die Spezifität sinkt", "sinkt die Sensitivität, die Spezifität steigt", "bleibt alles gleich"], a: 1, e: "Trade-off; ROC-Kurve." },
+    { q: "Nach Taylor & Russell ist ein Auswahlverfahren mit mäßiger Validität besonders nützlich, wenn …", o: ["die Selektionsquote hoch ist", "die Selektionsquote niedrig ist (nur wenige werden ausgewählt)", "die Grundquote 100 % beträgt", "alle aufgenommen werden"], a: 1, e: "Bei strenger Auswahl verbessert schon moderate Validität die Erfolgsquote." },
+    { q: "Eine konjunktive Entscheidungsregel bedeutet …", o: ["Schwächen können durch Stärken kompensiert werden", "in jedem Merkmal muss eine Mindestanforderung erfüllt sein", "ein einzelnes Merkmal reicht", "der Zufall entscheidet"], a: 1, e: "Multiple Cut-off." },
+    { q: "Meehls Befund zur klinischen vs. statistischen Vorhersage lautet sinngemäß:", o: ["Expert:innen sind immer besser", "Statistische Kombination ist meist gleich gut oder besser", "Beide sind wertlos", "Nur projektive Tests sind valide"], a: 1, e: "Bestätigt durch Grove et al. (2000)." },
+    { q: "Der Barnum-Effekt beschreibt …", o: ["die Neigung, allgemein gültige Persönlichkeitsbeschreibungen als zutreffend für sich selbst zu akzeptieren", "die Überschätzung von Basisraten", "einen Normierungsfehler", "eine Form von Testangst"], a: 0, e: "Gefahr bei vagen Rückmeldungen und Horoskopen." },
+    { q: "Welches Verfahren ist ein adaptiver, Rasch-basierter Intelligenztest aus Wien?", o: ["WAIS-IV", "AID 3", "Raven SPM", "d2-R"], a: 1, e: "Adaptives Intelligenz Diagnostikum (Kubinger)." },
+    { q: "Was misst der d2-R?", o: ["Intelligenz", "Aufmerksamkeit und Konzentration", "Depression", "Persönlichkeit"], a: 1, e: "Durchstreichtest." },
+    { q: "Welcher Fragebogen enthält ausdrücklich Validitätsskalen zur Erkennung verzerrter Antworten?", o: ["NEO-FFI", "MMPI-2", "BDI-II", "STAI"], a: 1, e: "Z. B. L-, F-, K-Skala." },
+    { q: "Strukturierte klinische Interviews wie das SKID verbessern vor allem …", o: ["die Ökonomie", "die Interrater-Reliabilität von Diagnosen", "die Augenscheinvalidität", "die Testangst"], a: 1, e: "Standardisierte Fragen und Entscheidungsregeln." },
+    { q: "Hauptkritik an projektiven Verfahren ist …", o: ["zu hohe Reliabilität", "geringe Objektivität/Reliabilität und fragliche Validität", "sie sind zu kurz", "sie sind nicht verfälschbar"], a: 1, e: "Gefahr illusorischer Korrelationen." },
+    { q: "Die DIN 33430 betrifft …", o: ["klinische Diagnostik", "berufsbezogene Eignungsdiagnostik", "Schulleistungstests", "Verkehrspsychologie ausschließlich"], a: 1, e: "Qualitätsstandard für Eignungsbeurteilungen." },
+    { q: "In Österreich ist klinisch-psychologische Diagnostik als Tätigkeit vorbehalten für …", o: ["alle Bachelor-Absolvent:innen", "Klinische Psycholog:innen nach dem Psychologengesetz 2013", "Lehrkräfte", "Coaches"], a: 1, e: "Postgraduale Ausbildung nach dem Master erforderlich." },
+    { q: "„Signs vs. samples“ unterscheidet …", o: ["Zeichen- und Kategoriensysteme", "Test als Indikator eines Merkmals vs. Test als Stichprobe des Zielverhaltens", "Normen und Kriterien", "Selbst- und Fremdbeurteilung"], a: 1, e: "Eigenschafts- vs. Verhaltensdiagnostik (z. B. Arbeitsprobe = sample)." }
+  ],
+  exam: [
+    { q: "Beschreiben Sie den diagnostischen Prozess an einem Beispiel: Eine Schule fragt an, ob ein 9-jähriges Kind eine Lernstörung im Rechnen hat. Formulieren Sie psychologische Fragen/Hypothesen und einen Untersuchungsplan.", p: 10,
+      s: "- Auftragsklärung (Auftraggeber, Einwilligung Eltern, Zweck) (1 P.)\n- Hypothesen: Rechenstörung (Diskrepanz zu Alter/Intelligenz?), allgemeine Lernschwäche, Aufmerksamkeitsprobleme, Mathematikangst, Beschulungs-/Sprachfaktoren, Seh-/Hörprobleme (3 P.)\n- Plan: Anamnese (Eltern, Lehrkraft), Intelligenztest (z. B. WISC-V), standardisierter Rechentest, Lese-/Rechtschreibtest zur Abgrenzung, Aufmerksamkeitsdiagnostik, Fragebogen Mathematikangst, Schulunterlagen, Beobachtung (3 P.)\n- Auswertung mit Normen/KI, Integration nach ICD-11-Kriterien, Bericht, Rückmeldung, Förderempfehlungen (3 P.)" },
+    { q: "Ein Depressionsscreening hat Sensitivität .85 und Spezifität .80. Berechnen Sie für eine Basisrate von 5 % (N = 1000) PPV und NPV und diskutieren Sie die Konsequenzen für die Praxis.", p: 8,
+      s: "- Kranke 50: RP = 42,5, FN = 7,5 (1,5 P.)\n- Gesunde 950: RN = 760, FP = 190 (1,5 P.)\n- PPV = 42,5/232,5 ≈ .18 (2 P.); NPV = 760/767,5 ≈ .99 (1 P.)\n- Konsequenz: Positives Ergebnis nur Anlass für ausführliche Diagnostik; Screening eignet sich zum Ausschluss; Basisrate beachten (2 P.)" },
+    { q: "Diskutieren Sie klinische und statistische Urteilsbildung. Welche Urteilsfehler gefährden diagnostische Entscheidungen und wie lassen sie sich reduzieren?", p: 8,
+      s: "- Definitionen; Meehl, Grove et al.; Ursachen der Überlegenheit mechanischer Regeln (3 P.)\n- Fehler: Bestätigungsfehler, Basisratenvernachlässigung, Anker, Halo, illusorische Korrelation, Overconfidence (3 P.)\n- Gegenmaßnahmen: strukturierte Verfahren, explizite Regeln, Hypothesenalternativen, Dokumentation, Supervision, Feedback (2 P.)" },
+    { q: "Nach welchen Kriterien wählen Sie einen Test für eine bestimmte Fragestellung aus? Wenden Sie diese auf die Auswahl eines Persönlichkeitsfragebogens für die Personalauswahl an.", p: 7,
+      s: "- Kriterien: Passung zur Fragestellung/Konstrukt, Gütekriterien, Normen (aktuell, passende Population), Fairness, Verfälschbarkeit, Ökonomie, Zumutbarkeit, Rezensionen (4 P.)\n- Anwendung: berufsbezogene Normen, Validitätsbelege für Berufserfolg (z. B. Gewissenhaftigkeit), Verfälschbarkeit in Selektionssituation (Forced-Choice), DIN 33430, Datenschutz, Transparenz (3 P.)" }
+  ],
+  glossary: [
+    ["Psychologische Diagnostik", "Regelgeleitete Informationserhebung zur Beantwortung einer Fragestellung und Vorbereitung von Entscheidungen."],
+    ["Statusdiagnostik", "Erfassung eines aktuellen Zustands."],
+    ["Prozessdiagnostik", "Erfassung von Veränderungen über die Zeit."],
+    ["Selektionsdiagnostik", "Diagnostik zur Auswahl von Personen oder Bedingungen."],
+    ["Modifikationsdiagnostik", "Diagnostik zur Planung und Evaluation von Veränderungen."],
+    ["Sensitivität", "Anteil der richtig als positiv Erkannten unter allen tatsächlich Positiven."],
+    ["Spezifität", "Anteil der richtig als negativ Erkannten unter allen tatsächlich Negativen."],
+    ["Positiver prädiktiver Wert", "Anteil tatsächlich Positiver unter allen positiv Getesteten."],
+    ["Grundquote", "Anteil geeigneter (bzw. betroffener) Personen in der Ausgangspopulation."],
+    ["Selektionsquote", "Anteil der ausgewählten Personen an allen Bewerbenden."],
+    ["Kompensatorische Regel", "Entscheidungsregel, bei der Schwächen durch Stärken ausgeglichen werden können."],
+    ["Aktuarische Urteilsbildung", "Mechanische, regelbasierte Kombination diagnostischer Informationen."],
+    ["Barnum-Effekt", "Akzeptanz vager, allgemeingültiger Beschreibungen als individuell zutreffend."],
+    ["Kritische Differenz", "Mindestunterschied zweier Testwerte, ab dem er nicht mehr durch Messfehler erklärbar ist."],
+    ["Objektiver Persönlichkeitstest", "Verfahren, das Persönlichkeit aus Verhalten in standardisierten Situationen erschließt, ohne offensichtliche Messintention."],
+    ["DIN 33430", "Norm für Anforderungen an berufsbezogene Eignungsdiagnostik."],
+    ["Anamnese", "Erhebung der Vorgeschichte (Lebens-, Krankheits-, Entwicklungsgeschichte)."]
+  ]
+});
+
+PP.addModule({
+  id: "E2",
+  group: "E",
+  title: "Praxis psychologischen Diagnostizierens",
+  short: "Diagnostik: Praxis",
+  ects: 6,
+  semester: "5",
+  lvs: [{ type: "UE / SE", title: "Praxis psychologischen Diagnostizierens (Testdurchführung, Auswertung, Gutachten)", pi: true }],
+  summary:
+    "In der praktischen Diagnostik werden Verfahren **selbst durchgeführt, ausgewertet und interpretiert** – in Rollenspielen und an Übungsfällen. Höhepunkt ist die Erstellung eines **psychologischen Befunds bzw. Gutachtens** zu einer realistischen Fragestellung sowie die **Rückmeldung** der Ergebnisse.\n\n" +
+    "Behandelt werden Anwendungsfelder wie Bildungs- und Schuldiagnostik (Lernstörungen, Hochbegabung, Schullaufbahn), Eignungsdiagnostik (Interview, Assessment Center), klinische Diagnostik nach ICD-11, neuropsychologische und verkehrspsychologische Diagnostik.",
+  goals: [
+    "Standardisierte Testverfahren korrekt durchführen, auswerten und interpretieren",
+    "Ergebnisse unterschiedlicher Informationsquellen integrieren",
+    "Einen psychologischen Bericht/ein Gutachten nach anerkannten Standards verfassen",
+    "Ergebnisse verständlich und ethisch angemessen rückmelden",
+    "Diagnostische Besonderheiten verschiedener Anwendungsfelder kennen"
+  ],
+  exam_info: "Prüfungsimmanent: aktive Teilnahme an Übungen, Testdurchführungen (gegenseitig/Übungspersonen), Auswertungsaufgaben, schriftliches Gutachten, ggf. Rückmeldegespräch im Rollenspiel.",
+  tips: [
+    "Testmanuale gründlich lesen – Durchführungsfehler (Instruktion, Zeitnahme, Abbruchkriterien) verfälschen Ergebnisse.",
+    "Gutachten nach dem Schema von Westhoff & Kluck schreiben: Fragestellung → psychologische Fragen → Untersuchungsplan → Ergebnisse → Befund → Stellungnahme.",
+    "Fachsprache für die Rückmeldung in Alltagssprache übersetzen üben (Prozentrang statt T-Wert, Bandbreiten statt Punktwerte)."
+  ],
+  prerequisites: ["E1 (Theorie der Diagnostik)", "D2 (Normen, KTT)", "G1 hilfreich (Gesprächsführung)"],
+  competencies: [
+    "Ich kann einen standardisierten Test manualgetreu durchführen (Instruktion, Zeit, Abbruch, Protokoll).",
+    "Ich kann Rohwerte in Normwerte umrechnen und Konfidenzintervalle angeben.",
+    "Ich kann Profile über kritische Differenzen interpretieren.",
+    "Ich kann ein Gutachten mit klarer Trennung von Ergebnissen, Befund und Stellungnahme schreiben.",
+    "Ich kann Ergebnisse adressatengerecht rückmelden.",
+    "Ich kann Kriterien für Lese-Rechtschreib- und Rechenstörungen nach ICD-11 nennen.",
+    "Ich kann Methoden der Eignungsdiagnostik und ihre prognostische Validität vergleichen.",
+    "Ich kann ein strukturiertes Einstellungsinterview entwickeln.",
+    "Ich kann den Ablauf einer klinisch-psychologischen Diagnostik nach ICD-11 beschreiben.",
+    "Ich kann Grundzüge der neuropsychologischen und der verkehrspsychologischen Diagnostik in Österreich beschreiben."
+  ],
+  skills: ["Testdurchführung und -auswertung", "Gutachtenerstellung", "Rückmeldegespräch", "Anforderungsanalyse", "Strukturiertes Interview"],
+  topics: [
+    { title: "Testdurchführung in der Praxis",
+      text: "Vorbereitung: Raum (ruhig, gut beleuchtet), Material vollständig, Manual gelesen, Stoppuhr/Computer getestet. **Rapport** herstellen, Aufklärung und Einwilligung, Zweck transparent machen (soweit möglich). **Wörtliche Instruktion** nach Manual, Beispielaufgaben, Zeitbegrenzungen, Abbruchregeln, Protokollierung von Auffälligkeiten (Motivation, Ermüdung, Testangst, Sprachprobleme, Hilfsmittel wie Brille). Bei Kindern: Pausen, Reihenfolge (anstrengende Tests nicht ans Ende).\n\nTypische Fehler: Abweichende Instruktion, falsche Zeitnahme, Hilfestellung, falsche Normtabelle (Alter!), Rechenfehler bei der Auswertung → Doppelkontrolle.",
+      concepts: ["Rapport", "standardisierte Instruktion", "Abbruchregel", "Verhaltensprotokoll", "Auswertungsobjektivität"] },
+    { title: "Auswertung und Interpretation",
+      text: "Rohwert → Normwert (passende Normstichprobe, Alter/Klassenstufe), **Konfidenzintervall** (z. B. 90 % oder 95 %) angeben, Interpretation in Bereichen (weit unterdurchschnittlich … weit überdurchschnittlich; z. B. IQ 85–115 = durchschnittlich). **Profilinterpretation**: Unterschiede zwischen Subtests nur, wenn die **kritische Differenz** überschritten ist; Häufigkeit solcher Differenzen in der Normstichprobe (Basisrate) beachten. **Validitätsprüfung**: Passen die Ergebnisse zu Anamnese, Beobachtung, Schulnoten? Diskrepanzen erklären.",
+      concepts: ["Normtabelle", "Konfidenzintervall", "Leistungsbereiche", "kritische Differenz", "Basisrate von Differenzen", "Konvergenz der Datenquellen"] },
+    { title: "Das psychologische Gutachten",
+      text: "Gliederung (nach Westhoff & Kluck; ähnlich Kubinger):\n\n1. **Auftraggeber, Fragestellung**, Anlass\n2. **Psychologische Fragen** (Hypothesen) und Begründung der Verfahrenswahl\n3. **Untersuchungsplan** und Durchführung (Termine, Verfahren, Bedingungen)\n4. **Ergebnisse** – getrennt nach Informationsquellen, beschreibend, ohne Interpretation\n5. **Befund**: Integration der Ergebnisse bezogen auf die psychologischen Fragen\n6. **Stellungnahme/Beantwortung der Fragestellung** und ggf. Empfehlungen\n7. Unterschrift, Datum, Anhänge\n\nQualitätskriterien: Nachvollziehbarkeit, Trennung von Daten und Interpretation, Belege für jede Aussage, Verständlichkeit für Auftraggeber, keine Aussagen jenseits der Fragestellung, vorsichtige Formulierungen bei Prognosen, Würde der begutachteten Person.",
+      concepts: ["Gutachtenaufbau", "Ergebnisse vs. Befund", "Stellungnahme", "Nachvollziehbarkeit", "Adressatenorientierung"] },
+    { title: "Rückmeldung von Ergebnissen",
+      text: "Rückmeldung ist Teil der Diagnostik und oft selbst eine Intervention. Prinzipien: verständliche Sprache, Stärken und Schwächen ausgewogen, **Bandbreiten statt Punktwerte**, Bedeutung für den Alltag erklären, Rückfragen ermöglichen, emotionale Reaktionen auffangen, Empfehlungen konkret, schriftliche Zusammenfassung. Bei Kindern: Eltern und (altersgerecht) das Kind einbeziehen. **Therapeutic Assessment** (Finn): Diagnostik gemeinsam mit Klient:innen als kollaborativer Prozess.",
+      concepts: ["Rückmeldegespräch", "Bandbreiten", "kollaborative Diagnostik", "Therapeutic Assessment"] },
+    { title: "Bildungs- und Schuldiagnostik",
+      text: "Typische Fragestellungen: Schulreife/Schulfähigkeit, **Lese-Rechtschreib-Störung** und **Rechenstörung** (ICD-11: Entwicklungsbezogene Lernstörung mit Beeinträchtigung im Lesen, schriftlichen Ausdruck oder Mathematik – deutlich unterhalb des Erwarteten für Alter und Intelligenz, nicht durch Sinnesbeeinträchtigung, mangelnde Beschulung o. Ä. erklärbar), **Hochbegabung** (oft IQ ≥ 130, mehrdimensionale Modelle wie das Münchner Begabungsmodell), Aufmerksamkeitsprobleme, Schullaufbahnberatung, Mobbing. In Österreich: **Schulpsychologie-Bildungsberatung** als Anlaufstelle; sonderpädagogischer Förderbedarf. Verfahren: Schulleistungstests (z. B. SLRT-II, DRT, HRT, DEMAT), Intelligenztests, Lern- und Leistungsmotivation, Fragebögen für Lehrkräfte/Eltern.",
+      concepts: ["Lese-Rechtschreib-Störung", "Rechenstörung", "Hochbegabung", "Münchner Begabungsmodell", "Schulpsychologie-Bildungsberatung", "Schulleistungstests"] },
+    { title: "Eignungsdiagnostik in Organisationen",
+      text: "Ausgangspunkt ist die **Anforderungsanalyse** (z. B. Critical Incident Technique, Arbeitsplatzanalyse). Methoden und **prognostische Validität** für Berufserfolg (Metaanalysen, Schmidt & Hunter, 1998; aktualisiert von Sackett et al., 2022): strukturierte Interviews gehören zu den validesten Verfahren; kognitive Fähigkeitstests, Arbeitsproben, Job-Knowledge-Tests und Assessment Center sind ebenfalls valide; unstrukturierte Interviews, Berufserfahrung in Jahren und Graphologie schneiden schlecht ab bzw. sind nicht valide.\n\n**Strukturiertes Interview**: anforderungsbezogene Fragen, **situative Fragen** („Was würden Sie tun, wenn …?“), **biografische/verhaltensbeschreibende Fragen** („Erzählen Sie von einer Situation, in der …“ – STAR), verankerte Bewertungsskalen, mehrere Beurteilende. **Assessment Center**: mehrere Übungen (Postkorb, Gruppendiskussion, Rollenspiel, Präsentation), mehrere Beobachtende, Anforderungsdimensionen; Kritik: Übungseffekte stärker als Dimensionseffekte. **Akzeptanz** und **Fairness** (sozialer Validität, Schuler).",
+      concepts: ["Anforderungsanalyse", "Critical Incident Technique", "prognostische Validität", "strukturiertes Interview", "situative/biografische Fragen", "STAR", "Assessment Center", "soziale Validität"] },
+    { title: "Klinische Diagnostik und Klassifikation",
+      text: "Ziel: Beschreibung der Symptomatik, **Klassifikation** nach ICD-11 (in Österreich verbindlich für das Gesundheitswesen, Umstellung von ICD-10 läuft) bzw. DSM-5-TR (Forschung), Schweregrad, Komorbidität, Funktionsniveau, Ätiologie-Hypothesen, Ressourcen, Behandlungsindikation. Vorgehen **multimodal und multimethodal**: Erstgespräch, strukturierte Interviews (SKID, DIPS), Selbst- und Fremdbeurteilungsskalen, Leistungsdiagnostik (z. B. bei kognitiven Beschwerden), Verhaltensbeobachtung, medizinische Abklärung (organische Ursachen ausschließen!). **Suizidalität** immer aktiv erfragen. **Verlaufsdiagnostik** zur Therapieevaluation (z. B. Reliable Change Index nach Jacobson & Truax).",
+      concepts: ["ICD-11", "DSM-5-TR", "multimodal", "Komorbidität", "Funktionsniveau", "Ausschluss organischer Ursachen", "Suizidalität erfragen", "Reliable Change Index"] },
+    { title: "Neuropsychologische und verkehrspsychologische Diagnostik",
+      text: "**Neuropsychologische Diagnostik**: Erfassung kognitiver Funktionen (Aufmerksamkeit, Gedächtnis, exekutive Funktionen, Sprache, visuell-räumliche Verarbeitung) nach Schädel-Hirn-Trauma, Schlaganfall, bei Demenzverdacht (Screenings wie **MMSE**, **MoCA**, Uhrentest; ausführlich z. B. CERAD), Epilepsie, MS. Prämorbides Niveau schätzen, Beschwerdenvalidierung.\n\n**Verkehrspsychologie** in Österreich: **verkehrspsychologische Untersuchung** (z. B. nach Führerscheinentzug wegen Alkohol, bei wiederholten Verkehrsdelikten) durch ermächtigte Stellen; Prüfung kraftfahrspezifischer Leistungsfunktionen (Beobachtung, Reaktion, Konzentration, Belastbarkeit – häufig mit dem Wiener Testsystem) und der Bereitschaft zur Verkehrsanpassung (Persönlichkeit, Einstellungen, Exploration).",
+      concepts: ["Neuropsychologie", "MMSE", "MoCA", "prämorbides Niveau", "Beschwerdenvalidierung", "verkehrspsychologische Untersuchung", "kraftfahrspezifische Leistungsfunktionen"] }
+  ],
+  materials: [
+    { title: "Open Test Archive (ZPID) – Verfahren zum Üben von Durchführung und Auswertung", url: "https://www.testarchiv.eu/", type: "Testsammlung", lang: "DE/EN" },
+    { title: "Schulpsychologie-Bildungsberatung (Österreich)", url: "https://www.schulpsychologie.at/", type: "Offizielle Info", lang: "DE" },
+    { title: "WHO – ICD-11 Browser (Kapitel 6: Mental, behavioural or neurodevelopmental disorders)", url: "https://icd.who.int/browse/2024-01/mms/en", type: "Klassifikation", lang: "EN" },
+    { title: "Sackett et al. (2022): Revisiting meta-analytic estimates of validity in personnel selection – Volltext suchen", url: "https://scholar.google.com/scholar?q=Sackett+2022+Revisiting+meta-analytic+estimates+of+validity+in+personnel+selection", type: "Artikel", lang: "EN" },
+    { title: "MoCA – Montreal Cognitive Assessment (Informationen)", url: "https://mocacognition.com/", type: "Testverfahren", lang: "EN" },
+    { title: "Kuratorium für Verkehrssicherheit (KFV) – Verkehrspsychologie in Österreich", url: "https://www.kfv.at/", type: "Website", lang: "DE" }
+  ],
+  lectures: [
+    { title: "Strukturiertes Interview / Assessment Center erklärt (YouTube-Suche)", url: "https://www.youtube.com/results?search_query=strukturiertes+Interview+Personalauswahl+Psychologie", provider: "YouTube", lang: "DE" },
+    { title: "Psychologisches Gutachten schreiben (YouTube-Suche)", url: "https://www.youtube.com/results?search_query=psychologisches+Gutachten+schreiben", provider: "YouTube", lang: "DE" },
+    { title: "Neuropsychological Assessment – Vorlesungen (YouTube-Suche)", url: "https://www.youtube.com/results?search_query=neuropsychological+assessment+lecture", provider: "YouTube", lang: "EN" }
+  ],
+  literature: [
+    { authors: "Westhoff, K. & Kluck, M.-L.", year: 2014, title: "Psychologische Gutachten schreiben und beurteilen", ed: "6. Aufl.", publisher: "Springer", tag: "Standard", lang: "DE", ebook: true },
+    { authors: "Kubinger, K. D.", year: 2019, title: "Psychologische Diagnostik: Theorie und Praxis psychologischen Diagnostizierens", ed: "3. Aufl.", publisher: "Hogrefe", tag: "Standard", lang: "DE" },
+    { authors: "Schuler, H.", year: 2014, title: "Psychologische Personalauswahl: Eignungsdiagnostik für Personalentscheidungen und Berufsberatung", ed: "4. Aufl.", publisher: "Hogrefe", tag: "Vertiefung", lang: "DE" },
+    { authors: "Kanning, U. P.", year: 2015, title: "Personalauswahl zwischen Anspruch und Wirklichkeit", publisher: "Springer", tag: "Einstieg", lang: "DE", ebook: true },
+    { authors: "Lezak, M. D. et al.", year: 2012, title: "Neuropsychological Assessment", ed: "5th ed.", publisher: "Oxford University Press", tag: "Nachschlagen", lang: "EN" },
+    { authors: "Schmidt-Atzert, L., Krumm, S. & Amelang, M.", year: 2021, title: "Psychologische Diagnostik", ed: "6. Aufl.", publisher: "Springer", tag: "Standard", lang: "DE", ebook: true },
+    { authors: "Hasselhorn, M., Schneider, W. & Trautwein, U. (Hrsg.)", year: 2014, title: "Lernverlaufsdiagnostik (Tests und Trends)", publisher: "Hogrefe", tag: "Vertiefung", lang: "DE" }
+  ],
+  quiz: [
+    { q: "Welcher Abschnitt eines Gutachtens enthält die Integration aller Ergebnisse bezogen auf die psychologischen Fragen?", o: ["Untersuchungsplan", "Ergebnisse", "Befund", "Anhang"], a: 2, e: "Ergebnisse = beschreibend; Befund = integrierend." },
+    { q: "Warum sollen Testergebnisse mit Konfidenzintervall berichtet werden?", o: ["Weil es schöner aussieht", "Weil jede Messung fehlerbehaftet ist", "Weil es gesetzlich vorgeschrieben ist", "Um Normen zu ersetzen"], a: 1, e: "Bandbreite statt Scheingenauigkeit." },
+    { q: "Ein Kind hat im Untertest A IQ-äquivalent 95, in B 105. Die kritische Differenz beträgt 14. Was folgt?", o: ["B ist eine echte Stärke", "Der Unterschied ist nicht interpretierbar", "A ist eine Schwäche", "Der Test ist ungültig"], a: 1, e: "10 < 14 → innerhalb des Messfehlerbereichs." },
+    { q: "Welche Methode der Personalauswahl hat nach aktuellen Metaanalysen die höchste prognostische Validität?", o: ["Graphologie", "Unstrukturiertes Interview", "Strukturiertes Interview", "Jahre Berufserfahrung"], a: 2, e: "Sackett et al. (2022); kognitive Tests und Arbeitsproben ebenfalls valide." },
+    { q: "„Erzählen Sie von einer Situation, in der Sie einen Konflikt im Team gelöst haben.“ Das ist eine …", o: ["situative Frage", "biografische/verhaltensbeschreibende Frage", "Suggestivfrage", "geschlossene Frage"], a: 1, e: "Vergangenes Verhalten als Prädiktor (STAR-Methode)." },
+    { q: "Ein bekanntes Problem von Assessment Centern ist, dass …", o: ["sie keine Validität haben", "Beurteilungen stärker übungs- als dimensionsspezifisch ausfallen", "sie zu billig sind", "nur eine Übung verwendet wird"], a: 1, e: "Konstruktvaliditätsproblem der Dimensionen." },
+    { q: "Was ist vor einer klinisch-psychologischen Störungsdiagnose immer zu prüfen?", o: ["Das Einkommen", "Organische/medizinische Ursachen der Symptome", "Die Hobbys", "Die Testangst der Diagnostikerin"], a: 1, e: "Z. B. Schilddrüse bei Depressivität, neurologische Ursachen." },
+    { q: "Der MoCA ist ein …", o: ["Persönlichkeitsfragebogen", "kognitives Screening (z. B. bei Demenzverdacht)", "Intelligenztest für Kinder", "Verkehrspsychologischer Test"], a: 1, e: "Montreal Cognitive Assessment." },
+    { q: "Was beschreibt der Reliable Change Index?", o: ["Die Reliabilität eines Tests", "Ob eine Veränderung zwischen zwei Messungen größer ist als durch Messfehler erklärbar", "Den Therapieabbruch", "Die Normierung"], a: 1, e: "Jacobson & Truax (1991)." },
+    { q: "Welche Aussage zur Rückmeldung ist richtig?", o: ["Nur schriftlich, nie mündlich", "Fachbegriffe ohne Erklärung verwenden", "Ergebnisse verständlich, mit Bandbreiten und Alltagsbedeutung erklären", "Nur Schwächen nennen"], a: 2, e: "Rückmeldung ist Teil professioneller Diagnostik." }
+  ],
+  exam: [
+    { q: "Schreiben Sie das Gerüst eines Gutachtens zur Fragestellung „Ist Frau M. (34 J.) für die Position als Teamleiterin im Kundenservice geeignet?“: psychologische Fragen, Untersuchungsplan, Beispiel für Ergebnis- und Befundformulierung.", p: 10,
+      s: "- Anforderungsanalyse → psychologische Fragen (z. B. Führungsmotivation, Kommunikationsfähigkeit, Belastbarkeit, Problemlösefähigkeit, Konfliktfähigkeit) (3 P.)\n- Plan: strukturiertes Interview, kognitiver Test, Persönlichkeitsfragebogen (berufsbezogen), Rollenspiel (Mitarbeitergespräch), Referenzen; Begründung (3 P.)\n- Ergebnisformulierung deskriptiv („Im Rollenspiel unterbrach Frau M. den Mitarbeiter zweimal …“) vs. Befund integrierend mit Bezug auf Fragen (2 P.)\n- Stellungnahme mit Begründung und Entwicklungsempfehlungen; DIN 33430 (2 P.)" },
+    { q: "Ein 8-jähriger Junge fällt durch schwache Rechtschreibung auf. Beschreiben Sie das diagnostische Vorgehen zur Abklärung einer Lese-Rechtschreib-Störung inkl. Differenzialdiagnostik.", p: 8,
+      s: "- Anamnese (Entwicklung, Sprache, Familie, Schulgeschichte), Seh-/Hörprüfung (2 P.)\n- Standardisierte Lese- und Rechtschreibtests mit Klassennormen (2 P.)\n- Intelligenzdiagnostik zur Einordnung (1 P.)\n- Differenzialdiagnostik: allgemeine Lernschwäche, ADHS, Sprachentwicklungsstörung, Deutsch als Zweitsprache/unzureichende Beschulung, emotionale Probleme (2 P.)\n- Integration, Rückmeldung, Förderempfehlungen (1 P.)" }
+  ],
+  glossary: [
+    ["Gutachten", "Schriftliche, nachvollziehbare Beantwortung einer diagnostischen Fragestellung."],
+    ["Befund", "Integration der Untersuchungsergebnisse bezogen auf die psychologischen Fragen."],
+    ["Anforderungsanalyse", "Systematische Ermittlung der Anforderungen einer Tätigkeit."],
+    ["Strukturiertes Interview", "Interview mit anforderungsbezogenen Fragen und standardisierter Bewertung."],
+    ["Assessment Center", "Multimethodales Auswahlverfahren mit mehreren Übungen und Beobachtenden."],
+    ["Reliable Change Index", "Kennwert, ob eine Veränderung statistisch über den Messfehler hinausgeht."],
+    ["Prämorbides Niveau", "Geschätztes Leistungsniveau vor einer Erkrankung/Schädigung."],
+    ["Verkehrspsychologische Untersuchung", "Untersuchung der kraftfahrspezifischen Leistungsfähigkeit und Verkehrsanpassung."]
+  ]
+});
