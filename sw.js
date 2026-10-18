@@ -1,8 +1,9 @@
 /* Service Worker: macht die App offline nutzbar.
  * Strategie: App-Dateien beim Installieren vorladen, danach „stale-while-revalidate“ –
  * sofort aus dem Cache antworten und im Hintergrund aktualisieren.
- * Bei Änderungen an der Dateiliste VERSION erhöhen (tests/unit/sw.test.mjs prüft die Liste). */
-const VERSION = "psychopfad-v2";
+ * Bei Änderungen an der Dateiliste VERSION erhöhen (tests/unit/pwa.test.mjs prüft die Liste).
+ * Builds (tools/build-web.mjs) setzen VERSION auf die App-Version, damit ein Release den Cache erneuert. */
+const VERSION = "psychopfad-v3";
 const ASSETS = [
   "./",
   "index.html",
@@ -31,6 +32,8 @@ const ASSETS = [
   "data/datasets/therapie.csv",
   "data/datasets/fragebogen.csv",
   "data/datasets/screening.csv",
+  "js/version.js",
+  "js/update.js",
   "js/stats.js",
   "js/trainer.js",
   "js/srs.js",
@@ -39,7 +42,7 @@ const ASSETS = [
 ];
 
 self.addEventListener("install", (event) => {
-  event.waitUntil(caches.open(VERSION).then((c) => c.addAll(ASSETS)).then(() => self.skipWaiting()));
+  event.waitUntil(caches.open(VERSION).then((c) => c.addAll(ASSETS.map((u) => new Request(u, { cache: "reload" })))).then(() => self.skipWaiting()));
 });
 
 self.addEventListener("activate", (event) => {

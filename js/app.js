@@ -2,7 +2,8 @@
  * Routen (Hash): #/  #/plan  #/modul/<ID>/<tab>  #/wiederholen  #/mischquiz  #/rechentrainer[/<gen>[/<seed>]]
  *                #/datensaetze  #/anki  #/pruefmodus[/<bereich>]  #/bibliothek  #/ressourcen  #/karriere
  *                #/glossar  #/fortschritt  #/einstellungen  #/suche/<begriff>
- * Benötigt: data/*.js, js/stats.js, js/trainer.js, js/srs.js, js/anki.js */
+ * Benötigt: data/*.js, js/version.js, js/update.js, js/stats.js, js/trainer.js, js/srs.js, js/anki.js
+ * In der Android-App zusätzlich js/capacitor.js (vom Build eingebunden). */
 (function () {
   "use strict";
 
@@ -11,6 +12,12 @@
   const $app = document.getElementById("app");
   const $side = document.getElementById("sidebar");
   const IN_ARTIFACT = !!(window.claude && typeof window.claude.use === "function");
+  // Android-App: Capacitor stellt die nativen Plugins bereit (js/capacitor.js wird nur in den APK-Build eingebunden)
+  const CAP = window.Capacitor;
+  const IS_NATIVE = !!(CAP && typeof CAP.isNativePlatform === "function" && CAP.isNativePlatform() && typeof CAP.registerPlugin === "function");
+  const native = IS_NATIVE ? { fs: CAP.registerPlugin("Filesystem"), share: CAP.registerPlugin("Share"), app: CAP.registerPlugin("App") } : null;
+  const V = window.PPVersion || { version: "dev", build: 0, commit: "", date: "", repo: PP.meta.repo };
+  const U = window.PPUpdate;
 
   // ---------- Zustand ----------
   const emptyState = () => ({
@@ -51,7 +58,17 @@
   const today = () => R.today();
   function toast(msg) { const t = document.getElementById("toast"); t.textContent = msg; t.classList.add("show"); clearTimeout(toast._t); toast._t = setTimeout(() => t.classList.remove("show"), 2800); }
   function copyText(txt, msg) {
-    try { navigator.clipboard.writeText(txt).then(() => toast(msg), () => toast("Kopieren nicht möglich – bitte manuell markieren.")); } catch (e) { toast("Kopieren nicht möglich – bitte manuell markieren."); }
+    const fail = "Kopieren nicht möglich – bitte manuell markieren.";
+    // Ersatzweg für WebViews und ältere Browser ohne Clipboard-API
+    const legacy = () => {
+      try {
+        const ta = document.createElement("textarea");
+        ta.value = txt; ta.setAttribute("readonly", ""); ta.style.position = "fixed"; ta.style.opacity = "0";
+        document.body.appendChild(ta); ta.select();
+        const ok = document.execCommand("copy"); ta.remove(); toast(ok ? msg : fail);
+      } catch (e) { toast(fail); }
+    };
+    try { navigator.clipboard.writeText(txt).then(() => toast(msg), legacy); } catch (e) { legacy(); }
   }
   function link(url, text) { return `<a href="${esc(url)}" target="_blank" rel="noopener noreferrer">${esc(text)}</a>`; }
   function grade(p) {
@@ -95,8 +112,15 @@
       verifyWriting = false;
     }, 1200);
   }
-  /** Datei anbieten: lokal als Download, auf der veröffentlichten Seite über die Speicherfunktion des Viewers. */
+  /** Datei anbieten: lokal als Download, auf der veröffentlichten Seite über die Speicherfunktion des Viewers,
+   *  in der Android-App über das Teilen-Menü (WebViews können keine Blob-Downloads). */
   function saveFile(filename, data, mime) {
+    if (native) {
+      native.fs.writeFile({ path: filename, data, directory: "CACHE", encoding: "utf8" })
+        .then((r) => native.share.share({ title: filename, files: [r.uri], dialogTitle: "Datei speichern oder teilen" }))
+        .catch((e) => { if (!/cancel/i.test(String(e && e.message))) copyText(data, "Teilen nicht möglich – Inhalt stattdessen in die Zwischenablage kopiert."); });
+      return;
+    }
     if (cloud.dl) {
       cloud.dl.save({ filename, data }).then(() => toast(`„${filename}“ gespeichert.`)).catch((e) => {
         if (e && e.code === "declined") toast("Speichern abgebrochen.");
@@ -110,6 +134,71 @@
     a.href = URL.createObjectURL(new Blob([data], { type: mime || "text/plain;charset=utf-8" }));
     a.download = filename; document.body.appendChild(a); a.click();
     setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+  }
+
+  // ---------- Version & Updates (GitHub Releases) ----------
+  // Die Android-App prüft beim Start (höchstens alle 12 Stunden) die neueste Veröffentlichung; die Web-App
+  // aktualisiert sich über den Service Worker und meldet, wenn eine neue Version geladen wurde.
+  const UPD_KEY = "psychopfad_update", APK_NAME = "psychopfad.apk", AUTO_CHECK_HOURS = 12;
+  let upd = loadUpd(), updUi = { busy: false, error: "" }, swUpdated = false;
+  function loadUpd() { try { return JSON.parse(localStorage.getItem(UPD_KEY)) || {}; } catch (e) { return {}; } }
+  function saveUpd() { try { localStorage.setItem(UPD_KEY, JSON.stringify(upd)); } catch (e) { /* privater Modus */ } }
+  const releasesUrl = () => `https://github.com/${V.repo}/releases`;
+  const apkLatestUrl = () => `${releasesUrl()}/latest/download/${APK_NAME}`;
+  // Nur gebaute Versionen (Build-Nummer > 0) vergleichen sich mit den Releases; der Entwicklungsstand nicht
+  const updateAvailable = () => !!(V.build && upd.info && U.isNewer(upd.info.version, V.version));
+  function platformName() { return IS_NATIVE ? "Android-App" : IN_ARTIFACT ? "Claude-Artifact" : location.protocol === "file:" ? "Offline-Datei" : "Web-App"; }
+  async function checkForUpdate() {
+    upd.info = await U.check({ repo: V.repo, current: V.version, apkName: APK_NAME });
+    upd.checked = Date.now(); saveUpd();
+    return upd.info;
+  }
+  function autoUpdateCheck() {
+    if (!IS_NATIVE || !V.build) return;
+    if (!U.due(upd.checked, Date.now(), AUTO_CHECK_HOURS)) { renderBanner(); return; }
+    checkForUpdate().then(() => { renderBanner(); renderSidebar(); }, () => { /* offline – beim nächsten Start erneut */ });
+  }
+  function renderBanner() {
+    const bar = document.getElementById("updateBanner"); if (!bar) return;
+    const i = upd.info;
+    if (swUpdated) {
+      bar.innerHTML = `<span>🆕 Eine neue Version wurde geladen.</span><button class="btn small primary" data-upd="reload">Neu laden</button>`;
+    } else if (IS_NATIVE && updateAvailable() && upd.dismissed !== i.version) {
+      bar.innerHTML = `<span>🆕 Version <b>${esc(i.version)}</b> ist verfügbar.</span>
+        <a class="btn small primary" href="${esc(i.apk || i.url)}" target="_blank" rel="noopener noreferrer">Herunterladen</a>
+        <a class="btn small" href="#/einstellungen">Was ist neu?</a><button class="icon-btn" data-upd="dismiss" aria-label="Hinweis ausblenden" title="Ausblenden">✕</button>`;
+    } else { bar.hidden = true; bar.innerHTML = ""; return; }
+    bar.hidden = false;
+  }
+  function updateResult() {
+    if (updUi.busy) return `<p class="muted">Suche nach Updates …</p>`;
+    if (updUi.error) return `<p class="notice small">${esc(updUi.error)}</p>`;
+    const i = upd.info; if (!i) return "";
+    const when = upd.checked ? new Date(upd.checked).toLocaleString("de-AT", { dateStyle: "short", timeStyle: "short" }) : "";
+    const pub = i.published ? ` vom ${esc(i.published.slice(0, 10).split("-").reverse().join("."))}` : "";
+    const notes = i.notes ? `<details ${updateAvailable() ? "open" : ""}><summary>Was ist neu in ${esc(i.version)}?</summary>${rich(i.notes)}</details>` : "";
+    if (!updateAvailable()) {
+      const txt = V.build ? `Du hast die neueste Version (${esc(i.version)}${pub}).` : `Neueste veröffentlichte Version: <b>${esc(i.version)}</b>${pub}.`;
+      return `<p>✓ ${txt} <span class="small muted">Geprüft ${esc(when)}</span></p>${notes}`;
+    }
+    const action = IS_NATIVE
+      ? `<a class="btn primary" href="${esc(i.apk || i.url)}" target="_blank" rel="noopener noreferrer">Version ${esc(i.version)} herunterladen${i.size ? ` (${(i.size / 1048576).toFixed(1).replace(".", ",")} MB)` : ""}</a>`
+      : /^https?:$/.test(location.protocol) ? `<button class="btn primary" data-upd="reload">Seite neu laden</button>`
+      : `<a class="btn primary" href="${esc(i.url || releasesUrl())}" target="_blank" rel="noopener noreferrer">Zur Veröffentlichung</a>`;
+    return `<p>🆕 Neue Version <b>${esc(i.version)}</b>${pub} verfügbar. <span class="small muted">Geprüft ${esc(when)}</span></p><div class="btn-row">${action}</div>${notes}`;
+  }
+  function versionCard() {
+    const commit = V.commit ? `Commit <a href="https://github.com/${esc(V.repo)}/commit/${esc(V.commit)}" target="_blank" rel="noopener noreferrer"><code>${esc(V.commit)}</code></a>` : "";
+    const built = V.date ? `gebaut am ${esc(V.date.slice(0, 10).split("-").reverse().join("."))}` : "";
+    const how = IS_NATIVE
+      ? `Die App sucht beim Start (höchstens alle ${AUTO_CHECK_HOURS} Stunden) nach einer neuen Version und zeigt dann oben einen Hinweis. Update herunterladen, öffnen und installieren – dein Lernstand bleibt erhalten.`
+      : `Die Web-App lädt neue Versionen automatisch und zeigt oben „Neu laden“ an. Für Android gibt es die App auch als APK – sie bietet Updates selbst an.`;
+    return `<div class="card" id="versionCard"><h3>App-Version & Updates</h3>
+      <p>Installiert: <b>${V.version === "dev" ? "Entwicklungsstand" : esc(V.version)}</b>${V.build ? ` (Build ${V.build})` : ""} · ${esc(platformName())}</p>
+      <p class="small muted">${[commit, built].filter(Boolean).join(" · ") || "Direkt aus dem Repository geöffnet – Versionsnummern erhalten nur gebaute Versionen."}</p>
+      <div id="updResult">${updateResult()}</div>
+      <div class="btn-row">${IN_ARTIFACT ? "" : `<button class="btn${updateAvailable() ? "" : " primary"}" data-upd="check">Nach Updates suchen</button>`}<a class="btn" href="${esc(releasesUrl())}" target="_blank" rel="noopener noreferrer">Alle Versionen</a>${IS_NATIVE ? "" : `<a class="btn" href="${esc(apkLatestUrl())}" target="_blank" rel="noopener noreferrer">Android-App (APK)</a>`}</div>
+      <p class="small muted">${how}</p></div>`;
   }
 
   // ---------- Fortschritt ----------
@@ -171,12 +260,12 @@
     const comment = document.getElementById("repComment").value.trim();
     if (!comment) { toast("Bitte kurz beschreiben, was falsch ist."); return; }
     const id = "r-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 6);
-    const r = Object.assign({ id, created: new Date().toISOString(), category: document.getElementById("repCat").value, comment, fix: document.getElementById("repFix").value.trim(), status: "offen" }, ctx);
+    const r = Object.assign({ id, created: new Date().toISOString(), category: document.getElementById("repCat").value, comment, fix: document.getElementById("repFix").value.trim(), status: "offen", app: V.version }, ctx);
     state.reports[id] = r; save(); closeReport(); toast("Meldung gespeichert – siehe Prüfmodus.");
     pushReport(r);
   }
   function reportMarkdown(r) {
-    return `### ${r.category} – ${r.mod || "allgemein"} (${r.kind})\n\n> ${String(r.text || "").replace(/\n/g, " ")}\n\n${r.url ? `Link: ${r.url}\n\n` : ""}**Problem:** ${r.comment}\n${r.fix ? `\n**Vorschlag:** ${r.fix}\n` : ""}\n_Gemeldet am ${r.created.slice(0, 10)} · Referenz ${r.ref || "–"}_\n`;
+    return `### ${r.category} – ${r.mod || "allgemein"} (${r.kind})\n\n> ${String(r.text || "").replace(/\n/g, " ")}\n\n${r.url ? `Link: ${r.url}\n\n` : ""}**Problem:** ${r.comment}\n${r.fix ? `\n**Vorschlag:** ${r.fix}\n` : ""}\n_Gemeldet am ${r.created.slice(0, 10)} · Referenz ${r.ref || "–"}${r.app ? " · App-Version " + r.app : ""}_\n`;
   }
   function issueUrl(title, body) {
     const repo = PP.meta.repo; if (!repo) return null;
@@ -233,6 +322,7 @@
         h += `<a href="${href}" class="${active ? "active" : ""}"><span class="mid">${esc(m.id)}</span><span>${esc(m.short || m.title)}</span>${state.done[m.id] ? '<span class="done-dot">✓</span>' : ""}</a>`;
       });
     });
+    h += `<div class="nav-foot"><a href="#/einstellungen">Version ${esc(V.version)}${updateAvailable() ? ' <span class="nav-count">neu</span>' : ""}</a></div>`;
     $side.innerHTML = h;
   }
 
@@ -681,7 +771,7 @@
         const rows = d.csv.trim().split("\n").slice(1, 9).map((l) => l.split(","));
         return `<section class="card dataset" id="ds-${d.id}"><h2>${esc(d.title)}</h2><div class="pills">${d.modules.map(modPill).join("")}<span class="pill">${d.n} Fälle</span><span class="pill">${d.columns.length} Variablen</span></div>
           <p>${esc(d.description)}</p>
-          <div class="btn-row"><button class="btn primary" data-dssave="${d.id}">CSV speichern</button><button class="btn" data-dscopy="${d.id}">CSV kopieren</button>${IN_ARTIFACT ? "" : `<a class="btn" href="${esc(d.file)}" download>Datei direkt öffnen</a>`}</div>
+          <div class="btn-row"><button class="btn primary" data-dssave="${d.id}">CSV speichern</button><button class="btn" data-dscopy="${d.id}">CSV kopieren</button>${IN_ARTIFACT || IS_NATIVE ? "" : `<a class="btn" href="${esc(d.file)}" download>Datei direkt öffnen</a>`}</div>
           <h3>Variablen</h3><div class="table-wrap"><table><thead><tr><th>Name</th><th>Bedeutung</th><th>Skalenniveau</th></tr></thead><tbody>${d.variables.map((v) => `<tr><td><code>${esc(v[0])}</code></td><td>${esc(v[1])}</td><td>${esc(v[2])}</td></tr>`).join("")}</tbody></table></div>
           <details class="topic"><summary>Vorschau (erste 8 Zeilen)</summary><div class="t-body table-wrap"><table class="data"><thead><tr>${d.columns.map((c) => `<th>${esc(c)}</th>`).join("")}</tr></thead><tbody>${rows.map((r) => `<tr>${r.map((c) => `<td class="num">${esc(c)}</td>`).join("")}</tr>`).join("")}</tbody></table></div></details>
           <h3>Aufgaben</h3><ol class="ds-tasks">${d.tasks.map((t) => `<li><p>${esc(t.q)}</p><p class="small muted">${esc(t.hint)}</p>
@@ -829,7 +919,7 @@ npm run check-links</code></pre>
     return h;
   }
   function viewSettings() {
-    let h = `<h1>Einstellungen</h1><div class="card"><h3>Farbschema</h3><select id="themeSel" aria-label="Farbschema">${[["auto", "System"], ["light", "Hell"], ["dark", "Dunkel"]].map(([v, l]) => `<option value="${v}" ${state.settings.theme === v ? "selected" : ""}>${l}</option>`).join("")}</select></div>
+    let h = `<h1>Einstellungen</h1>${versionCard()}<div class="card"><h3>Farbschema</h3><select id="themeSel" aria-label="Farbschema">${[["auto", "System"], ["light", "Hell"], ["dark", "Dunkel"]].map(([v, l]) => `<option value="${v}" ${state.settings.theme === v ? "selected" : ""}>${l}</option>`).join("")}</select></div>
       <div class="card"><h3>Such-URLs der Bibliothekskataloge</h3><p class="small">Platzhalter <code>{q}</code> wird durch den Suchbegriff ersetzt. Im Katalog nach <code>TESTWORT</code> suchen, Adresse kopieren und <code>TESTWORT</code> durch <code>{q}</code> ersetzen. Leer = Suchbegriff wird kopiert und die Katalogstartseite geöffnet.</p>`;
     PP.libraries.forEach((l) => { h += `<p><label><b>${esc(l.name)}</b><br><input type="url" data-libtpl="${l.id}" value="${esc(libTemplate(l))}" placeholder="${esc(l.home)}…?q={q}" style="width:100%"></label></p>`; });
     return h + `<button class="btn primary" data-act="saveLibs">Speichern</button></div>`;
@@ -1022,6 +1112,15 @@ npm run check-links</code></pre>
       }
       save(); keep(route); return;
     }
+    // Updates
+    if (d.upd === "check") {
+      updUi = { busy: true, error: "" }; keep(route);
+      checkForUpdate().then(() => { updUi = { busy: false, error: "" }; }, (e) => { updUi = { busy: false, error: U.errorText(e) }; })
+        .then(() => { if (location.hash.startsWith("#/einstellungen")) keep(route); else renderSidebar(); renderBanner(); });
+      return;
+    }
+    if (d.upd === "dismiss") { upd.dismissed = upd.info && upd.info.version; saveUpd(); renderBanner(); return; }
+    if (d.upd === "reload") { location.reload(); return; }
     // Fortschritt & Einstellungen
     if (d.act === "export") { saveFile("psychopfad-fortschritt.json", JSON.stringify(state, null, 2), "application/json"); return; }
     if (d.act === "copyState") { copyText(JSON.stringify(state), "Fortschritt kopiert – z. B. in einer Notiz sichern."); return; }
@@ -1097,16 +1196,35 @@ npm run check-links</code></pre>
   });
   function applyTheme() { const t = state.settings.theme; if (t === "auto") delete document.documentElement.dataset.theme; else document.documentElement.dataset.theme = t; }
 
-  // Offline-Fähigkeit (PWA) – nur über http(s), nicht als Datei und nicht auf der veröffentlichten Seite
-  if ("serviceWorker" in navigator && /^https?:$/.test(location.protocol) && !IN_ARTIFACT) {
-    window.addEventListener("load", () => { navigator.serviceWorker.register("sw.js").catch(() => {}); });
+  // Offline-Fähigkeit (PWA) – nur über http(s), nicht als Datei, nicht auf der veröffentlichten Seite und nicht
+  // in der Android-App (dort liegen alle Dateien in der APK; ein Cache würde nach Updates alte Dateien liefern)
+  if ("serviceWorker" in navigator && /^https?:$/.test(location.protocol) && !IN_ARTIFACT && !IS_NATIVE) {
+    window.addEventListener("load", () => {
+      const hadController = !!navigator.serviceWorker.controller;
+      navigator.serviceWorker.register("sw.js").then((reg) => {
+        // Neuer Service Worker übernimmt → neue Version ist geladen und wird beim Neuladen angezeigt
+        navigator.serviceWorker.addEventListener("controllerchange", () => { if (hadController) { swUpdated = true; renderBanner(); } });
+        document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") reg.update().catch(() => {}); });
+      }).catch(() => {});
+    });
+  }
+  if (IS_NATIVE && navigator.serviceWorker) navigator.serviceWorker.getRegistrations().then((rs) => rs.forEach((r) => r.unregister())).catch(() => {});
+  // Android-Zurück-Taste: erst Dialog bzw. Menü schließen, dann in der App zurück, auf der ersten Seite beenden
+  if (native) {
+    native.app.addListener("backButton", (ev) => {
+      if (document.getElementById("overlay")) closeReport();
+      else if ($side.classList.contains("open")) $side.classList.remove("open");
+      else if (ev && ev.canGoBack) history.back();
+      else native.app.exitApp();
+    }).catch(() => {});
   }
 
   // Zugriff für automatische Tests
-  window.PPApp = { get state() { return state; }, get trainer() { return trainer; }, get review() { return rev; }, srsQueue, verifyItems };
+  window.PPApp = { get state() { return state; }, get trainer() { return trainer; }, get review() { return rev; }, get update() { return upd; }, srsQueue, verifyItems, native: IS_NATIVE };
 
   applyTheme();
   initCloud();
   lastHash = location.hash;
   route();
+  autoUpdateCheck();
 })();

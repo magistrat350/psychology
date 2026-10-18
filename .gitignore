@@ -1,3 +1,8 @@
 node_modules/
 dist/
 reports/
+www/
+android/
+*.apk
+*.aab
+release.jks

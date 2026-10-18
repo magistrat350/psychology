@@ -1,0 +1,8 @@
+{
+  "appId": "io.github.magistrat350.psychopfad",
+  "appName": "PsychoPfad",
+  "webDir": "www",
+  "android": {
+    "backgroundColor": "#f7f6f2"
+  }
+}

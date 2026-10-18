@@ -245,3 +245,8 @@ pre { background: var(--surface-2); border: 1px solid var(--border); border-radi
 .anki-prev ol { margin: 4px 0; padding-left: 20px; }
 .flash:focus-visible, .btn:focus-visible, .opt:focus-visible, a:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 table.data td:first-child { text-align: left; font-weight: 600; }
+.update-banner { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; padding: 8px 16px; background: var(--accent-soft); color: var(--text); border-bottom: 1px solid var(--border); }
+.update-banner[hidden] { display: none; }
+.update-banner span { flex: 1 1 220px; }
+.sidebar .nav-foot { margin: 18px 10px 0; padding-top: 10px; border-top: 1px solid var(--border); font-size: .8rem; }
+.sidebar .nav-foot a { padding: 2px 0; color: var(--muted); }
