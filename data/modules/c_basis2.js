@@ -1,1 +1,654 @@
-/* folgt */
+/* Pflichtmodulgruppe C – Basismodulgruppe II (22 ECTS) */
+PP.addModule({
+  id: "C1",
+  group: "C",
+  title: "Sozialpsychologie II",
+  short: "Sozialpsychologie II",
+  ects: 4,
+  semester: "2",
+  lvs: [{ type: "VO", title: "Sozialpsychologie II", ects: 4, pi: false }],
+  summary:
+    "Aufbauend auf der StEOP-Einführung (A2) vertieft Sozialpsychologie II das **Selbst im sozialen Kontext**, **soziale Kognition**, **zwischenmenschliche Beziehungen**, **Normen und Kooperation**, **Intergruppenprozesse** sowie **kulturelle Einflüsse**. Zudem werden Anwendungen in Gesundheit, Umwelt, Recht und Organisation behandelt.\n\n" +
+    "Ein roter Faden ist das Zusammenspiel von **automatischen** und **kontrollierten** Prozessen (Zwei-Prozess-Modelle) sowie die kritische Bewertung klassischer Befunde im Licht der Replikationsdebatte.",
+  goals: [
+    "Theorien zum Selbst (Selbstkonzept, Selbstwert, sozialer Vergleich, Selbstwahrnehmung) erklären",
+    "Zwei-Prozess-Modelle sozialer Kognition und Befunde zu Automatizität kritisch darstellen",
+    "Theorien der Attraktion und enger Beziehungen anwenden",
+    "Soziale Normen, Kooperation und soziale Dilemmata analysieren",
+    "Modelle zu Stereotypen, Vorurteilen und deren Reduktion vergleichen",
+    "Kulturvergleichende Befunde und das WEIRD-Problem reflektieren"
+  ],
+  exam_info: "Schriftliche Vorlesungsprüfung (MC und/oder offene Fragen) über Vorlesungsfolien und angegebene Literatur.",
+  tips: [
+    "Für jede Theorie ein Alltagsbeispiel und ein Schlüsselexperiment notieren.",
+    "Replikationsstatus mitlernen (z. B. Ego-Depletion, Elderly-Priming) – wird gern geprüft und zeigt kritisches Verständnis.",
+    "Modelle grafisch darstellen: Stereotype-Content-Modell als 2×2-Matrix, Investitionsmodell als Pfeildiagramm."
+  ],
+  prerequisites: ["A2 (Einführung Sozialpsychologie)", "Methodengrundlagen aus A1"],
+  competencies: [
+    "Ich kann Selbstkonzept, Selbstwert, Selbstwahrnehmungstheorie (Bem) und Theorie sozialer Vergleichsprozesse (Festinger) erklären.",
+    "Ich kann Selbstwerterhöhung und Selbstverifikation gegenüberstellen.",
+    "Ich kann Zwei-Prozess-Modelle (heuristisch vs. systematisch; automatisch vs. kontrolliert) beschreiben.",
+    "Ich kann Priming-Befunde und deren Replikationsprobleme kritisch diskutieren.",
+    "Ich kann Determinanten interpersonaler Attraktion (Nähe, Mere-Exposure, Ähnlichkeit, Attraktivität) nennen.",
+    "Ich kann Sternbergs Dreieckstheorie und Rusbults Investitionsmodell erklären.",
+    "Ich kann deskriptive und injunktive Normen unterscheiden und Norminterventionen planen.",
+    "Ich kann soziale Dilemmata (Gefangenendilemma, Öffentliche-Güter-Spiel) erläutern.",
+    "Ich kann das Stereotype-Content-Modell (Wärme × Kompetenz) anwenden.",
+    "Ich kann Strategien der Vorurteilsreduktion (Kontakt, Rekategorisierung) begründen.",
+    "Ich kann independentes vs. interdependentes Selbst und das WEIRD-Problem erklären."
+  ],
+  skills: ["Sozialpsychologische Theorien auf Praxisprobleme (Gesundheit, Umwelt, Organisation) übertragen", "Replikationsstatus von Befunden recherchieren"],
+  topics: [
+    { title: "Das Selbst: Selbstkonzept und Selbstwert",
+      text: "**Selbstkonzept** = Gesamtheit des Wissens über sich selbst (Selbstschemata; Markus). **Selbstwert** = Bewertung dieses Wissens (Rosenberg-Skala). Quellen des Selbstwissens: Introspektion (begrenzt – Nisbett & Wilson, 1977: „Telling more than we can know“), Beobachtung des eigenen Verhaltens (**Selbstwahrnehmungstheorie**, Bem: Wir schließen aus unserem Verhalten auf unsere Einstellungen, besonders wenn innere Hinweise schwach sind), Rückmeldungen anderer (Spiegelselbst, Cooley), **sozialer Vergleich** (Festinger, 1954: Aufwärts- vs. Abwärtsvergleich).\n\nMotive: **Selbstwerterhöhung** (Better-than-average-Effekt, selbstwertdienliche Attributionen), **Selbstverifikation** (Swann: Menschen suchen Bestätigung ihres Selbstbildes, auch wenn negativ), Selbsteinschätzung (akkurate Information). **Soziometertheorie** (Leary): Selbstwert als Indikator sozialer Akzeptanz. **Selbstdiskrepanztheorie** (Higgins): Ideal-Selbst-Diskrepanz → Niedergeschlagenheit; Soll-Selbst-Diskrepanz → Angst.",
+      concepts: ["Selbstkonzept", "Selbstwert", "Selbstwahrnehmungstheorie", "sozialer Vergleich", "Selbstwerterhöhung", "Selbstverifikation", "Soziometer", "Selbstdiskrepanz"] },
+    { title: "Selbstregulation und Selbstdarstellung",
+      text: "**Selbstaufmerksamkeit** (Duval & Wicklund): Fokus auf sich selbst → Vergleich mit Standards. **Selbstregulation**: Zielverfolgung, Belohnungsaufschub. Das **Ego-Depletion-Modell** (Baumeister: Selbstkontrolle als begrenzte Ressource) ist nach großen Replikationsprojekten (Hagger et al., 2016) stark umstritten – gutes Beispiel für die Replikationskrise.\n\n**Selbstdarstellung/Impression Management** (Goffman): strategische Selbstpräsentation, Ingratiation, Self-Handicapping (Hindernisse schaffen, um Misserfolg external attribuieren zu können). **Self-Monitoring** (Snyder): Personen unterscheiden sich darin, wie stark sie ihr Verhalten an Situationsanforderungen anpassen.",
+      concepts: ["Selbstaufmerksamkeit", "Ego-Depletion", "Impression Management", "Self-Handicapping", "Self-Monitoring"] },
+    { title: "Soziale Kognition: automatisch und kontrolliert",
+      text: "**Schemata** und **Skripte** strukturieren Wahrnehmung; **Priming** erhöht die Zugänglichkeit von Konzepten (Higgins, Rholes & Jones, 1977: Eindrucksbildung). **Zwei-Prozess-Modelle**: heuristisch-systematisch (Chaiken), ELM (Petty & Cacioppo), Kontinuum-Modell der Eindrucksbildung (Fiske & Neuberg: von kategoriebasiert zu individuierend), reflektiv-impulsiv (Strack & Deutsch).\n\n**Automatizität** (Bargh): unbewusst, unbeabsichtigt, effizient, nicht kontrollierbar. Berühmte Verhaltens-Priming-Befunde (z. B. langsameres Gehen nach Alters-Priming, Bargh et al., 1996) ließen sich nicht zuverlässig replizieren (Doyen et al., 2012). **Motiviertes Denken**: Menschen verarbeiten Informationen so, dass gewünschte Schlüsse gestützt werden. **Kontrafaktisches Denken** (Olympia-Medaillen: Bronze zufriedener als Silber).",
+      concepts: ["Schema", "Skript", "Priming", "Zugänglichkeit", "Zwei-Prozess-Modelle", "Kontinuum-Modell", "Automatizität", "motiviertes Denken", "kontrafaktisches Denken"] },
+    { title: "Interpersonale Attraktion",
+      text: "Determinanten:\n\n- **Räumliche Nähe** (Festinger, Schachter & Back, 1950: Westgate-Wohnheim – Freundschaften mit direkten Nachbarn)\n- **Mere-Exposure-Effekt** (Zajonc, 1968): wiederholte Darbietung erhöht Mögen\n- **Ähnlichkeit** von Einstellungen, Werten (Byrne) – stärker als Komplementarität\n- **Physische Attraktivität**: „What is beautiful is good“-Stereotyp (Dion, Berscheid & Walster); Durchschnittlichkeit, Symmetrie\n- **Reziprozität** des Mögens\n- **Fehlattribution von Erregung** (Dutton & Aron, 1974: Hängebrücke)\n\nEvolutionspsychologische Ansätze vs. soziokulturelle Erklärungen (Social-Role-Theorie) zu Geschlechtsunterschieden in Partnerpräferenzen.",
+      concepts: ["Nähe", "Mere-Exposure", "Ähnlichkeit", "Attraktivitätsstereotyp", "Reziprozität", "Fehlattribution"] },
+    { title: "Enge Beziehungen",
+      text: "**Sternbergs Dreieckstheorie der Liebe**: Intimität, Leidenschaft, Bindung/Verpflichtung → z. B. romantische Liebe (I + L), kameradschaftliche Liebe (I + B), vollkommene Liebe (alle drei). **Erwachsenenbindung** (Hazan & Shaver, 1987): Bindungsstile auch in Partnerschaften; Dimensionen Angst und Vermeidung.\n\n**Soziale Austauschtheorie** (Thibaut & Kelley): Belohnungen, Kosten, **Vergleichsniveau** (CL) und **Vergleichsniveau für Alternativen** (CLalt). **Equity-Theorie**: Zufriedenheit bei ausgewogenem Input-Output-Verhältnis. **Investitionsmodell** (Rusbult): Commitment = Zufriedenheit + Investitionen − Qualität der Alternativen → sagt Stabilität vorher. **Gottman**: Kritik, Verachtung, Rechtfertigung, Mauern (die „vier apokalyptischen Reiter“) sagen Trennung vorher. Austausch- vs. Gemeinschaftsbeziehungen (Clark & Mills).",
+      concepts: ["Dreieckstheorie", "Erwachsenenbindung", "soziale Austauschtheorie", "CL/CLalt", "Equity", "Investitionsmodell", "Gottman"] },
+    { title: "Soziale Normen und Kooperation",
+      text: "**Deskriptive Normen** (was die meisten tun) vs. **injunktive Normen** (was gebilligt wird). Cialdini: Botschaften wie „Viele Besucher stehlen Holz“ können den deskriptiven Normeffekt umkehren; Hotelhandtuch-Studien (Goldstein, Cialdini & Griskevicius, 2008): Hinweis auf Mehrheit der Gäste erhöhte Wiederverwendung. **Bumerang-Effekt** bei Energiespar-Feedback (Schultz et al., 2007) – durch injunktive Ergänzung (Smiley) verhindert.\n\n**Soziale Dilemmata**: individuelles Interesse widerspricht kollektivem. **Gefangenendilemma** (Defektion dominant, gegenseitige Kooperation kollektiv besser), **Öffentliche-Güter-Spiel**, **Allmendeklemme** (Hardin). Kooperation wird gefördert durch Kommunikation, Reputation, wiederholte Interaktion (**Tit-for-Tat**, Axelrod), Bestrafung von Trittbrettfahrern, Identifikation mit der Gruppe. Anwendungen: Klimaschutz, Impfbereitschaft.",
+      concepts: ["deskriptive/injunktive Norm", "Bumerang-Effekt", "Gefangenendilemma", "öffentliche Güter", "Allmende", "Tit-for-Tat", "Trittbrettfahrer"] },
+    { title: "Stereotype, Vorurteile und ihre Reduktion – Vertiefung",
+      text: "**Stereotype-Content-Modell** (Fiske, Cuddy, Glick & Xu, 2002): Gruppen werden auf **Wärme** und **Kompetenz** beurteilt → vier Cluster mit typischen Emotionen: hoch/hoch (Bewunderung, Eigengruppe), warm/inkompetent (Mitleid, z. B. Ältere), kalt/kompetent (Neid, z. B. Reiche), kalt/inkompetent (Verachtung). **Ambivalenter Sexismus** (Glick & Fiske): feindselig vs. wohlwollend. **Moderner/aversiver Rassismus** (Gaertner & Dovidio): egalitäre Selbstbilder bei subtiler Diskriminierung in mehrdeutigen Situationen.\n\n**Stereotypaktivierung und -anwendung** (Devine, 1989): Aktivierung automatisch, Anwendung kontrollierbar. Reduktion: **Kontakt** (Metaanalyse Pettigrew & Tropp, 2006: robust, auch erweiterter/indirekter Kontakt), **Dekategorisierung**, **Rekategorisierung** (Common Ingroup Identity Model), **wechselseitige Differenzierung**, Perspektivübernahme, Jigsaw-Klassenzimmer. **Rechtfertigungsideologien**: soziale Dominanzorientierung, System-Justification-Theorie.",
+      concepts: ["Stereotype-Content-Modell", "Wärme/Kompetenz", "ambivalenter Sexismus", "aversiver Rassismus", "Devine 1989", "Common Ingroup Identity", "soziale Dominanzorientierung", "System Justification"] },
+    { title: "Kultur und Sozialverhalten",
+      text: "**Independentes vs. interdependentes Selbst** (Markus & Kitayama, 1991): westliche Kulturen betonen Einzigartigkeit und Autonomie, ostasiatische Verbundenheit und Anpassung. Folgen für Attribution (stärkerer fundamentaler Attributionsfehler in individualistischen Kulturen; Morris & Peng), Emotion, Motivation, Selbstwert. **Hofstedes Kulturdimensionen** (Individualismus, Machtdistanz u. a.).\n\n**WEIRD-Problem** (Henrich, Heine & Norenzayan, 2010): Die meisten Studien stammen aus **W**estern, **E**ducated, **I**ndustrialized, **R**ich, **D**emocratic Gesellschaften – Generalisierbarkeit ist eingeschränkt (z. B. Müller-Lyer-Täuschung, Ultimatum-Spiel variieren kulturell). Kulturvergleichende Methodik: Messäquivalenz, Übersetzung/Rückübersetzung.",
+      concepts: ["independent/interdependent", "Markus & Kitayama", "Individualismus/Kollektivismus", "Hofstede", "WEIRD", "Messäquivalenz"] },
+    { title: "Angewandte Sozialpsychologie",
+      text: "- **Gesundheit**: Theorie des geplanten Verhaltens, Furchtappelle (wirken nur mit Selbstwirksamkeit), soziale Unterstützung als Puffer\n- **Umwelt**: Normen-Interventionen, Nudging (Thaler & Sunstein), Verhaltensbarrieren (Einstellungs-Verhaltens-Lücke)\n- **Recht**: Augenzeugen, Geständnisse, Jury-Entscheidungen, Ankereffekte bei Strafzumessung (Englich & Mussweiler)\n- **Organisation**: Führung, Teamprozesse, Fairness (prozedurale Gerechtigkeit)\n- **Medien und Online-Verhalten**: Echokammern, Online-Enthemmung, Desinformation (Inokulation nach McGuire: „Prebunking“)",
+      concepts: ["Furchtappell", "Nudging", "Einstellungs-Verhaltens-Lücke", "prozedurale Gerechtigkeit", "Inokulation", "Prebunking"] }
+  ],
+  materials: [
+    { title: "Principles of Social Psychology – 1st International H5P Edition (BCcampus)", url: "https://opentextbc.ca/socialpsychology/", type: "Lehrbuch (OER)", lang: "EN" },
+    { title: "Noba Project – Module „The Self“, „Love, Friendship and Social Support“, „Prejudice, Discrimination, and Stereotyping“, „Cooperation“", url: "https://nobaproject.com/", type: "Lehrbuch (OER)", lang: "EN" },
+    { title: "Project Implicit – IAT selbst ausprobieren", url: "https://implicit.harvard.edu/implicit/", type: "Interaktiv", lang: "EN/DE" },
+    { title: "Henrich, Heine & Norenzayan (2010): The weirdest people in the world? – Volltext suchen", url: "https://scholar.google.com/scholar?q=Henrich+Heine+Norenzayan+2010+weirdest+people+in+the+world", type: "Artikel", lang: "EN" },
+    { title: "Many Labs / Replikationsprojekte – Übersicht auf OSF (Suche „Many Labs“)", url: "https://osf.io/search?q=Many%20Labs", type: "Datenbank", lang: "EN" },
+    { title: "The Evolution of Trust – interaktives Spiel zur Spieltheorie (Nicky Case)", url: "https://ncase.me/trust/", type: "Interaktiv", lang: "EN/DE" }
+  ],
+  lectures: [
+    { title: "Coursera – Social Psychology (Wesleyan, Scott Plous)", url: "https://www.coursera.org/learn/social-psychology", provider: "Coursera", lang: "EN" },
+    { title: "Yale PSYC 110 – Lectures „Why Are People Different?“ und „Liking, Love, and Lust“", url: "https://oyc.yale.edu/psychology/psyc-110", provider: "Yale Open Courses", lang: "EN" },
+    { title: "Coursera – Moralities of Everyday Life (Yale, Paul Bloom & Molly Crockett)", url: "https://www.coursera.org/learn/moralities", provider: "Coursera", lang: "EN" },
+    { title: "Crash Course Psychology #37–#40 (Social Thinking, Influence, Prejudice, Aggression vs. Altruism)", url: "https://www.youtube.com/results?search_query=Crash+Course+Psychology+prejudice+discrimination", provider: "YouTube", lang: "EN" },
+    { title: "Sozialpsychologie-Vorlesungen deutschsprachig (YouTube-Suche)", url: "https://www.youtube.com/results?search_query=Sozialpsychologie+Vorlesung+Selbst+Attraktion", provider: "YouTube", lang: "DE" }
+  ],
+  literature: [
+    { authors: "Jonas, K., Stroebe, W. & Hewstone, M. (Hrsg.)", year: 2014, title: "Sozialpsychologie", ed: "6. Aufl.", publisher: "Springer", tag: "Standard", lang: "DE", ebook: true },
+    { authors: "Aronson, E., Wilson, T. D. & Akert, R. M.", year: 2014, title: "Sozialpsychologie", ed: "8. Aufl.", publisher: "Pearson", tag: "Standard", lang: "DE" },
+    { authors: "Werth, L., Denzler, M. & Mayer, J.", year: 2020, title: "Sozialpsychologie – Das Individuum im sozialen Kontext", publisher: "Springer", tag: "Standard", lang: "DE", ebook: true },
+    { authors: "Bierhoff, H.-W. & Frey, D. (Hrsg.)", year: 2016, title: "Soziale Motive und soziale Einstellungen (Enzyklopädie der Psychologie)", publisher: "Hogrefe", tag: "Vertiefung", lang: "DE" },
+    { authors: "Fiske, S. T. & Taylor, S. E.", year: 2020, title: "Social Cognition: From Brains to Culture", ed: "4th ed.", publisher: "SAGE", tag: "Vertiefung", lang: "EN" },
+    { authors: "Myers, D. G. & Twenge, J. M.", year: 2022, title: "Social Psychology", publisher: "McGraw-Hill", tag: "Vertiefung", lang: "EN" },
+    { authors: "Thaler, R. H. & Sunstein, C. R.", year: 2009, title: "Nudge: Wie man kluge Entscheidungen anstößt", publisher: "Econ/Ullstein", tag: "Einstieg", lang: "DE" },
+    { authors: "Henrich, J.", year: 2020, title: "The WEIRDest People in the World", publisher: "Farrar, Straus and Giroux", tag: "Einstieg", lang: "EN" }
+  ],
+  quiz: [
+    { q: "Die Selbstwahrnehmungstheorie (Bem) besagt, dass Menschen …", o: ["ihre Einstellungen immer introspektiv kennen", "aus ihrem eigenen Verhalten auf ihre Einstellungen schließen, besonders wenn innere Hinweise schwach sind", "sich stets mit Besseren vergleichen", "Dissonanz vermeiden"], a: 1, e: "Alternative Erklärung zu manchen Dissonanzbefunden." },
+    { q: "Ein Abwärtsvergleich dient typischerweise …", o: ["der Selbstverbesserung", "der Selbstwerterhöhung", "der Selbstverifikation", "der Selbstaufmerksamkeit"], a: 1, e: "Vergleich mit schlechter Gestellten hebt den Selbstwert." },
+    { q: "Personen mit negativem Selbstbild bevorzugen manchmal Partner, die sie negativ sehen. Welche Theorie erklärt das?", o: ["Soziometertheorie", "Selbstverifikationstheorie", "Self-Handicapping", "Mere-Exposure"], a: 1, e: "Swann: Streben nach Konsistenz und Vorhersagbarkeit." },
+    { q: "Nach der Selbstdiskrepanztheorie führt eine Diskrepanz zwischen tatsächlichem Selbst und Soll-Selbst vor allem zu …", o: ["Niedergeschlagenheit", "Angst/Unruhe", "Freude", "Langeweile"], a: 1, e: "Ideal-Diskrepanz → depressive Emotionen; Soll-Diskrepanz → agitierte Emotionen." },
+    { q: "Was ist Self-Handicapping?", o: ["Ehrliche Selbstbeschreibung", "Schaffen von Hindernissen, um möglichen Misserfolg external erklären zu können", "Hilfe für andere", "Konformität mit Gruppen"], a: 1, e: "Z. B. vor der Prüfung bewusst nicht lernen." },
+    { q: "Welcher Befund steht exemplarisch für Replikationsprobleme in der Sozialpsychologie?", o: ["Mere-Exposure-Effekt", "Verhaltens-Priming durch Alterswörter (langsameres Gehen)", "Bystander-Effekt", "Konformität bei Asch"], a: 1, e: "Doyen et al. (2012) konnten Bargh et al. (1996) nicht replizieren." },
+    { q: "Die Westgate-Studie von Festinger, Schachter & Back zeigte, dass Freundschaften vor allem beeinflusst werden durch …", o: ["Persönlichkeit", "räumliche Nähe", "Einkommen", "Bildungsniveau"], a: 1, e: "Funktionale Distanz im Wohnheim sagte Freundschaften vorher." },
+    { q: "Welche Komponenten umfasst Sternbergs Dreieckstheorie der Liebe?", o: ["Vertrauen, Respekt, Humor", "Intimität, Leidenschaft, Bindung/Verpflichtung", "Wärme, Kompetenz, Moral", "Nähe, Ähnlichkeit, Attraktivität"], a: 1, e: "Kombinationen ergeben verschiedene Liebesformen." },
+    { q: "Nach Rusbults Investitionsmodell sinkt Commitment, wenn …", o: ["die Zufriedenheit steigt", "die Investitionen steigen", "die Qualität der Alternativen steigt", "die Beziehung länger dauert"], a: 2, e: "Commitment = Zufriedenheit + Investitionen − Alternativenqualität." },
+    { q: "Ein Schild „Die meisten Gäste verwenden ihre Handtücher mehrfach“ nutzt vor allem …", o: ["eine injunktive Norm", "eine deskriptive Norm", "einen Furchtappell", "kognitive Dissonanz"], a: 1, e: "Information darüber, was andere tatsächlich tun." },
+    { q: "Im Gefangenendilemma ist für jede einzelne Person (einmalig gespielt) die dominante Strategie …", o: ["Kooperation", "Defektion", "Zufall", "Tit-for-Tat"], a: 1, e: "Unabhängig vom Verhalten des anderen ist Defektion individuell besser." },
+    { q: "Welche Strategie gewann Axelrods Turniere zum wiederholten Gefangenendilemma?", o: ["Immer defektieren", "Immer kooperieren", "Tit-for-Tat", "Zufällig"], a: 2, e: "Freundlich beginnen, erwidern, verzeihen, klar." },
+    { q: "Nach dem Stereotype-Content-Modell lösen Gruppen, die als kompetent, aber kalt gesehen werden, typischerweise … aus.", o: ["Mitleid", "Neid", "Verachtung", "Bewunderung"], a: 1, e: "Z. B. Reiche oder bestimmte erfolgreiche Minderheiten." },
+    { q: "Wohlwollender Sexismus …", o: ["ist harmlos", "idealisiert Frauen in traditionellen Rollen und kann Ungleichheit stabilisieren", "existiert nur bei Frauen", "ist dasselbe wie feindseliger Sexismus"], a: 1, e: "Glick & Fiske: ambivalenter Sexismus." },
+    { q: "Devine (1989) zeigte, dass …", o: ["nur vorurteilsbehaftete Menschen Stereotype kennen", "Stereotype automatisch aktiviert werden, ihre Anwendung aber kontrolliert werden kann", "Stereotype nie automatisch sind", "Kontakt keine Wirkung hat"], a: 1, e: "Unterscheidung von Aktivierung und Anwendung." },
+    { q: "Das Common-Ingroup-Identity-Modell reduziert Vorurteile durch …", o: ["Trennung der Gruppen", "Rekategorisierung in eine gemeinsame übergeordnete Gruppe", "Wettbewerb", "Betonung von Unterschieden"], a: 1, e: "„Wir“ statt „wir und die“." },
+    { q: "Was beschreibt das Akronym WEIRD?", o: ["Eine Persönlichkeitsstörung", "Die überwiegende Herkunft von Studienteilnehmenden aus westlichen, gebildeten, industrialisierten, reichen, demokratischen Gesellschaften", "Ein Forschungsdesign", "Eine Normart"], a: 1, e: "Henrich et al. (2010) – eingeschränkte Generalisierbarkeit." },
+    { q: "In Kulturen mit interdependentem Selbstverständnis ist der fundamentale Attributionsfehler im Vergleich zu individualistischen Kulturen eher …", o: ["stärker", "schwächer", "gleich", "nicht messbar"], a: 1, e: "Situative Einflüsse werden stärker berücksichtigt (Morris & Peng, 1994)." },
+    { q: "Was ist „Prebunking“ bzw. Inokulation?", o: ["Nachträgliche Richtigstellung", "Vorbeugende Konfrontation mit abgeschwächten Manipulationstechniken, um Widerstand aufzubauen", "Zensur", "Belohnung richtiger Antworten"], a: 1, e: "Nach McGuires Inokulationstheorie." }
+  ],
+  exam: [
+    { q: "Erläutern Sie die Theorie sozialer Vergleichsprozesse und grenzen Sie die Motive Selbsteinschätzung, Selbstwerterhöhung und Selbstverifikation voneinander ab. Nennen Sie je einen empirischen Befund.", p: 8,
+      s: "- Festinger (1954): Bedürfnis nach Bewertung eigener Fähigkeiten/Meinungen; bei fehlenden objektiven Standards Vergleich mit ähnlichen anderen; Aufwärts-/Abwärtsvergleich (2 P.)\n- Selbsteinschätzung: akkurate Information (z. B. Wahl diagnostischer Aufgaben, Trope) (2 P.)\n- Selbstwerterhöhung: Better-than-average-Effekt, selbstwertdienliche Attribution, Abwärtsvergleich (2 P.)\n- Selbstverifikation: Swann – Bevorzugung selbstkonsistenter Rückmeldung (2 P.)" },
+    { q: "Eine Stadtverwaltung möchte den Energieverbrauch der Haushalte senken. Entwickeln Sie eine sozialpsychologisch fundierte Intervention auf Basis sozialer Normen. Welche Fallstricke sind zu beachten?", p: 8,
+      s: "- Deskriptive Norm: Vergleich mit Nachbarschaftsdurchschnitt (Schultz et al., 2007) (2 P.)\n- Injunktive Ergänzung (Smiley/Frowny) gegen Bumerang-Effekt bei unterdurchschnittlichen Verbrauchern (2 P.)\n- Lokale, ähnliche Referenzgruppen; konkrete Handlungstipps; Selbstwirksamkeit (2 P.)\n- Fallstricke: negative deskriptive Normen vermeiden („viele verschwenden …“), Reaktanz, Evaluation mit Kontrollgruppe (2 P.)" },
+    { q: "Stellen Sie das Stereotype-Content-Modell dar und erklären Sie, welche emotionalen und verhaltensbezogenen Reaktionen sich aus den vier Quadranten ergeben.", p: 7,
+      s: "- Dimensionen Wärme (Intention) und Kompetenz (Fähigkeit), Ursprung in Status und Konkurrenz (2 P.)\n- Quadranten mit Beispielen und Emotionen: Bewunderung, Mitleid, Neid, Verachtung (4 P.)\n- Verhalten (BIAS-Map): aktive/passive Förderung bzw. Schädigung, z. B. Neid → in Krisen aktive Schädigung (1 P.)" },
+    { q: "Diskutieren Sie das WEIRD-Problem und seine Bedeutung für die Generalisierbarkeit sozialpsychologischer Befunde. Welche methodischen Anforderungen stellt kulturvergleichende Forschung?", p: 7,
+      s: "- WEIRD-Definition, Überrepräsentation (Studierendenstichproben aus USA/Europa) (2 P.)\n- Beispiele kultureller Variation: Attributionsstil, Selbstwert, Wahrnehmungstäuschungen, Fairness im Ultimatum-Spiel (2 P.)\n- Methodik: Messinvarianz, Übersetzung/Rückübersetzung, Antwortstile, Stichprobenvergleichbarkeit, Multi-Site-Studien (3 P.)" }
+  ],
+  glossary: [
+    ["Selbstkonzept", "Organisiertes Wissen einer Person über sich selbst."],
+    ["Selbstwert", "Globale Bewertung der eigenen Person."],
+    ["Soziale Vergleichstheorie", "Menschen bewerten sich durch Vergleich mit anderen (Festinger)."],
+    ["Selbstverifikation", "Streben nach Bestätigung des bestehenden Selbstbildes."],
+    ["Self-Handicapping", "Selbstbehinderung zum Schutz des Selbstwerts bei möglichem Misserfolg."],
+    ["Priming", "Voraktivierung eines Konzepts, die nachfolgende Verarbeitung beeinflusst."],
+    ["Mere-Exposure-Effekt", "Zunehmendes Mögen durch wiederholte Darbietung."],
+    ["Investitionsmodell", "Commitment ergibt sich aus Zufriedenheit, Investitionen und Alternativen (Rusbult)."],
+    ["Deskriptive Norm", "Wahrnehmung dessen, was die meisten Menschen tatsächlich tun."],
+    ["Injunktive Norm", "Wahrnehmung dessen, was gebilligt oder missbilligt wird."],
+    ["Soziales Dilemma", "Situation, in der individuell rationales Verhalten kollektiv schadet."],
+    ["Stereotype-Content-Modell", "Gruppenstereotype variieren auf Wärme und Kompetenz (Fiske et al.)."],
+    ["Aversiver Rassismus", "Subtile Diskriminierung bei Personen mit egalitärem Selbstbild."],
+    ["Rekategorisierung", "Bildung einer gemeinsamen übergeordneten Gruppenidentität."],
+    ["Interdependentes Selbst", "Selbstverständnis, das Verbundenheit und soziale Rollen betont."],
+    ["WEIRD", "Western, Educated, Industrialized, Rich, Democratic – typische, nicht repräsentative Stichproben."]
+  ]
+});
+
+PP.addModule({
+  id: "C2",
+  group: "C",
+  title: "Entwicklungspsychologie II",
+  short: "Entwicklungspsychologie II",
+  ects: 4,
+  semester: "2",
+  lvs: [{ type: "VO", title: "Entwicklungspsychologie II", ects: 4, pi: false }],
+  summary:
+    "Entwicklungspsychologie II erweitert die Perspektive auf die **gesamte Lebensspanne** und auf die **sozial-emotionale Entwicklung**: Selbstregulation, Moral, Sozialisation in Familie und Peergroup, Jugendalter, frühes, mittleres und spätes Erwachsenenalter, Altern, Resilienz und Entwicklungspsychopathologie.\n\n" +
+    "Die Wiener Tradition der Lebenslaufpsychologie (Charlotte Bühler) und die Bildungs- und Entwicklungsforschung der Fakultät machen dieses Fach in Wien besonders präsent.",
+  goals: [
+    "Theorien der Moralentwicklung und sozialen Kognition darstellen und kritisch bewerten",
+    "Einflüsse von Familie, Erziehungsstilen, Geschwistern und Peers auf Entwicklung erklären",
+    "Entwicklungsaufgaben und -prozesse in Jugend und Erwachsenenalter beschreiben",
+    "Modelle erfolgreichen Alterns und kognitive Veränderungen im Alter erläutern",
+    "Risiko- und Schutzfaktoren sowie Resilienz verstehen",
+    "Lebensspannenperspektive auf angewandte Fragen übertragen (Bildung, Prävention, Pflege)"
+  ],
+  exam_info: "Schriftliche Vorlesungsprüfung über Vorlesungsinhalte und Lehrbuchkapitel.",
+  tips: [
+    "Zeitachse über die Lebensspanne anlegen und Theorien/Befunde einordnen.",
+    "Kohlberg-Stufen mit dem Heinz-Dilemma üben: Nicht die Entscheidung, sondern die Begründung bestimmt die Stufe.",
+    "Erziehungsstile als 2×2-Matrix (Wärme × Kontrolle) lernen."
+  ],
+  prerequisites: ["A2 (Einführung Entwicklungspsychologie)"],
+  competencies: [
+    "Ich kann Kohlbergs Stufen der Moralentwicklung erklären und Kritik (Gilligan, Turiel) wiedergeben.",
+    "Ich kann Selbstregulation und Belohnungsaufschub (Marshmallow-Test) inkl. Replikationsbefunden diskutieren.",
+    "Ich kann Erziehungsstile nach Baumrind/Maccoby & Martin und ihre Korrelate beschreiben.",
+    "Ich kann die Bedeutung von Peers und Freundschaften in Kindheit und Jugend erklären.",
+    "Ich kann Entwicklungsaufgaben (Havighurst) und das Konzept der Emerging Adulthood erläutern.",
+    "Ich kann fluide und kristalline Intelligenz im Altersverlauf unterscheiden.",
+    "Ich kann das SOC-Modell (Baltes) und die sozioemotionale Selektivitätstheorie (Carstensen) erklären.",
+    "Ich kann Resilienz, Risiko- und Schutzfaktoren (Kauai-Studie) beschreiben.",
+    "Ich kann Grundannahmen der Entwicklungspsychopathologie (Äquifinalität, Multifinalität) erklären."
+  ],
+  skills: ["Entwicklungsverläufe interpretieren", "Präventionsansätze entwicklungspsychologisch begründen"],
+  topics: [
+    { title: "Selbstregulation und Temperament",
+      text: "**Temperament**: früh beobachtbare, biologisch mitbedingte Unterschiede in Reaktivität und Selbstregulation. Thomas & Chess: einfache, schwierige und langsam auftauende Kinder; **Passungsmodell** (goodness of fit). Rothbart: Extraversion/Surgency, negative Affektivität, **effortful control**. Kagan: **Verhaltenshemmung** (behavioral inhibition) als Risikofaktor für Ängstlichkeit.\n\n**Belohnungsaufschub** (Mischel, Marshmallow-Test): längeres Warten im Vorschulalter korrelierte mit späteren Schulleistungen. Konzeptuelle Replikation (Watts, Duncan & Quan, 2018) mit diverserer Stichprobe: deutlich kleinere Zusammenhänge, nach Kontrolle familiärer Hintergrundmerkmale stark reduziert. Selbstregulation entwickelt sich mit dem präfrontalen Kortex und durch Ko-Regulation mit Bezugspersonen.",
+      concepts: ["Temperament", "Passungsmodell", "effortful control", "Verhaltenshemmung", "Belohnungsaufschub", "Marshmallow-Test", "Ko-Regulation"] },
+    { title: "Moralentwicklung",
+      text: "**Piaget**: heteronome Moral (Regeln von Autoritäten unveränderlich, Folgen zählen) → autonome Moral (Absicht zählt). **Kohlberg** (moralische Dilemmata, z. B. Heinz-Dilemma) – drei Ebenen mit je zwei Stufen:\n\n- **Präkonventionell**: (1) Orientierung an Strafe und Gehorsam, (2) instrumenteller Austausch\n- **Konventionell**: (3) interpersonale Erwartungen („guter Junge/gutes Mädchen“), (4) Gesetz und Ordnung\n- **Postkonventionell**: (5) Sozialvertrag, (6) universelle ethische Prinzipien\n\nKritik: **Gilligan** – Fürsorge-Ethik vs. Gerechtigkeits-Ethik (empirisch geringe Geschlechtsunterschiede); kulturelle Verzerrung; Kluft zwischen moralischem Urteilen und Handeln. **Turiel**: Domänentheorie – Kinder unterscheiden früh moralische, sozial-konventionelle und persönliche Bereiche. Säuglingsforschung (Hamlin: Präferenz für helfende Figuren; Replikation gemischt). **Prosoziales Verhalten**: Helfen ab ca. 14–18 Monaten (Warneken & Tomasello).",
+      concepts: ["heteronome/autonome Moral", "Kohlberg-Stufen", "Heinz-Dilemma", "Gilligan", "Domänentheorie", "prosoziales Verhalten"] },
+    { title: "Familie und Erziehung",
+      text: "**Erziehungsstile** (Baumrind; Maccoby & Martin) entlang **Wärme/Responsivität** × **Kontrolle/Anforderung**:\n\n- **autoritativ** (hoch/hoch): beste Entwicklungskorrelate (Kompetenz, Selbstwert, Schulleistung)\n- **autoritär** (niedrig Wärme/hoch Kontrolle)\n- **permissiv/nachgiebig** (hoch Wärme/niedrig Kontrolle)\n- **vernachlässigend** (niedrig/niedrig): ungünstigste Folgen\n\nEinschränkungen: korrelative Befunde, bidirektionale Effekte (Kinder beeinflussen Eltern), kulturelle Unterschiede. **Psychologische vs. Verhaltenskontrolle**. **Familiensystemtheorie**, Geschwister (nicht-geteilte Umwelt), Scheidungsfolgen (Konfliktniveau wichtiger als Struktur), sozioökonomischer Status, **Familienstressmodell** (Conger). Körperstrafen: Metaanalysen zeigen negative Korrelate; in Österreich seit 1989 gesetzlich verboten.",
+      concepts: ["autoritativ", "autoritär", "permissiv", "vernachlässigend", "bidirektionale Effekte", "nicht-geteilte Umwelt", "Familienstressmodell"] },
+    { title: "Peers, Freundschaft und Schule",
+      text: "Peerbeziehungen unterscheiden sich von Eltern-Kind-Beziehungen durch **Symmetrie**. **Soziometrischer Status** (Coie & Dodge): beliebt, abgelehnt (aggressiv/zurückgezogen), vernachlässigt, kontrovers, durchschnittlich – Ablehnung ist Risikofaktor. Freundschaftskonzepte entwickeln sich von gemeinsamen Aktivitäten zu Intimität und Loyalität (Selman: Perspektivübernahme).\n\n**Bullying/Mobbing**: Täter:in, Opfer, Mitläufer, Verteidiger, Außenstehende (Participant-Role-Ansatz); Prävention schulweit (Olweus; in Österreich z. B. ViSC-Programm der Universität Wien – Strohmeier & Spiel). Cybermobbing. Peers im Jugendalter: Gruppenkonformität, **Sozialisation vs. Selektion**.",
+      concepts: ["soziometrischer Status", "Perspektivübernahme", "Bullying", "Participant Roles", "ViSC", "Selektion vs. Sozialisation"] },
+    { title: "Jugendalter",
+      text: "**Pubertät** (hormonell, körperlich; säkulare Akzeleration), Unterschiede im Pubertätstiming (frühe Reife bei Mädchen als Risiko). **Gehirnentwicklung**: späte Reifung des präfrontalen Kortex, frühere Sensitivität des Belohnungssystems → **Duale-Systeme-Modell** (Steinberg) zur Erklärung erhöhter Risikobereitschaft, v. a. in Anwesenheit von Peers. **Identitätsentwicklung** (Erikson, Marcia), Autonomie gegenüber Eltern (Konflikte meist um Alltägliches), romantische Beziehungen, Mediennutzung. **Entwicklungsaufgaben** (Havighurst): Ablösung, Berufswahl, Wertesystem, Peerbeziehungen, Körperakzeptanz. Häufige Probleme: Depression (Anstieg v. a. bei Mädchen), Essstörungen, Substanzkonsum, Delinquenz (adoleszenzbegrenzt vs. lebenslang persistent – Moffitt).",
+      concepts: ["Pubertätstiming", "Duale-Systeme-Modell", "Identitätsstatus", "Entwicklungsaufgaben", "Moffitt-Typologie"] },
+    { title: "Erwachsenenalter",
+      text: "**Emerging Adulthood** (Arnett): ca. 18–29 Jahre in Industriegesellschaften – Identitätsexploration, Instabilität, Selbstfokus, Gefühl des Dazwischen-Seins, Möglichkeiten. Entwicklungsaufgaben: Partnerschaft, Elternschaft, Beruf. **Generativität** (Erikson). **Big-Five-Entwicklung**: Reifungsprinzip – Gewissenhaftigkeit und Verträglichkeit nehmen zu, Neurotizismus ab (Roberts et al., 2006). „Midlife-Crisis“ empirisch kein universelles Phänomen; **U-förmige Lebenszufriedenheit** (Tiefpunkt im mittleren Alter) diskutiert. Lebenslanges Lernen, Work-Life-Balance, Übergang zur Elternschaft (Rückgang der Partnerschaftszufriedenheit im Mittel).",
+      concepts: ["Emerging Adulthood", "Generativität", "Reifungsprinzip", "Lebenszufriedenheit", "Übergang zur Elternschaft"] },
+    { title: "Altern: Kognition, Emotion, Erfolgreiches Altern",
+      text: "**Fluide Intelligenz** (Verarbeitungsgeschwindigkeit, schlussfolgerndes Denken; Mechanik) nimmt ab dem jungen Erwachsenenalter ab; **kristalline Intelligenz** (Wissen, Wortschatz; Pragmatik) bleibt bis ins hohe Alter stabil oder steigt (Cattell & Horn; Baltes’ Zwei-Komponenten-Modell). Seattle Longitudinal Study (Schaie): Abbau später und individuell variabler als Querschnitte nahelegen. **Kognitive Reserve**, Plastizität (Testing-the-Limits).\n\n**SOC-Modell** (Baltes & Baltes): **Selektion** (Ziele auswählen), **Optimierung** (Ressourcen verbessern), **Kompensation** (Verluste ausgleichen) – Beispiel Pianist Rubinstein. **Sozioemotionale Selektivitätstheorie** (Carstensen): Bei begrenzter Zeitperspektive Priorität emotional bedeutsamer Ziele → kleinere, engere Netzwerke, **Positivitätseffekt**. **Paradox des Wohlbefindens** im Alter. Drittes vs. viertes Lebensalter; Demenz (Alzheimer häufigste Form); Altersstereotype (Levy: positive Selbstbilder ↔ Gesundheit, Lebenserwartung).",
+      concepts: ["fluide/kristalline Intelligenz", "Mechanik/Pragmatik", "Seattle Longitudinal Study", "kognitive Reserve", "SOC-Modell", "sozioemotionale Selektivität", "Positivitätseffekt", "Wohlbefindensparadox"] },
+    { title: "Resilienz und Entwicklungspsychopathologie",
+      text: "**Resilienz** = positive Entwicklung trotz erheblicher Risiken – ein Prozess, kein festes Merkmal („ordinary magic“, Masten). **Kauai-Längsschnittstudie** (Werner & Smith, Geburtsjahrgang 1955): Ein Drittel der Hochrisikokinder entwickelte sich gut. **Schutzfaktoren**: personal (Temperament, Intelligenz, Selbstwirksamkeit), familiär (stabile Bezugsperson), sozial (Mentoren, Schule). **Risikofaktoren** kumulieren (Anzahl wichtiger als Art); **ACEs** (Adverse Childhood Experiences).\n\n**Entwicklungspsychopathologie**: Störungen als Abweichungen von normativen Verläufen; **Äquifinalität** (verschiedene Wege → gleiches Ergebnis), **Multifinalität** (gleiche Ausgangslage → verschiedene Ergebnisse); **Diathese-Stress-** und **Differential-Susceptibility-Modelle** (Belsky: Orchideen- vs. Löwenzahnkinder).",
+      concepts: ["Resilienz", "Kauai-Studie", "Schutzfaktoren", "kumulatives Risiko", "ACEs", "Äquifinalität", "Multifinalität", "Differential Susceptibility"] },
+    { title: "Lebensende, Trauer und Medien",
+      text: "**Sterben und Trauer**: Kübler-Ross’ Phasen (Nicht-wahrhaben-Wollen, Zorn, Verhandeln, Depression, Zustimmung) sind empirisch nicht als feste Abfolge belegt; heute **Duales Prozessmodell** der Trauer (Stroebe & Schut: Pendeln zwischen verlust- und wiederherstellungsorientierter Bewältigung); Resilienz als häufigster Verlauf (Bonanno). Anhaltende Trauerstörung als Diagnose in ICD-11.\n\n**Medien und Entwicklung**: Bildschirmzeit im Kleinkindalter, Lernen aus Videos (Video-Defizit-Effekt), Social Media und Wohlbefinden im Jugendalter (kleine durchschnittliche Zusammenhänge, große individuelle Unterschiede – Orben & Przybylski).",
+      concepts: ["Kübler-Ross", "duales Prozessmodell", "anhaltende Trauerstörung", "Video-Defizit-Effekt", "Social Media"] }
+  ],
+  materials: [
+    { title: "OpenStax Psychology 2e – Kap. 9 (Lifespan Development)", url: "https://openstax.org/details/books/psychology-2e", type: "Lehrbuch (OER)", lang: "EN" },
+    { title: "LibreTexts – Lifespan Development (Lally & Valentine-French u. a.)", url: "https://socialsci.libretexts.org/Bookshelves/Psychology", type: "Lehrbuch (OER)", lang: "EN" },
+    { title: "Noba Project – Module „Social and Personality Development in Childhood“, „Adolescent Development“, „Aging“", url: "https://nobaproject.com/", type: "Lehrbuch (OER)", lang: "EN" },
+    { title: "Center on the Developing Child (Harvard) – Resilienz, Toxic Stress, Executive Function", url: "https://developingchild.harvard.edu/", type: "Website", lang: "EN" },
+    { title: "Watts, Duncan & Quan (2018): Revisiting the marshmallow test – Volltext suchen", url: "https://scholar.google.com/scholar?q=Watts+Duncan+Quan+2018+Revisiting+the+marshmallow+test", type: "Artikel", lang: "EN" }
+  ],
+  lectures: [
+    { title: "Yale PSYC 110 – Lectures „What Is It Like to Be a Baby“ & „Why Are People Different?“", url: "https://oyc.yale.edu/psychology/psyc-110", provider: "Yale Open Courses", lang: "EN" },
+    { title: "Crash Course Psychology #18–#20 (Development)", url: "https://www.youtube.com/results?search_query=Crash+Course+Psychology+adolescence+adulthood", provider: "YouTube", lang: "EN" },
+    { title: "Harvard Center on the Developing Child – Videos (YouTube-Suche)", url: "https://www.youtube.com/results?search_query=Center+on+the+Developing+Child+Harvard", provider: "YouTube", lang: "EN" },
+    { title: "Laura Carstensen – Older people are happier (TED)", url: "https://www.youtube.com/results?search_query=Laura+Carstensen+older+people+are+happier", provider: "YouTube/TED", lang: "EN" },
+    { title: "Entwicklungspsychologie Lebensspanne Vorlesung (YouTube-Suche)", url: "https://www.youtube.com/results?search_query=Entwicklungspsychologie+Lebensspanne+Vorlesung", provider: "YouTube", lang: "DE" }
+  ],
+  literature: [
+    { authors: "Schneider, W. & Lindenberger, U. (Hrsg.)", year: 2018, title: "Entwicklungspsychologie", ed: "8. Aufl.", publisher: "Beltz", tag: "Standard", lang: "DE" },
+    { authors: "Siegler, R. et al.", year: 2021, title: "Entwicklungspsychologie im Kindes- und Jugendalter", publisher: "Springer", tag: "Standard", lang: "DE", ebook: true },
+    { authors: "Baltes, P. B. & Baltes, M. M. (Eds.)", year: 1990, title: "Successful Aging: Perspectives from the Behavioral Sciences", publisher: "Cambridge University Press", tag: "Klassiker", lang: "EN", note: "Grundlagentext zum SOC-Modell." },
+    { authors: "Berk, L. E.", year: 2020, title: "Entwicklungspsychologie", publisher: "Pearson", tag: "Standard", lang: "DE" },
+    { authors: "Santrock, J. W.", year: 2021, title: "Life-Span Development", publisher: "McGraw-Hill", tag: "Vertiefung", lang: "EN" },
+    { authors: "Lohaus, A. (Hrsg.)", year: 2018, title: "Entwicklungspsychologie des Jugendalters", publisher: "Springer", tag: "Vertiefung", lang: "DE", ebook: true },
+    { authors: "Werner, E. E. & Smith, R. S.", year: 2001, title: "Journeys from Childhood to Midlife: Risk, Resilience, and Recovery", publisher: "Cornell University Press", tag: "Klassiker", lang: "EN" },
+    { authors: "Mischel, W.", year: 2015, title: "Der Marshmallow-Test: Willensstärke, Belohnungsaufschub und die Entwicklung der Persönlichkeit", publisher: "Siedler", tag: "Einstieg", lang: "DE" }
+  ],
+  quiz: [
+    { q: "Ein Kind argumentiert im Heinz-Dilemma: „Er soll nicht stehlen, weil er sonst ins Gefängnis kommt.“ Welche Kohlberg-Stufe?", o: ["Stufe 1 (Strafe und Gehorsam)", "Stufe 3", "Stufe 4", "Stufe 5"], a: 0, e: "Präkonventionell: Orientierung an Strafvermeidung." },
+    { q: "„Gesetze müssen eingehalten werden, sonst bricht die Gesellschaft zusammen.“ Welche Stufe?", o: ["Stufe 2", "Stufe 3", "Stufe 4", "Stufe 6"], a: 2, e: "Konventionell: Orientierung an Gesetz und sozialer Ordnung." },
+    { q: "Gilligans Kritik an Kohlberg betont …", o: ["die Rolle der Intelligenz", "eine Fürsorge-Ethik neben der Gerechtigkeits-Ethik", "die Bedeutung von Strafe", "biologische Reifung"], a: 1, e: "Empirisch fanden sich jedoch nur geringe Geschlechtsunterschiede." },
+    { q: "Welcher Erziehungsstil ist mit den günstigsten Entwicklungsergebnissen assoziiert?", o: ["Autoritär", "Autoritativ", "Permissiv", "Vernachlässigend"], a: 1, e: "Hohe Wärme und hohe, erklärte Anforderungen." },
+    { q: "Was zeigte die konzeptuelle Replikation des Marshmallow-Tests (Watts et al., 2018)?", o: ["Deutlich stärkere Zusammenhänge als bei Mischel", "Kleinere Zusammenhänge, die nach Kontrolle des familiären Hintergrunds stark schrumpften", "Keinerlei Varianz im Warten", "Nur Effekte bei Jungen"], a: 1, e: "Der sozioökonomische Kontext erklärte einen großen Teil." },
+    { q: "Welche Kategorie gehört NICHT zu den soziometrischen Statusgruppen nach Coie & Dodge?", o: ["Beliebt", "Abgelehnt", "Vernachlässigt", "Autoritativ"], a: 3, e: "Weitere: kontrovers, durchschnittlich." },
+    { q: "Das Duale-Systeme-Modell erklärt jugendliches Risikoverhalten durch …", o: ["frühe Reifung des präfrontalen Kortex", "ein früh sensitives Belohnungssystem bei noch unreifer kognitiver Kontrolle", "Hormonmangel", "fehlende Intelligenz"], a: 1, e: "Steinberg; verstärkt durch Peers." },
+    { q: "Emerging Adulthood nach Arnett bezeichnet etwa die Altersspanne …", o: ["12–17", "18–29", "30–45", "45–65"], a: 1, e: "Phase der Exploration zwischen Jugend und etabliertem Erwachsenenalter." },
+    { q: "Welche Veränderung der Big Five im Erwachsenenalter beschreibt das Reifungsprinzip?", o: ["Neurotizismus steigt", "Gewissenhaftigkeit und Verträglichkeit steigen, Neurotizismus sinkt", "Alle Merkmale bleiben konstant", "Offenheit steigt stark"], a: 1, e: "Roberts et al. (2006), Metaanalyse." },
+    { q: "Welche Intelligenzform bleibt im Alter weitgehend stabil?", o: ["Fluide Intelligenz", "Kristalline Intelligenz", "Verarbeitungsgeschwindigkeit", "Arbeitsgedächtnis"], a: 1, e: "Wissensbasierte Pragmatik." },
+    { q: "Ein älterer Pianist spielt weniger Stücke, übt diese intensiver und spielt vor schnellen Passagen langsamer. Das illustriert …", o: ["die Disengagement-Theorie", "das SOC-Modell", "die Aktivitätstheorie", "Kohorteneffekte"], a: 1, e: "Selektion, Optimierung, Kompensation (Rubinstein-Beispiel)." },
+    { q: "Nach der sozioemotionalen Selektivitätstheorie bevorzugen Ältere …", o: ["große Netzwerke mit vielen neuen Kontakten", "emotional bedeutsame, enge Beziehungen", "informationsreiche Kontakte", "Isolation"], a: 1, e: "Begrenzte Zeitperspektive → emotionsbezogene Ziele." },
+    { q: "Was zeigte die Kauai-Studie?", o: ["Alle Risikokinder entwickelten Störungen", "Etwa ein Drittel der Hochrisikokinder entwickelte sich positiv", "Armut hat keine Effekte", "Resilienz ist rein genetisch"], a: 1, e: "Schutzfaktoren: stabile Bezugsperson, Temperament, Unterstützung außerhalb der Familie." },
+    { q: "Multifinalität bedeutet …", o: ["verschiedene Ausgangsbedingungen führen zum gleichen Ergebnis", "gleiche Ausgangsbedingungen führen zu unterschiedlichen Ergebnissen", "eine Störung hat viele Symptome", "mehrere Diagnosen gleichzeitig"], a: 1, e: "Gegenstück: Äquifinalität." },
+    { q: "Das duale Prozessmodell der Trauer beschreibt …", o: ["feste Phasen der Trauer", "ein Pendeln zwischen verlust- und wiederherstellungsorientierter Bewältigung", "Trauer als Krankheit", "nur kognitive Prozesse"], a: 1, e: "Stroebe & Schut." },
+    { q: "Thomas & Chess’ Konzept der „goodness of fit“ meint …", o: ["Passung zwischen kindlichem Temperament und Umweltanforderungen", "körperliche Fitness", "Eignung für eine Schulform", "Passung von Geschwistern"], a: 0, e: "Entwicklung gelingt bei passender Umweltgestaltung." }
+  ],
+  exam: [
+    { q: "Stellen Sie Kohlbergs Theorie der Moralentwicklung dar (Methode, Ebenen, Stufen) und diskutieren Sie drei Kritikpunkte.", p: 9,
+      s: "- Methode: Dilemma-Interviews, Begründung entscheidet (1 P.)\n- Drei Ebenen × zwei Stufen mit Beschreibung (4 P.)\n- Kritik (je 4/3 P.): Gilligan (Fürsorge), kulturelle Verzerrung/Westzentrierung, Urteil-Handlungs-Lücke, Turiels Domänen, frühe Moralfähigkeiten bei Kleinkindern" },
+    { q: "Erklären Sie das SOC-Modell und die sozioemotionale Selektivitätstheorie. Wie lässt sich damit das „Paradox des Wohlbefindens“ im Alter erklären?", p: 8,
+      s: "- SOC: Selektion, Optimierung, Kompensation mit Beispiel (3 P.)\n- SST: Zeitperspektive → Zielprioritäten; Netzwerkverkleinerung; Positivitätseffekt (3 P.)\n- Paradox: trotz Verlusten stabiles/hohes Wohlbefinden durch adaptive Zielanpassung und Emotionsregulation (2 P.)" },
+    { q: "Was versteht man unter Resilienz? Beschreiben Sie Risiko- und Schutzfaktoren auf individueller, familiärer und sozialer Ebene und leiten Sie Implikationen für Präventionsprogramme ab.", p: 8,
+      s: "- Definition als Prozess positiver Anpassung trotz Risiko (1 P.)\n- Risikofaktoren (kumulativ, ACEs) (2 P.)\n- Schutzfaktoren auf drei Ebenen mit Beispielen (3 P.)\n- Prävention: Stärkung von Beziehungen, Selbstwirksamkeit, Elterntrainings, schulische Programme, frühe Intervention (2 P.)" },
+    { q: "Vergleichen Sie die vier Erziehungsstile und diskutieren Sie, warum korrelative Befunde zur Wirkung von Erziehungsstilen vorsichtig zu interpretieren sind.", p: 7,
+      s: "- 2×2-Schema mit Beschreibung und Korrelaten (4 P.)\n- Vorsicht: Kindeffekte/Bidirektionalität, genetische Konfundierung (passive Gen-Umwelt-Korrelation), kulturelle Moderation, Selbstberichte (3 P.)" }
+  ],
+  glossary: [
+    ["Temperament", "Biologisch mitbedingte, früh erkennbare Unterschiede in Reaktivität und Selbstregulation."],
+    ["Belohnungsaufschub", "Fähigkeit, auf eine sofortige Belohnung zugunsten einer größeren späteren zu verzichten."],
+    ["Präkonventionelle Moral", "Kohlberg: moralisches Urteil an Strafe und eigenem Nutzen orientiert."],
+    ["Postkonventionelle Moral", "Kohlberg: Urteil an Sozialvertrag und universellen Prinzipien orientiert."],
+    ["Autoritativer Erziehungsstil", "Hohe Wärme und hohe, begründete Anforderungen."],
+    ["Soziometrie", "Methode zur Erfassung sozialer Beziehungen und Statuspositionen in Gruppen."],
+    ["Emerging Adulthood", "Lebensphase etwa 18–29 Jahre mit Exploration und Instabilität (Arnett)."],
+    ["Fluide Intelligenz", "Fähigkeit zum Lösen neuartiger Probleme, weitgehend wissensunabhängig."],
+    ["Kristalline Intelligenz", "Erworbenes Wissen und kulturell vermittelte Fertigkeiten."],
+    ["SOC-Modell", "Selektion, Optimierung, Kompensation als Strategien erfolgreicher Entwicklung (Baltes)."],
+    ["Positivitätseffekt", "Ältere Menschen beachten und erinnern positive Information relativ stärker."],
+    ["Resilienz", "Positive Anpassung trotz erheblicher Belastungen."],
+    ["Äquifinalität", "Verschiedene Entwicklungswege führen zum gleichen Ergebnis."],
+    ["Multifinalität", "Gleiche Ausgangsbedingungen führen zu unterschiedlichen Ergebnissen."]
+  ]
+});
+
+PP.addModule({
+  id: "C3",
+  group: "C",
+  title: "Differentielle Psychologie und Persönlichkeitspsychologie",
+  short: "Differentielle & Persönlichkeitspsych.",
+  ects: 4,
+  semester: "3",
+  lvs: [{ type: "VO", title: "Differentielle Psychologie und Persönlichkeitspsychologie", ects: 4, pi: false }],
+  summary:
+    "Während die Allgemeine Psychologie nach dem fragt, was allen Menschen gemeinsam ist, untersucht die **Differentielle Psychologie** die **Unterschiede zwischen Menschen** und die **Persönlichkeitspsychologie** die individuelle Besonderheit und Organisation von Erleben und Verhalten.\n\n" +
+    "Inhalte: Paradigmen der Persönlichkeitspsychologie, Eigenschaftsmodelle (Big Five, HEXACO, Eysenck), biologische Grundlagen (Gray, Genetik), die Person-Situation-Debatte, Stabilität und Veränderung, **Intelligenz** (Strukturmodelle, Messung, Erblichkeit, Flynn-Effekt), Kreativität, Selbstkonzept, Motive sowie Geschlechts- und Kulturunterschiede.",
+  goals: [
+    "Paradigmen der Persönlichkeitspsychologie vergleichen",
+    "Eigenschaftsmodelle und ihre Entstehung (lexikalischer Ansatz, Faktorenanalyse) erklären",
+    "Biologische, lerntheoretische und sozial-kognitive Persönlichkeitstheorien darstellen",
+    "Die Person-Situation-Debatte und interaktionistische Lösungen erläutern",
+    "Intelligenzmodelle, IQ-Konzept, Erblichkeit und Vorhersagevalidität erklären",
+    "Befunde zu Stabilität und Veränderung von Persönlichkeit über die Lebensspanne interpretieren"
+  ],
+  exam_info: "Schriftliche Vorlesungsprüfung.",
+  tips: [
+    "Big-Five-Facetten (NEO-PI-R: je 6 Facetten) mit Beispielitems lernen.",
+    "Intelligenzmodelle als Hierarchie zeichnen (g → breite Fähigkeiten → spezifische Fähigkeiten).",
+    "IQ-Rechnungen üben: Mittelwert 100, SD 15 – Prozentränge mit der Normalverteilung abschätzen."
+  ],
+  prerequisites: ["Korrelation, Normalverteilung, z-Werte (D1 parallel)", "A2/B1-Grundbegriffe"],
+  competencies: [
+    "Ich kann die Paradigmen der Persönlichkeitspsychologie (psychoanalytisch, behavioristisch, Eigenschafts-, Informationsverarbeitungs-, dynamisch-interaktionistisch, neurowissenschaftlich, molekulargenetisch, evolutionär) benennen.",
+    "Ich kann den lexikalischen Ansatz und die Rolle der Faktorenanalyse erklären.",
+    "Ich kann die Big Five und ihre Facetten beschreiben sowie das HEXACO-Modell abgrenzen.",
+    "Ich kann Eysencks PEN-Modell und Grays BIS/BAS-Theorie erklären.",
+    "Ich kann die Person-Situation-Debatte (Mischel, 1968) und das CAPS-Modell darstellen.",
+    "Ich kann Rangordnungs- und Mittelwertstabilität unterscheiden.",
+    "Ich kann Intelligenzmodelle (Spearman, Thurstone, Cattell-Horn-Carroll, Gardner) vergleichen.",
+    "Ich kann den Abweichungs-IQ berechnen und interpretieren.",
+    "Ich kann Befunde zur Erblichkeit von Intelligenz und den Flynn-Effekt erklären.",
+    "Ich kann implizite und explizite Motive unterscheiden.",
+    "Ich kann Geschlechtsunterschiede in Persönlichkeit unter Berücksichtigung von Effektgrößen diskutieren."
+  ],
+  skills: ["Persönlichkeitsprofile interpretieren", "Effektgrößen und Verteilungsüberlappung verstehen", "Persönlichkeitstests kritisch auswählen"],
+  topics: [
+    { title: "Gegenstand und Paradigmen",
+      text: "**Persönlichkeit** = Gesamtheit der Persönlichkeitseigenschaften eines Menschen, d. h. der individuellen Besonderheiten im Erleben und Verhalten, die relativ **zeitstabil** und **situationskonsistent** sind (Asendorpf). **Differentielle Psychologie** (William Stern, 1900/1911): variablenorientiert (Variation eines Merkmals über Personen) vs. personorientiert (Muster vieler Merkmale in einer Person); nomothetisch vs. idiographisch.\n\nParadigmen (Asendorpf): **psychoanalytisch** (Freud, Abwehr), **behavioristisch** (Lerngeschichte), **Eigenschaftsparadigma** (Traits, Faktorenanalyse), **Informationsverarbeitungsparadigma** (Wissen, Schemata, kognitive Stile), **dynamisch-interaktionistisch** (Wechselwirkung Person–Umwelt), **neurowissenschaftlich**, **molekulargenetisch** und **evolutionspsychologisch**. Datenquellen nach Cattell: **L-Daten** (Lebenslauf), **Q-Daten** (Fragebogen), **T-Daten** (objektive Tests); dazu Fremdbeurteilungen.",
+      concepts: ["Persönlichkeit", "William Stern", "variablen- vs. personorientiert", "nomothetisch/idiographisch", "Paradigmen", "L-/Q-/T-Daten"] },
+    { title: "Eigenschaftsmodelle: Big Five und HEXACO",
+      text: "**Lexikalische Hypothese**: Wichtige Persönlichkeitsunterschiede haben sich in der Sprache als Wörter niedergeschlagen (Allport & Odbert: ca. 18 000 Begriffe). Über **Faktorenanalysen** entstanden Cattells 16 Faktoren und schließlich die **Big Five**:\n\n- **Offenheit für Erfahrungen** (Fantasie, Ästhetik, Gefühle, Handlungen, Ideen, Werte)\n- **Gewissenhaftigkeit** (Kompetenz, Ordnungsliebe, Pflichtbewusstsein, Leistungsstreben, Selbstdisziplin, Besonnenheit)\n- **Extraversion** (Herzlichkeit, Geselligkeit, Durchsetzungsfähigkeit, Aktivität, Erlebnishunger, Frohsinn)\n- **Verträglichkeit** (Vertrauen, Freimütigkeit, Altruismus, Entgegenkommen, Bescheidenheit, Gutherzigkeit)\n- **Neurotizismus** (Ängstlichkeit, Reizbarkeit, Depression, soziale Befangenheit, Impulsivität, Verletzlichkeit)\n\n(Facetten nach dem NEO-PI-R von Costa & McCrae.) **HEXACO** (Ashton & Lee) ergänzt **Ehrlichkeit-Bescheidenheit** (Honesty-Humility) als sechsten Faktor. Big Five sagen u. a. Berufserfolg (v. a. Gewissenhaftigkeit), Gesundheit, Lebenserwartung und Beziehungsqualität vorher (Ozer & Benet-Martínez, 2006). **Dunkle Triade**: Narzissmus, Machiavellismus, Psychopathie.",
+      concepts: ["lexikalische Hypothese", "Faktorenanalyse", "OCEAN", "Facetten", "NEO-PI-R", "HEXACO", "Honesty-Humility", "Dunkle Triade"] },
+    { title: "Biologische Persönlichkeitstheorien",
+      text: "**Eysenck**: drei Superfaktoren **P**sychotizismus, **E**xtraversion, **N**eurotizismus. Biologische Basis: Extraversion ↔ kortikale **Erregung** (ARAS) – Introvertierte haben ein höheres Grundaktivierungsniveau und suchen daher weniger Stimulation; Neurotizismus ↔ Labilität des limbischen Systems. Belege: Zitronensaft-Test (Introvertierte speicheln mehr), gemischte Befundlage.\n\n**Grays Reinforcement Sensitivity Theory**: **Behavioral Activation System (BAS)** – Sensitivität für Belohnung (Impulsivität); **Behavioral Inhibition System (BIS)** – Sensitivität für Bestrafung/Konflikt (Ängstlichkeit); in der Revision zusätzlich **Fight-Flight-Freeze-System**. Cloninger: Temperamentsdimensionen (Novelty Seeking, Harm Avoidance …) mit Bezug zu Neurotransmittern. Zuckerman: Sensation Seeking.\n\n**Verhaltensgenetik**: Zwillingsstudien zeigen Heritabilitäten von ca. **40–50 %** für die Big Five; geteilte Umwelt erklärt wenig, **nicht-geteilte Umwelt** viel. Polygenie mit sehr kleinen Einzeleffekten.",
+      concepts: ["PEN-Modell", "kortikale Erregung", "ARAS", "BIS/BAS", "Reinforcement Sensitivity Theory", "Sensation Seeking", "Heritabilität", "nicht-geteilte Umwelt"] },
+    { title: "Person-Situation-Debatte und Interaktionismus",
+      text: "**Mischel (1968)**: Korrelationen zwischen Eigenschaftsmaßen und Verhalten in einzelnen Situationen überschreiten selten **r ≈ .30** („Persönlichkeitskoeffizient“) → Verhalten sei situationsspezifisch. Antworten: **Aggregation** über viele Situationen erhöht die Konsistenz (Epstein); Persönlichkeit zeigt sich in **Wenn-dann-Signaturen** – stabile Muster der Variation über Situationen (Mischel & Shoda: **CAPS-Modell**, kognitiv-affektives Persönlichkeitssystem mit Enkodierungen, Erwartungen, Zielen, Affekten, Kompetenzen). **Starke vs. schwache Situationen**. **Interaktionismus**: Verhalten = f(Person, Situation); Personen wählen und gestalten Situationen (aktive, reaktive, evokative Gen-Umwelt-Korrelation). Ein r von .30 ist zudem praktisch bedeutsam.\n\n**Sozial-kognitive Ansätze**: Rotter (Kontrollüberzeugungen internal/external), Bandura (Selbstwirksamkeit, reziproker Determinismus), Kelly (Persönliche Konstrukte).",
+      concepts: ["Mischel 1968", "Persönlichkeitskoeffizient", "Aggregation", "Wenn-dann-Signaturen", "CAPS", "starke/schwache Situation", "Kontrollüberzeugung", "Selbstwirksamkeit", "reziproker Determinismus"] },
+    { title: "Stabilität und Veränderung",
+      text: "Unterscheide: **Rangordnungsstabilität** (Beibehaltung der relativen Position – nimmt mit dem Alter zu, Plateau ca. ab 50; Roberts & DelVecchio, 2000), **Mittelwertveränderung** (Reifungsprinzip: Zunahme von Gewissenhaftigkeit, Verträglichkeit, emotionaler Stabilität), **individuelle Unterschiede in Veränderung**, **ipsative Stabilität** (Profilform). Veränderung durch Lebensereignisse und soziale Rollen (**soziale Investitionstheorie**), aber auch gezielte Interventionen (Psychotherapie verändert v. a. Neurotizismus; Roberts et al., 2017). **Kumulatives Stabilitätsprinzip**.",
+      concepts: ["Rangordnungsstabilität", "Mittelwertveränderung", "Reifungsprinzip", "ipsative Stabilität", "soziale Investitionstheorie", "kumulative Stabilität"] },
+    { title: "Intelligenz: Modelle",
+      text: "Definitionen: „Intelligenz ist, was der Intelligenztest misst“ (Boring) – operational; inhaltlich: Fähigkeit zu Problemlösen, Abstraktion, Lernen aus Erfahrung.\n\n- **Spearman** (1904): **Generalfaktor g** + spezifische Faktoren s (positive Mannigfaltigkeit: alle Leistungstests korrelieren positiv)\n- **Thurstone**: sieben Primärfähigkeiten (u. a. verbales Verständnis, Wortflüssigkeit, Rechnen, Raumvorstellung, Gedächtnis, Wahrnehmungsgeschwindigkeit, schlussfolgerndes Denken)\n- **Cattell & Horn**: fluide (Gf) vs. kristalline (Gc) Intelligenz\n- **Carroll** (Drei-Schichten-Modell) → **Cattell-Horn-Carroll (CHC)**-Modell als heutiger Standard (g, breite Fähigkeiten wie Gf, Gc, Gv, Gs, Gwm …)\n- **Jäger**: Berliner Intelligenzstrukturmodell (Operationen × Inhalte)\n- **Gardner**: multiple Intelligenzen – populär, aber empirisch schwach gestützt (Fähigkeiten korrelieren doch)\n- **Sternberg**: triarchische Theorie (analytisch, kreativ, praktisch)\n- **Emotionale Intelligenz** (Mayer & Salovey: Fähigkeitsmodell) – inkrementelle Validität umstritten",
+      concepts: ["g-Faktor", "positive Mannigfaltigkeit", "Primärfähigkeiten", "Gf/Gc", "CHC-Modell", "Berliner Intelligenzstrukturmodell", "multiple Intelligenzen", "emotionale Intelligenz"] },
+    { title: "Intelligenz: Messung, Erblichkeit, Validität",
+      text: "**Binet & Simon** (1905): erster Intelligenztest; **Intelligenzalter**. **Stern**: IQ = Intelligenzalter / Lebensalter × 100 (nur für Kinder sinnvoll). **Wechsler**: **Abweichungs-IQ** – Normierung an der Altersgruppe mit **M = 100, SD = 15**: IQ = 100 + 15·z. Ca. 68 % liegen zwischen 85 und 115, ca. 95 % zwischen 70 und 130. Tests: WAIS/WISC (Wechsler), Raven-Matrizen (sprachfrei, Gf), IST-2000-R, in Österreich viel genutzt: Verfahren aus dem Wiener Testsystem und AID (Kubinger).\n\n**Vorhersagevalidität**: Schulleistung (r ≈ .50), Berufserfolg (einer der besten Einzelprädiktoren), Einkommen, Gesundheit. **Erblichkeit** steigt mit dem Alter (ca. .20 in der Kindheit bis ca. .60–.80 im Erwachsenenalter – **Wilson-Effekt**) und ist bei niedrigem SES teils geringer (Turkheimer, umstritten). **Flynn-Effekt**: Anstieg der Testwerte um ca. 3 IQ-Punkte pro Jahrzehnt im 20. Jh. (v. a. fluide Tests) – zu schnell für genetische Ursachen; Ursachen: Bildung, Ernährung, Komplexität der Umwelt; in einigen Ländern zuletzt Stagnation/Umkehr. Gruppenunterschiede sind keine Belege für genetische Ursachen.",
+      concepts: ["Binet", "Intelligenzalter", "Abweichungs-IQ", "M=100/SD=15", "Wechsler-Tests", "Raven", "Vorhersagevalidität", "Wilson-Effekt", "Flynn-Effekt"] },
+    { title: "Selbstkonzept, Motive, Kreativität",
+      text: "**Implizite vs. explizite Motive** (McClelland, Koestner & Weinberger, 1989): implizite Motive (Leistung, Macht, Anschluss) werden über **TAT/PSE** (Bildgeschichten) erfasst und sagen spontanes, langfristiges Verhalten vorher; explizite (Fragebogen) sagen bewusste Entscheidungen vorher – beide korrelieren kaum. **Kontrollüberzeugungen**, **Selbstwirksamkeit**, **Optimismus**, **Selbstwert** als persönlichkeitsnahe Konstrukte.\n\n**Kreativität**: divergentes Denken (Guilford; Alternative-Uses-Task: Flüssigkeit, Flexibilität, Originalität), **Schwellenhypothese** (Intelligenz notwendig, aber ab ca. IQ 120 nicht mehr hinreichend – Befunde gemischt), Offenheit als stärkster Big-Five-Korrelat.",
+      concepts: ["implizite Motive", "TAT/PSE", "Leistungs-/Macht-/Anschlussmotiv", "Optimismus", "divergentes Denken", "Schwellenhypothese"] },
+    { title: "Geschlechts- und Gruppenunterschiede richtig interpretieren",
+      text: "Unterschiede zwischen Gruppen werden über **Effektgrößen** (Cohens d) beschrieben; selbst mittlere Effekte bedeuten große **Überlappung** der Verteilungen (d = 0,5 → ca. 80 % Überlappung). **Gender-Similarities-Hypothese** (Hyde, 2005): Die meisten psychologischen Geschlechtsunterschiede sind klein (d < 0,35). Größere Unterschiede z. B. bei Interessen (Dinge vs. Menschen), bestimmten motorischen Leistungen, mentaler Rotation (mittel). In Persönlichkeit: Frauen im Mittel etwas höher in Neurotizismus und Verträglichkeit; auf Facettenebene teils größere Unterschiede. Variabilitätsunterschiede, kulturelle Moderation (Gender-Equality-Paradox, diskutiert). Kein Rückschluss vom Gruppenmittel auf Einzelpersonen.",
+      concepts: ["Cohens d", "Verteilungsüberlappung", "Gender-Similarities-Hypothese", "mentale Rotation", "Variabilität", "ökologischer Fehlschluss"] }
+  ],
+  materials: [
+    { title: "Noba Project – Module „Personality Traits“, „Personality Assessment“, „Intelligence“", url: "https://nobaproject.com/", type: "Lehrbuch (OER)", lang: "EN" },
+    { title: "OpenStax Psychology 2e – Kap. 7.4–7.6 (Intelligence) und Kap. 11 (Personality)", url: "https://openstax.org/details/books/psychology-2e", type: "Lehrbuch (OER)", lang: "EN" },
+    { title: "International Personality Item Pool (IPIP) – freie Persönlichkeitsitems", url: "https://ipip.ori.org/", type: "Testsammlung", lang: "EN" },
+    { title: "Open Test Archive (ZPID) – frei nutzbare Persönlichkeitsfragebögen", url: "https://www.testarchiv.eu/", type: "Testsammlung", lang: "DE/EN" },
+    { title: "Interpreting Cohen’s d – interaktive Visualisierung (Kristoffer Magnusson)", url: "https://rpsychologist.com/cohend/", type: "Interaktiv", lang: "EN", note: "Zeigt Überlappung von Verteilungen bei verschiedenen Effektgrößen." },
+    { title: "Hyde (2005): The gender similarities hypothesis – Volltext suchen", url: "https://scholar.google.com/scholar?q=Hyde+2005+gender+similarities+hypothesis", type: "Artikel", lang: "EN" }
+  ],
+  lectures: [
+    { title: "Yale PSYC 110 – Lecture „Why Are People Different? Differences“", url: "https://oyc.yale.edu/psychology/psyc-110", provider: "Yale Open Courses", lang: "EN" },
+    { title: "Crash Course Psychology #21–#23 (Personality, Measuring Personality, Intelligence)", url: "https://www.youtube.com/results?search_query=Crash+Course+Psychology+measuring+personality", provider: "YouTube", lang: "EN" },
+    { title: "Persönlichkeitspsychologie – Vorlesungsaufzeichnungen (englisch, YouTube-Suche)", url: "https://www.youtube.com/results?search_query=personality+psychology+lecture+Big+Five+traits", provider: "YouTube", lang: "EN", note: "Universitätsvorlesungen auswählen; Quellen kritisch prüfen." },
+    { title: "Persönlichkeitspsychologie Vorlesung (deutschsprachig, YouTube-Suche)", url: "https://www.youtube.com/results?search_query=Pers%C3%B6nlichkeitspsychologie+Vorlesung+Big+Five", provider: "YouTube", lang: "DE" }
+  ],
+  literature: [
+    { authors: "Neyer, F. J. & Asendorpf, J. B.", year: 2018, title: "Psychologie der Persönlichkeit", ed: "6. Aufl.", publisher: "Springer", tag: "Standard", lang: "DE", ebook: true, note: "Das deutschsprachige Standardwerk." },
+    { authors: "Rammsayer, T. & Weber, H.", year: 2016, title: "Differentielle Psychologie – Persönlichkeitstheorien", publisher: "Hogrefe", tag: "Standard", lang: "DE" },
+    { authors: "Stemmler, G., Hagemann, D., Amelang, M. & Spinath, F.", year: 2016, title: "Differentielle Psychologie und Persönlichkeitsforschung", ed: "8. Aufl.", publisher: "Kohlhammer", tag: "Standard", lang: "DE" },
+    { authors: "Rost, D. H.", year: 2013, title: "Handbuch Intelligenz", publisher: "Beltz", tag: "Vertiefung", lang: "DE" },
+    { authors: "Funder, D. C.", year: 2019, title: "The Personality Puzzle", ed: "8th ed.", publisher: "W. W. Norton", tag: "Vertiefung", lang: "EN" },
+    { authors: "Larsen, R. J., Buss, D. M. & Wismeijer, A.", year: 2020, title: "Personality Psychology: Domains of Knowledge about Human Nature", publisher: "McGraw-Hill", tag: "Vertiefung", lang: "EN" },
+    { authors: "Ritchie, S.", year: 2015, title: "Intelligence: All That Matters", publisher: "John Murray", tag: "Einstieg", lang: "EN", note: "Kurzer, aktueller Überblick zur Intelligenzforschung." }
+  ],
+  quiz: [
+    { q: "Was besagt die lexikalische Hypothese?", o: ["Persönlichkeit ist sprachlich nicht erfassbar", "Wichtige Persönlichkeitsunterschiede sind in der Alltagssprache in Wörtern repräsentiert", "Sprache bestimmt Persönlichkeit", "Nur Fachbegriffe sind relevant"], a: 1, e: "Grundlage der faktorenanalytischen Big-Five-Forschung." },
+    { q: "Welcher Big-Five-Faktor ist der beste Prädiktor für Berufserfolg über viele Berufe hinweg?", o: ["Offenheit", "Gewissenhaftigkeit", "Extraversion", "Verträglichkeit"], a: 1, e: "Konsistentester Prädiktor (Barrick & Mount)." },
+    { q: "Welchen Faktor ergänzt das HEXACO-Modell?", o: ["Psychotizismus", "Ehrlichkeit-Bescheidenheit", "Intelligenz", "Sensation Seeking"], a: 1, e: "Honesty-Humility." },
+    { q: "Nach Eysenck haben Introvertierte …", o: ["ein niedrigeres kortikales Grundaktivierungsniveau", "ein höheres kortikales Grundaktivierungsniveau und meiden daher starke Stimulation", "keine biologische Grundlage", "mehr BAS-Aktivität"], a: 1, e: "Arousal-Theorie der Extraversion." },
+    { q: "Das Behavioral Inhibition System (Gray) ist vor allem verbunden mit …", o: ["Belohnungssensitivität und Impulsivität", "Bestrafungssensitivität und Ängstlichkeit", "Intelligenz", "Kreativität"], a: 1, e: "BAS ↔ Belohnung/Impulsivität." },
+    { q: "Was kritisierte Mischel (1968)?", o: ["Die Faktorenanalyse", "Die geringe Vorhersagekraft von Eigenschaften für Verhalten in einzelnen Situationen", "Die Intelligenzmessung", "Die Psychoanalyse"], a: 1, e: "Korrelationen selten über .30." },
+    { q: "Was löst das Konsistenzproblem nach Epstein?", o: ["Mehr Situationen ignorieren", "Aggregation des Verhaltens über viele Situationen", "Nur Laborstudien", "Projektive Tests"], a: 1, e: "Aggregation erhöht die Reliabilität und damit Korrelationen." },
+    { q: "Rangordnungsstabilität von Persönlichkeitsmerkmalen …", o: ["ist in der Kindheit am höchsten", "nimmt mit dem Alter zu", "ist konstant null", "sinkt im Alter stark"], a: 1, e: "Roberts & DelVecchio (2000)." },
+    { q: "Welche Heritabilität wird für die Big Five typischerweise berichtet?", o: ["ca. 0–10 %", "ca. 40–50 %", "ca. 90 %", "100 %"], a: 1, e: "Der Rest geht v. a. auf nicht-geteilte Umwelt (und Messfehler) zurück." },
+    { q: "Spearmans Generalfaktor g wurde aus der Beobachtung abgeleitet, dass …", o: ["Intelligenztests nicht korrelieren", "alle kognitiven Leistungstests positiv miteinander korrelieren", "Intelligenz erblich ist", "Kinder schneller lernen"], a: 1, e: "Positive Mannigfaltigkeit." },
+    { q: "Welches Modell gilt heute als umfassendes Standardmodell der Intelligenzstruktur?", o: ["Gardners multiple Intelligenzen", "Cattell-Horn-Carroll-Modell", "Sterns IQ-Formel", "Eysencks PEN"], a: 1, e: "Hierarchisch mit g und breiten Fähigkeiten." },
+    { q: "Eine Person hat im Abweichungs-IQ einen Wert von 130. Wie viele Standardabweichungen liegt sie über dem Mittelwert?", o: ["1", "2", "3", "0,5"], a: 1, e: "(130 − 100)/15 = 2." },
+    { q: "Etwa welcher Anteil der Bevölkerung hat einen IQ zwischen 85 und 115?", o: ["ca. 34 %", "ca. 50 %", "ca. 68 %", "ca. 95 %"], a: 2, e: "± 1 SD um den Mittelwert der Normalverteilung." },
+    { q: "Der Flynn-Effekt bezeichnet …", o: ["sinkende Erblichkeit mit dem Alter", "den Anstieg durchschnittlicher IQ-Testwerte über Generationen", "Unterschiede zwischen Zwillingen", "den Testübungseffekt"], a: 1, e: "Ca. 3 Punkte pro Jahrzehnt im 20. Jahrhundert." },
+    { q: "Die Heritabilität von Intelligenz …", o: ["sinkt mit dem Alter", "steigt mit dem Alter", "ist immer 0,5", "ist bei Kindern am höchsten"], a: 1, e: "Wilson-Effekt; u. a. durch aktive Gen-Umwelt-Korrelation." },
+    { q: "Implizite Motive werden klassischerweise erfasst durch …", o: ["Fragebögen", "Bildgeschichten (TAT/PSE)", "Reaktionszeiten im Stroop", "EEG"], a: 1, e: "Sie korrelieren kaum mit expliziten Motivmaßen." },
+    { q: "Hydes Gender-Similarities-Hypothese besagt, dass …", o: ["Männer und Frauen in allen Merkmalen gleich sind", "die meisten psychologischen Geschlechtsunterschiede klein sind", "Geschlechtsunterschiede rein biologisch sind", "Frauen intelligenter sind"], a: 1, e: "Metaanalysen-Synthese: Großteil d < 0,35." },
+    { q: "Was ist eine „Wenn-dann-Signatur“ (Mischel & Shoda)?", o: ["Eine Unterschrift", "Ein stabiles individuelles Muster, wie sich das Verhalten über Situationen hinweg verändert", "Ein Testverfahren", "Ein Faktorladungsmuster"], a: 1, e: "Kern des CAPS-Modells." }
+  ],
+  exam: [
+    { q: "Erläutern Sie die Entstehung des Big-Five-Modells (lexikalischer Ansatz, Faktorenanalyse), beschreiben Sie die fünf Faktoren mit je zwei Facetten und nennen Sie Kritikpunkte.", p: 9,
+      s: "- Lexikalische Hypothese, Allport & Odbert, Cattell, Faktorenanalysen (Goldberg, Costa & McCrae) (2 P.)\n- Fünf Faktoren mit Facetten (5 P.)\n- Kritik: atheoretisch/deskriptiv, sprach- und kulturabhängig (HEXACO), Selbstbericht-Abhängigkeit, Breite vs. Facetten, keine Erklärung von Prozessen (2 P.)" },
+    { q: "Stellen Sie die Person-Situation-Debatte dar und erläutern Sie, wie die Persönlichkeitspsychologie darauf reagiert hat.", p: 8,
+      s: "- Mischel 1968: Persönlichkeitskoeffizient, Situationismus (2 P.)\n- Aggregationsprinzip (Epstein) (2 P.)\n- CAPS, Wenn-dann-Signaturen, starke/schwache Situationen (2 P.)\n- Interaktionismus, Gen-Umwelt-Korrelationen; praktische Bedeutsamkeit von r = .30 (2 P.)" },
+    { q: "Vergleichen Sie drei Intelligenzmodelle und erklären Sie das Konzept des Abweichungs-IQ. Berechnen Sie den IQ einer Person mit z = −1,2 und interpretieren Sie ihn.", p: 9,
+      s: "- Drei Modelle (z. B. Spearman, Thurstone, CHC oder Gardner) mit Kernaussagen und Bewertung (5 P.)\n- Abweichungs-IQ: Normierung an Altersgruppe, M = 100, SD = 15 (2 P.)\n- IQ = 100 + 15 · (−1,2) = 82; unterdurchschnittlich, ca. 12. Prozentrang; Konfidenzintervall wegen Messfehler beachten (2 P.)" },
+    { q: "Diskutieren Sie Befunde zur Erblichkeit der Intelligenz. Was bedeutet eine Heritabilität von 0,7 – und was nicht? Wie passt der Flynn-Effekt dazu?", p: 8,
+      s: "- Zwillings-/Adoptionsstudien; Heritabilität steigt mit Alter (2 P.)\n- h² = 0,7: 70 % der Varianz in einer bestimmten Population/Zeit gehen auf genetische Unterschiede zurück; keine Aussage über Individuen, Veränderbarkeit oder Gruppenunterschiede (3 P.)\n- Flynn-Effekt: starke Mittelwertveränderung in kurzer Zeit → Umweltfaktoren; hohe Heritabilität und große Umweltwirkung sind vereinbar (3 P.)" }
+  ],
+  glossary: [
+    ["Persönlichkeitseigenschaft", "Relativ zeitstabile und situationskonsistente individuelle Besonderheit im Erleben und Verhalten."],
+    ["Lexikalische Hypothese", "Bedeutsame Persönlichkeitsunterschiede sind in der Sprache kodiert."],
+    ["Big Five", "Offenheit, Gewissenhaftigkeit, Extraversion, Verträglichkeit, Neurotizismus."],
+    ["HEXACO", "Sechsfaktorenmodell mit zusätzlichem Faktor Ehrlichkeit-Bescheidenheit."],
+    ["BIS/BAS", "Verhaltenshemmungs- und Verhaltensaktivierungssystem (Gray)."],
+    ["Persönlichkeitskoeffizient", "Typische Obergrenze (r ≈ .30) der Korrelation Trait–Einzelverhalten (Mischel)."],
+    ["Aggregation", "Zusammenfassung vieler Messungen zur Erhöhung der Reliabilität."],
+    ["CAPS", "Cognitive-Affective Personality System (Mischel & Shoda)."],
+    ["Rangordnungsstabilität", "Stabilität der relativen Positionen von Personen in einem Merkmal über die Zeit."],
+    ["g-Faktor", "Generalfaktor der Intelligenz (Spearman)."],
+    ["CHC-Modell", "Hierarchisches Intelligenzmodell nach Cattell, Horn und Carroll."],
+    ["Abweichungs-IQ", "Normierter Intelligenzwert mit Mittelwert 100 und Standardabweichung 15."],
+    ["Flynn-Effekt", "Anstieg der mittleren IQ-Testwerte über Generationen."],
+    ["Implizites Motiv", "Unbewusste affektive Präferenz für bestimmte Anreizklassen (Leistung, Macht, Anschluss)."],
+    ["Divergentes Denken", "Erzeugen vieler unterschiedlicher Lösungen; Indikator für Kreativität."],
+    ["Cohens d", "Standardisierte Mittelwertsdifferenz; Effektgröße."]
+  ]
+});
+
+PP.addModule({
+  id: "C4",
+  group: "C",
+  title: "Vertiefung in Sozial-, Entwicklungs- oder Differentieller Psychologie bzw. forschungsorientiertes Praktikum",
+  short: "Vertiefung Basis II (Wahl)",
+  ects: 6,
+  semester: "4",
+  choice: "Gewählt wird **eine** Option: **Vertiefung in Sozialpsychologie**, **Vertiefung in Entwicklungspsychologie**, **Vertiefung in Differentieller Psychologie** oder ein **forschungsorientiertes Praktikum** (je 6 ECTS). Themen wechseln semesterweise (u:find). Die Rubrik deckt die gemeinsamen Kernkompetenzen ab: Fragebogen- und Feldforschung, Beobachtung, Längsschnitt- und Tagebuchdesigns, Arbeit mit Kindern sowie Auswertung korrelativer Daten.",
+  lvs: [{ type: "SE / PR", title: "Vertiefungsseminar Sozial-, Entwicklungs- oder Differentielle Psychologie bzw. forschungsorientiertes Praktikum", ects: 6, pi: true }],
+  summary:
+    "Das Modul vertieft eines der Grundlagenfächer der Basismodulgruppe II forschungsnah. Im Unterschied zu B3 (oft experimentell-kognitiv) stehen hier häufig **Fragebogen-, Feld-, Beobachtungs- und Längsschnittmethoden** im Vordergrund: z. B. Online-Survey zu Vorurteilen, Tagebuchstudie (Experience Sampling) zu Stimmung und Persönlichkeit, Beobachtung von Eltern-Kind-Interaktionen oder Sekundäranalysen großer Panels.",
+  goals: [
+    "Ein Spezialthema anhand aktueller Literatur vertiefen",
+    "Eine Fragebogenstudie oder Beobachtungsstudie planen und durchführen",
+    "Skalen bilden, Reliabilität prüfen und korrelative Zusammenhänge (inkl. Regression, Moderation/Mediation) analysieren",
+    "Ethische Besonderheiten (Kinder, sensible Themen) berücksichtigen",
+    "Ergebnisse präsentieren und schriftlich berichten"
+  ],
+  exam_info: "Prüfungsimmanent: Anwesenheit, Referat, Projektarbeit, schriftlicher Bericht bzw. Seminararbeit.",
+  tips: [
+    "Bestehende validierte Skalen verwenden (Open Test Archive, IPIP) statt eigene Items zu erfinden.",
+    "Bei Online-Surveys Aufmerksamkeitschecks und Ausschlusskriterien vorab festlegen.",
+    "Moderation und Mediation sauber unterscheiden – häufiger Fehler in Seminararbeiten."
+  ],
+  prerequisites: ["C1–C3 begonnen bzw. abgeschlossen", "D1 (Statistik: Korrelation, Regression)"],
+  competencies: [
+    "Ich kann eine Online-Befragung mit validierten Skalen aufsetzen (z. B. SoSci Survey, LimeSurvey).",
+    "Ich kann Skalenwerte bilden (inkl. Umpolung) und Cronbachs α bzw. McDonalds ω berechnen.",
+    "Ich kann Korrelationen und multiple Regressionen durchführen und interpretieren.",
+    "Ich kann Moderation (Interaktion) und Mediation (indirekter Effekt) unterscheiden und testen.",
+    "Ich kann ein Beobachtungssystem mit Kategorien und Interrater-Reliabilität (Cohens κ) anwenden.",
+    "Ich kann Vor- und Nachteile von Tagebuch-/ESM-Studien beschreiben.",
+    "Ich kann ethische Anforderungen bei Forschung mit Kindern benennen."
+  ],
+  skills: ["SoSci Survey/LimeSurvey", "Skalenanalyse", "Regression/Moderation/Mediation in jamovi oder R", "Beobachtungskodierung"],
+  topics: [
+    { title: "Fragebogenstudien planen",
+      text: "Schritte: Konstrukte definieren → **validierte Skalen** auswählen (Reliabilität, Validität, Normen, Lizenz) → Reihenfolge (sensible Fragen spät, Demografie am Ende), Instruktion, Antwortformat → **Pretest** → Erhebung → Datenbereinigung. Online-Werkzeuge: **SoSci Survey** (kostenlos für Forschung, in DACH verbreitet), LimeSurvey, Qualtrics. Stichproben: Gelegenheitsstichproben, Panels (Prolific), Repräsentativität. Qualitätsmaßnahmen: Attention Checks, Bearbeitungszeit, Straightlining erkennen.",
+      concepts: ["validierte Skalen", "Pretest", "SoSci Survey", "Attention Check", "Straightlining", "Gelegenheitsstichprobe"] },
+    { title: "Skalenbildung und Reliabilität",
+      text: "Negativ formulierte Items **umpolen** (bei 1–5: neu = 6 − alt), Skalenwert als Mittelwert. **Cronbachs α** (interne Konsistenz; abhängig von Itemzahl und Interkorrelationen; > .70 akzeptabel für Forschungszwecke), **McDonalds ω** als robustere Alternative. **Trennschärfen** (korrigierte Item-Skala-Korrelation). Fehlende Werte: Muster prüfen, ggf. multiple Imputation.",
+      concepts: ["Umpolung", "Cronbachs α", "McDonalds ω", "Trennschärfe", "fehlende Werte"] },
+    { title: "Korrelation, Regression, Moderation, Mediation",
+      text: "**Multiple Regression**: Vorhersage einer AV durch mehrere Prädiktoren; standardisierte Gewichte β, R², Multikollinearität. **Moderation**: Die Stärke des Zusammenhangs X → Y hängt von Z ab (Interaktionsterm X × Z; Variablen vorher zentrieren; Simple Slopes). **Mediation**: X wirkt über M auf Y (indirekter Effekt a·b; Test per **Bootstrapping**, z. B. PROCESS-Logik nach Hayes). Wichtig: Mediation mit Querschnittsdaten erlaubt keine Kausalaussage.",
+      concepts: ["multiple Regression", "β-Gewichte", "R²", "Moderation", "Interaktionsterm", "Simple Slopes", "Mediation", "indirekter Effekt", "Bootstrapping"] },
+    { title: "Systematische Beobachtung",
+      text: "Beobachtungssystem: **Kategoriensystem** (exhaustiv, exklusiv, eindeutig definiert, mit Ankerbeispielen) oder **Ratingskalen**; **Event-Sampling** vs. **Time-Sampling**; Video-Kodierung (z. B. mit BORIS, ELAN). Beobachterschulung, **Interrater-Reliabilität**: Cohens κ (zufallskorrigierte Übereinstimmung) für Kategorien, ICC für Ratings. Beobachtungsfehler: Halo, Milde/Strenge, zentrale Tendenz, Beobachterdrift, Reaktivität der Beobachteten.",
+      concepts: ["Kategoriensystem", "Event-/Time-Sampling", "Cohens κ", "ICC", "Beobachterdrift", "Reaktivität"] },
+    { title: "Längsschnitt-, Tagebuch- und ESM-Designs",
+      text: "**Experience Sampling / Ambulantes Assessment**: mehrmals täglich kurze Befragungen im Alltag (Smartphone) → ökologische Validität, intraindividuelle Prozesse (z. B. State-Extraversion und positive Stimmung), geringerer Erinnerungsbias. Analyse mit **Mehrebenenmodellen** (Messungen in Personen geschachtelt; Within- vs. Between-Effekte trennen). Panels wie SOEP oder pairfam für Sekundäranalysen.",
+      concepts: ["Experience Sampling", "ambulantes Assessment", "ökologische Validität", "Mehrebenenmodell", "Within/Between", "SOEP"] },
+    { title: "Forschung mit Kindern und sensiblen Themen",
+      text: "Einwilligung der Erziehungsberechtigten **und** altersgerechte Zustimmung (Assent) des Kindes; Abbruchsignale beachten; kindgerechte Aufgaben (kurz, spielerisch); in Schulen zusätzlich Genehmigung der Bildungsdirektion bzw. Schulleitung. Bei sensiblen Themen (Gewalt, Suizidalität) Hilfsangebote bereitstellen und Verfahren bei Gefährdung festlegen.",
+      concepts: ["Assent", "Einwilligung Erziehungsberechtigter", "Schulgenehmigung", "Gefährdungsprotokoll"] }
+  ],
+  materials: [
+    { title: "SoSci Survey – Online-Befragungen (kostenlos für Forschung)", url: "https://www.soscisurvey.de/", type: "Software", lang: "DE/EN" },
+    { title: "LimeSurvey – Open-Source-Umfragetool", url: "https://www.limesurvey.org/", type: "Software", lang: "DE/EN" },
+    { title: "Open Test Archive (ZPID)", url: "https://www.testarchiv.eu/", type: "Testsammlung", lang: "DE/EN" },
+    { title: "GESIS – ZIS: Zusammenstellung sozialwissenschaftlicher Items und Skalen", url: "https://zis.gesis.org/", type: "Testsammlung", lang: "DE/EN" },
+    { title: "jamovi – Module für Mediation/Moderation (medmod)", url: "https://www.jamovi.org/", type: "Software", lang: "EN" },
+    { title: "BORIS – Software für Verhaltensbeobachtung (frei)", url: "https://www.boris.unito.it/", type: "Software", lang: "EN" }
+  ],
+  lectures: [
+    { title: "Moderation und Mediation erklärt (YouTube-Suche)", url: "https://www.youtube.com/results?search_query=Moderation+Mediation+Regression+erkl%C3%A4rt", provider: "YouTube", lang: "DE" },
+    { title: "Multilevel Modeling Einführung (YouTube-Suche)", url: "https://www.youtube.com/results?search_query=multilevel+modeling+introduction+psychology", provider: "YouTube", lang: "EN" },
+    { title: "SoSci Survey Tutorial (YouTube-Suche)", url: "https://www.youtube.com/results?search_query=SoSci+Survey+Tutorial", provider: "YouTube", lang: "DE" }
+  ],
+  literature: [
+    { authors: "Döring, N.", year: 2023, title: "Forschungsmethoden und Evaluation in den Sozial- und Humanwissenschaften", ed: "6. Aufl.", publisher: "Springer", tag: "Standard", lang: "DE", ebook: true },
+    { authors: "Hayes, A. F.", year: 2022, title: "Introduction to Mediation, Moderation, and Conditional Process Analysis", ed: "3rd ed.", publisher: "Guilford", tag: "Vertiefung", lang: "EN" },
+    { authors: "Moosbrugger, H. & Kelava, A. (Hrsg.)", year: 2020, title: "Testtheorie und Fragebogenkonstruktion", ed: "3. Aufl.", publisher: "Springer", tag: "Nachschlagen", lang: "DE", ebook: true },
+    { authors: "Mehl, M. R. & Conner, T. S. (Eds.)", year: 2012, title: "Handbook of Research Methods for Studying Daily Life", publisher: "Guilford", tag: "Vertiefung", lang: "EN" },
+    { authors: "Field, A.", year: 2018, title: "Discovering Statistics Using IBM SPSS Statistics", ed: "5th ed.", publisher: "SAGE", tag: "Nachschlagen", lang: "EN" }
+  ],
+  quiz: [
+    { q: "Ein Item wird auf einer 1–5-Skala negativ formuliert. Wie lautet der umgepolte Wert für eine Antwort „2“?", o: ["2", "3", "4", "5"], a: 2, e: "6 − 2 = 4." },
+    { q: "Moderation bedeutet …", o: ["X wirkt über M auf Y", "der Zusammenhang zwischen X und Y hängt von einer dritten Variable Z ab", "X und Y korrelieren nicht", "Y beeinflusst X"], a: 1, e: "Getestet über einen Interaktionsterm." },
+    { q: "Mit welchem Verfahren wird der indirekte Effekt in Mediationsanalysen üblicherweise getestet?", o: ["Chi-Quadrat-Test", "Bootstrapping-Konfidenzintervall", "t-Test für unabhängige Stichproben", "Levene-Test"], a: 1, e: "Robuster als der Sobel-Test." },
+    { q: "Cohens κ misst …", o: ["interne Konsistenz", "zufallskorrigierte Übereinstimmung zweier Beurteilender bei Kategorien", "Retest-Reliabilität", "Effektgröße eines Mittelwertsunterschieds"], a: 1, e: "Interrater-Reliabilität für nominale Daten." },
+    { q: "Ein Vorteil von Experience-Sampling-Studien ist …", o: ["geringer Aufwand für Teilnehmende", "hohe ökologische Validität und geringerer Erinnerungsbias", "Kausalnachweis", "keine fehlenden Werte"], a: 1, e: "Erhebung im Alltag, nahe am Geschehen." },
+    { q: "Was ist „Assent“ in der Forschung mit Kindern?", o: ["Einwilligung der Eltern", "Altersgerechte Zustimmung des Kindes selbst", "Genehmigung der Schule", "Datenschutzerklärung"], a: 1, e: "Ergänzt die Einwilligung der Erziehungsberechtigten." },
+    { q: "Warum sollte man Prädiktoren vor Bildung eines Interaktionsterms zentrieren?", o: ["Um die Stichprobe zu vergrößern", "Um Haupteffekte sinnvoll interpretierbar zu machen und Kollinearität zu reduzieren", "Um Signifikanz zu erzwingen", "Weil SPSS es verlangt"], a: 1, e: "Haupteffekte gelten dann am Mittelwert der anderen Variable." },
+    { q: "Beim Event-Sampling wird …", o: ["in festen Zeitintervallen beobachtet", "jedes Auftreten eines definierten Ereignisses registriert", "nur Video aufgezeichnet", "der Beobachter zufällig gewählt"], a: 1, e: "Time-Sampling = festgelegte Intervalle." }
+  ],
+  exam: [
+    { q: "Planen Sie eine Fragebogenstudie zur Frage, ob der Zusammenhang zwischen Social-Media-Nutzung und Einsamkeit durch sozialen Vergleich vermittelt wird. Beschreiben Sie Instrumente, Stichprobe, Qualitätssicherung und Auswertung. Welche Grenzen hat das Design?", p: 10,
+      s: "- Instrumente: Nutzungsdauer (ggf. objektiv per Screen-Time), Skala zu sozialem Vergleich (z. B. INCOM), Einsamkeitsskala (UCLA) (2 P.)\n- Stichprobe/Power, Online-Erhebung, Einwilligung (2 P.)\n- Qualität: Attention Checks, Ausschlusskriterien, Pretest (2 P.)\n- Auswertung: Skalenbildung, α/ω, Mediation mit Bootstrapping (a·b) (2 P.)\n- Grenzen: Querschnitt → keine Kausalität, Selbstbericht, alternative Modelle (umgekehrte Richtung) (2 P.)" },
+    { q: "Entwickeln Sie ein Beobachtungssystem für prosoziales Verhalten im Kindergarten und erläutern Sie, wie Sie dessen Güte sichern.", p: 7,
+      s: "- Kategorien (Teilen, Helfen, Trösten …) mit Definitionen und Ankerbeispielen; exklusiv/exhaustiv (3 P.)\n- Event- vs. Time-Sampling begründen; Video (1 P.)\n- Schulung, Doppelkodierung, Cohens κ, Driftkontrolle, Habituation an Beobachter (3 P.)" }
+  ],
+  glossary: [
+    ["Cronbachs α", "Maß der internen Konsistenz einer Skala."],
+    ["Moderation", "Abhängigkeit eines Zusammenhangs von einer dritten Variable."],
+    ["Mediation", "Wirkung einer Variable auf eine andere über eine vermittelnde Variable."],
+    ["Experience Sampling", "Wiederholte Erhebung momentaner Erlebenszustände im Alltag."],
+    ["Mehrebenenmodell", "Statistisches Modell für hierarchisch geschachtelte Daten."],
+    ["Cohens κ", "Zufallskorrigiertes Maß der Beurteilerübereinstimmung."],
+    ["Straightlining", "Gleichförmiges Antwortmuster als Zeichen geringer Antwortqualität."]
+  ]
+});
+
+PP.addModule({
+  id: "C5",
+  group: "C",
+  title: "Diversitäts- und Genderforschung",
+  short: "Diversität & Gender",
+  ects: 4,
+  semester: "3",
+  lvs: [{ type: "VO", title: "Diversitäts- und Genderforschung in der Psychologie", ects: 4, pi: false }],
+  summary:
+    "Das Modul behandelt, wie sich **Geschlecht, Alter, Kultur/Migration, sozioökonomischer Status, sexuelle Orientierung, Behinderung und weitere Diversitätsdimensionen** auf Erleben, Verhalten, Chancen und Gesundheit auswirken – und wie die Psychologie selbst durch ihre Methoden, Stichproben und Begriffe Ungleichheiten abbildet oder reproduziert.\n\n" +
+    "Zentrale Themen: Begriffe (sex, gender, Geschlechtsidentität), empirische Befunde zu Geschlechtsunterschieden und -ähnlichkeiten, Theorien der Geschlechterentwicklung, Stereotype und Diskriminierung, Intersektionalität, Minderheitenstress, Diversität in Organisation und Gesundheitsversorgung sowie diversitätssensible Forschungs- und Diagnostikpraxis.",
+  goals: [
+    "Grundbegriffe der Gender- und Diversitätsforschung präzise verwenden",
+    "Empirische Befunde zu Geschlechtsunterschieden mit Effektgrößen korrekt interpretieren",
+    "Biologische, sozial-kognitive und soziokulturelle Theorien der Geschlechterentwicklung vergleichen",
+    "Mechanismen von Stereotypisierung und Diskriminierung entlang verschiedener Dimensionen erklären",
+    "Intersektionalität und Minderheitenstress als Konzepte anwenden",
+    "Diversitätssensible Forschung, Diagnostik und Beratung reflektieren"
+  ],
+  exam_info: "Schriftliche Prüfung über Vorlesungsinhalte und Pflichtliteratur.",
+  tips: [
+    "Begriffspaare sauber trennen: sex/gender, Stereotyp/Vorurteil/Diskriminierung, Gleichheit/Gleichstellung (equality/equity).",
+    "Zu jedem behaupteten Unterschied fragen: Wie groß (d)? Wie viel Überlappung? In welchen Kulturen? Mit welcher Methode erhoben?",
+    "Theorien der Geschlechterentwicklung mit je einem typischen Befund lernen."
+  ],
+  prerequisites: ["A2/C1 (Stereotype, soziale Identität)", "C3 (Effektgrößen, Geschlechtsunterschiede)"],
+  competencies: [
+    "Ich kann sex, gender, Geschlechtsidentität, Geschlechtsausdruck und sexuelle Orientierung unterscheiden.",
+    "Ich kann die Gender-Similarities-Hypothese und Befunde zu größeren Unterschieden darstellen.",
+    "Ich kann Social-Role-Theorie, Geschlechtsschema-Theorie und biologische Ansätze vergleichen.",
+    "Ich kann das Konzept der Intersektionalität erklären und anwenden.",
+    "Ich kann das Minderheitenstress-Modell (Meyer) erläutern.",
+    "Ich kann Stereotype Threat, ambivalenten Sexismus und Altersstereotype erklären.",
+    "Ich kann Dimensionen von Diversität (z. B. Diversity-Modell nach Gardenswartz & Rowe) benennen.",
+    "Ich kann Kriterien diversitätssensibler Forschung (Stichproben, Messinvarianz, Sprache) nennen.",
+    "Ich kann Geschlechtsunterschiede in psychischen Störungen und mögliche Erklärungen beschreiben."
+  ],
+  skills: ["Kritische Analyse von Studien hinsichtlich Stichproben- und Messbias", "Geschlechtersensible Sprache in wissenschaftlichen Texten", "Diversitätssensible Gesprächsführung"],
+  topics: [
+    { title: "Grundbegriffe",
+      text: "- **Sex**: biologisches Geschlecht (Chromosomen, Gonaden, Hormone, Anatomie) – nicht immer eindeutig binär (Intergeschlechtlichkeit)\n- **Gender**: soziales Geschlecht, gesellschaftliche Rollen, Erwartungen, Normen\n- **Geschlechtsidentität**: inneres Erleben des eigenen Geschlechts (cis, trans, nicht-binär)\n- **Geschlechtsausdruck**: äußeres Auftreten\n- **Sexuelle Orientierung**: Richtung sexueller/romantischer Anziehung\n- **Doing Gender** (West & Zimmerman): Geschlecht wird in Interaktionen hergestellt\n\nDiversität umfasst nach Gardenswartz & Rowe Persönlichkeit (Kern), innere Dimensionen (Alter, Geschlecht, sexuelle Orientierung, physische Fähigkeiten, Ethnizität, soziale Herkunft), äußere Dimensionen (Bildung, Einkommen, Religion, Familienstand …) und organisationale Dimensionen. In Österreich: Gleichbehandlungsgesetz, Antidiskriminierungsrecht.",
+      concepts: ["sex/gender", "Geschlechtsidentität", "Intergeschlechtlichkeit", "Doing Gender", "Diversitätsdimensionen", "Gleichbehandlungsgesetz"] },
+    { title: "Geschlechtsunterschiede und -ähnlichkeiten",
+      text: "Klassiker: Maccoby & Jacklin (1974). **Hyde (2005)**: In Metaanalysen sind ca. 78 % der Unterschiede klein oder nahe null. Größere Unterschiede (d ≥ 0,5) u. a.: bestimmte motorische Leistungen (Wurfweite), Einstellungen zu Gelegenheitssex, körperliche Aggression (mittel), **Interessen** (Dinge vs. Menschen; Su et al., 2009: d ≈ 0,9), **mentale Rotation** (mittel). Keine bedeutsamen Unterschiede in allgemeiner Intelligenz und mathematischer Leistung im Mittel (mit zeitlichem und kulturellem Wandel). **Variabilitätshypothese**: teils größere Streuung bei Männern. Unterschiede sind oft **kontextabhängig** (z. B. Stereotype Threat, Instruktion).\n\n**Gehirn**: Joel et al. (2015): Gehirne sind „Mosaike“ aus eher männlich/weiblich typischen Merkmalen; Kritik an „Neurosexismus“ (Fine). Gleichzeitig existieren Mittelwertsunterschiede (z. B. Volumen) – Interpretation umstritten.",
+      concepts: ["Hyde 2005", "Metaanalyse", "Interessen", "mentale Rotation", "Variabilitätshypothese", "Gehirn-Mosaik", "Neurosexismus"] },
+    { title: "Theorien der Geschlechterentwicklung",
+      text: "- **Biologische Ansätze**: pränatale Androgene (z. B. kongenitale adrenale Hyperplasie → stärkeres „jungentypisches“ Spielverhalten), evolutionäre Psychologie\n- **Sozial-kognitive Lerntheorie** (Bandura, Bussey): Modelllernen, Verstärkung, Selbstregulation\n- **Kognitive Entwicklungstheorie** (Kohlberg): Geschlechtsidentität → Geschlechtsstabilität → **Geschlechtskonstanz** (ca. 5–7 J.)\n- **Geschlechtsschema-Theorie** (Bem; Martin & Halverson): Kinder bilden Schemata und organisieren Wahrnehmung danach; „Gender Detectives“\n- **Social-Role-Theorie** (Eagly & Wood): Geschlechtsunterschiede entstehen aus der Verteilung von Männern und Frauen auf gesellschaftliche Rollen → Stereotype → Erwartungen → Verhalten; Unterschiede variieren mit Gleichstellung\n- **Androgynie** (Bem): hohe Ausprägung von Maskulinität und Femininität",
+      concepts: ["pränatale Androgene", "sozial-kognitive Theorie", "Geschlechtskonstanz", "Geschlechtsschema", "Social-Role-Theorie", "Androgynie"] },
+    { title: "Stereotype, Sexismus und Diskriminierung",
+      text: "Geschlechterstereotype: **Agency** (Durchsetzungsfähigkeit, Kompetenz) vs. **Communion** (Wärme, Fürsorge). **Deskriptive** vs. **präskriptive** Stereotype – Verletzung präskriptiver Normen wird sanktioniert (**Backlash**, Rudman). **Lack-of-Fit-Modell** (Heilman): wahrgenommene Unpassung von Frauen in Führungsrollen; **Role-Congruity-Theorie** (Eagly & Karau). **Glass Ceiling** und **Glass Cliff** (Ryan & Haslam: Frauen erhalten Führungspositionen eher in Krisen). **Ambivalenter Sexismus** (feindselig/wohlwollend). Feldexperimente zur Diskriminierung: Lebenslaufstudien (Moss-Racusin et al., 2012: identische Bewerbung, „John“ besser bewertet als „Jennifer“), Bewerbungen mit Kopftuch-Foto (Weichselbaumer).",
+      concepts: ["Agency/Communion", "präskriptive Stereotype", "Backlash", "Lack-of-Fit", "Role-Congruity", "Glass Ceiling", "Glass Cliff", "Korrespondenztest"] },
+    { title: "Intersektionalität",
+      text: "Begriff von **Kimberlé Crenshaw** (1989): Diskriminierungserfahrungen ergeben sich aus der **Überschneidung** mehrerer Kategorien (z. B. Geschlecht × Ethnizität × Klasse) und sind nicht als Summe einzelner Benachteiligungen verstehbar. Psychologische Umsetzung: Intersektionale Stereotype (z. B. „intersectional invisibility“, Purdie-Vaughns & Eibach), Analysen von Interaktionseffekten, qualitative Zugänge. Herausforderung: Stichprobengrößen für Untergruppen, Vermeidung essentialisierender Kategorien.",
+      concepts: ["Crenshaw", "Intersektionalität", "intersektionale Unsichtbarkeit", "Interaktionseffekte"] },
+    { title: "Minderheitenstress und Gesundheit",
+      text: "**Minderheitenstress-Modell** (Meyer, 2003): Angehörige stigmatisierter Minderheiten (z. B. LGBTIQ+) erleben zusätzlich zu allgemeinen Stressoren **distale** Stressoren (Diskriminierung, Gewalt) und **proximale** Stressoren (erwartete Ablehnung, Verheimlichung, internalisierte Stigmatisierung) → erhöhtes Risiko für psychische Belastungen. Schutzfaktoren: Gemeinschaftszugehörigkeit, Coping, Akzeptanz. Übertragbar auf ethnische Minderheiten, Menschen mit Behinderung, Migrationserfahrung (Akkulturationsstress; Berrys Akkulturationsstrategien: Integration, Assimilation, Separation, Marginalisierung).\n\n**Geschlecht und psychische Gesundheit**: Depression und Angststörungen bei Frauen etwa doppelt so häufig diagnostiziert; Substanzstörungen, ADHS (diagnostiziert) und Suizide bei Männern häufiger. Erklärungen: biologische Faktoren, Rumination (Nolen-Hoeksema), Gewalterfahrungen, Hilfesuchverhalten, diagnostischer Bias.",
+      concepts: ["Minderheitenstress", "distale/proximale Stressoren", "internalisiertes Stigma", "Akkulturation (Berry)", "Rumination", "diagnostischer Bias"] },
+    { title: "Weitere Dimensionen: Alter, Behinderung, sozioökonomischer Status, Kultur",
+      text: "- **Ageism**: Altersstereotype (warm, aber inkompetent), Stereotype Embodiment (Levy) – internalisierte Altersbilder beeinflussen Gesundheit\n- **Behinderung**: medizinisches vs. **soziales Modell** (Behinderung entsteht durch Barrieren), UN-Behindertenrechtskonvention, ICF der WHO (bio-psycho-soziales Modell)\n- **Sozioökonomischer Status**: Bildungsungleichheit, Gesundheitsgradient, subjektiver Status (MacArthur-Leiter), Stigma\n- **Kultur/Migration**: kultursensible Diagnostik, Sprachbarrieren, Testfairness, Dolmetschen in der Beratung\n- **Neurodiversität**: Autismus, ADHS als Variationen statt ausschließlich Defizite",
+      concepts: ["Ageism", "soziales Modell von Behinderung", "ICF", "SES-Gradient", "kultursensible Diagnostik", "Neurodiversität"] },
+    { title: "Diversitätssensible Forschung und Praxis",
+      text: "Forschung: diverse Stichproben (gegen WEIRD-Bias), **Messinvarianz** prüfen (Bedeutet ein Fragebogen in verschiedenen Gruppen dasselbe?), Geschlecht/Gender differenziert erheben (nicht nur binär), Sex-and-Gender-Analyse (SAGER-Leitlinien), Vermeidung von Reifizierung. **Geschlechtersensible Sprache** in Texten (z. B. Doppelnennung, Doppelpunkt/Genderstern, neutrale Formen – an der Uni Wien gibt es Leitfäden).\n\nPraxis: **Testfairness** in der Diagnostik (Differential Item Functioning, faire Normen), Diversitätskompetenz in Beratung und Therapie (kulturelle Demut), Diversity Management in Organisationen (Business Case vs. Fairness Case; Wirkung von Diversity-Trainings oft gering – Strukturen ändern wirkt stärker).",
+      concepts: ["Messinvarianz", "SAGER-Leitlinien", "geschlechtersensible Sprache", "Testfairness", "DIF", "Diversity Management", "kulturelle Demut"] }
+  ],
+  materials: [
+    { title: "Noba Project – Module „Gender“, „Prejudice, Discrimination, and Stereotyping“, „Culture“", url: "https://nobaproject.com/", type: "Lehrbuch (OER)", lang: "EN" },
+    { title: "APA – Guidelines for Psychological Practice with Girls and Women / Boys and Men / LGBTQ+ (Übersicht)", url: "https://www.apa.org/practice/guidelines", type: "Richtlinie", lang: "EN" },
+    { title: "APA Style – Bias-Free Language", url: "https://apastyle.apa.org/style-grammar-guidelines/bias-free-language", type: "Richtlinie", lang: "EN" },
+    { title: "Hyde (2005): The gender similarities hypothesis – Volltext suchen", url: "https://scholar.google.com/scholar?q=Hyde+2005+gender+similarities+hypothesis", type: "Artikel", lang: "EN" },
+    { title: "Meyer (2003): Prejudice, social stress, and mental health in LGB populations – Volltext suchen", url: "https://scholar.google.com/scholar?q=Meyer+2003+Prejudice+social+stress+mental+health+lesbian+gay+bisexual", type: "Artikel", lang: "EN" },
+    { title: "WHO – ICF (Internationale Klassifikation der Funktionsfähigkeit)", url: "https://www.who.int/standards/classifications/international-classification-of-functioning-disability-and-health", type: "Klassifikation", lang: "EN" },
+    { title: "Universität Wien – Gleichstellung und Diversität", url: "https://gleichstellung.univie.ac.at/", type: "Offizielle Info", lang: "DE" }
+  ],
+  lectures: [
+    { title: "Kimberlé Crenshaw – The urgency of intersectionality (TED)", url: "https://www.youtube.com/results?search_query=Kimberle+Crenshaw+urgency+of+intersectionality", provider: "YouTube/TED", lang: "EN" },
+    { title: "Cordelia Fine – Vorträge zu Delusions of Gender / Testosterone Rex (YouTube-Suche)", url: "https://www.youtube.com/results?search_query=Cordelia+Fine+lecture", provider: "YouTube", lang: "EN" },
+    { title: "Crash Course Psychology – Gender & Sexuality (YouTube-Suche)", url: "https://www.youtube.com/results?search_query=Crash+Course+Psychology+gender+sexuality", provider: "YouTube", lang: "EN" },
+    { title: "Genderforschung Psychologie Vorlesung (YouTube-Suche)", url: "https://www.youtube.com/results?search_query=Psychologie+Geschlechterforschung+Vorlesung", provider: "YouTube", lang: "DE" }
+  ],
+  literature: [
+    { authors: "Steins, G. (Hrsg.)", year: 2010, title: "Handbuch Psychologie und Geschlechterforschung", publisher: "VS Verlag", tag: "Standard", lang: "DE", ebook: true },
+    { authors: "Hyde, J. S. & Else-Quest, N. M.", year: 2022, title: "Half the Human Experience: The Psychology of Women", publisher: "Cengage", tag: "Vertiefung", lang: "EN" },
+    { authors: "Eckes, T. & Trautner, H. M. (Hrsg.)", year: 2000, title: "The Developmental Social Psychology of Gender", publisher: "Erlbaum", tag: "Vertiefung", lang: "EN" },
+    { authors: "Fine, C.", year: 2012, title: "Die Geschlechterlüge: Die Macht der Vorurteile über Frau und Mann (Orig.: Delusions of Gender)", publisher: "Klett-Cotta", tag: "Einstieg", lang: "DE" },
+    { authors: "Genkova, P. & Ringeisen, T. (Hrsg.)", year: 2016, title: "Handbuch Diversity Kompetenz", publisher: "Springer", tag: "Vertiefung", lang: "DE", ebook: true },
+    { authors: "Eagly, A. H. & Wood, W.", year: 2012, title: "Social role theory (in: Handbook of Theories of Social Psychology)", publisher: "SAGE", tag: "Klassiker", lang: "EN" },
+    { authors: "Crenshaw, K.", year: 1989, title: "Demarginalizing the Intersection of Race and Sex (University of Chicago Legal Forum)", publisher: "University of Chicago", tag: "Klassiker", lang: "EN" },
+    { authors: "Saini, A.", year: 2017, title: "Inferior: How Science Got Women Wrong", publisher: "Fourth Estate", tag: "Einstieg", lang: "EN" }
+  ],
+  quiz: [
+    { q: "Was bezeichnet „gender“ im Unterschied zu „sex“?", o: ["Chromosomales Geschlecht", "Soziales Geschlecht: Rollen, Normen, Erwartungen", "Sexuelle Orientierung", "Hormonstatus"], a: 1, e: "Sex = biologische Merkmale." },
+    { q: "Hydes Gender-Similarities-Hypothese beruht auf …", o: ["Einzelfallstudien", "einer Zusammenschau von Metaanalysen", "Hirnscans", "Tierstudien"], a: 1, e: "Ca. 78 % der Effekte klein oder nahe null." },
+    { q: "Bei welchem Merkmal zeigen Metaanalysen einen großen Geschlechtsunterschied?", o: ["Allgemeine Intelligenz", "Mathematische Leistung", "Berufliche Interessen (Dinge vs. Menschen)", "Selbstwert"], a: 2, e: "Su et al. (2009): d ≈ 0,9." },
+    { q: "Die Social-Role-Theorie erklärt Geschlechtsunterschiede vor allem durch …", o: ["Gene", "die Verteilung der Geschlechter auf gesellschaftliche Rollen", "Hirnstruktur", "Zufall"], a: 1, e: "Eagly & Wood." },
+    { q: "Geschlechtskonstanz nach Kohlberg bedeutet …", o: ["Wissen, dass das Geschlecht über Situationen und Zeit hinweg gleich bleibt", "Bevorzugung gleichgeschlechtlicher Spielpartner", "hormonelle Stabilität", "eine Persönlichkeitseigenschaft"], a: 0, e: "Wird etwa zwischen 5 und 7 Jahren erreicht." },
+    { q: "Der „Glass Cliff“-Effekt beschreibt, dass Frauen …", o: ["nie Führungspositionen erhalten", "überproportional häufig in Krisensituationen in Führungspositionen berufen werden", "seltener kündigen", "höhere Gehälter erhalten"], a: 1, e: "Ryan & Haslam." },
+    { q: "Wer prägte den Begriff Intersektionalität?", o: ["Alice Eagly", "Kimberlé Crenshaw", "Janet Hyde", "Susan Fiske"], a: 1, e: "1989, ursprünglich im Antidiskriminierungsrecht." },
+    { q: "Nach dem Minderheitenstress-Modell ist „internalisierte Stigmatisierung“ ein …", o: ["distaler Stressor", "proximaler Stressor", "Schutzfaktor", "biologischer Faktor"], a: 1, e: "Distal: Diskriminierung, Gewalt; proximal: Erwartung von Ablehnung, Verheimlichung, internalisiertes Stigma." },
+    { q: "Das soziale Modell von Behinderung besagt, dass …", o: ["Behinderung eine individuelle Krankheit ist", "Behinderung wesentlich durch gesellschaftliche Barrieren entsteht", "Behinderung genetisch ist", "es keine Behinderung gibt"], a: 1, e: "Gegenstück zum medizinischen Modell." },
+    { q: "Welche Akkulturationsstrategie verbindet Beibehaltung der Herkunftskultur mit Kontakt zur Aufnahmegesellschaft?", o: ["Assimilation", "Separation", "Integration", "Marginalisierung"], a: 2, e: "Berrys Modell." },
+    { q: "Messinvarianz zu prüfen bedeutet …", o: ["die Stichprobe zu vergrößern", "zu prüfen, ob ein Instrument in verschiedenen Gruppen dasselbe Konstrukt gleich misst", "Mittelwerte zu vergleichen", "die Reliabilität zu erhöhen"], a: 1, e: "Voraussetzung für faire Gruppenvergleiche." },
+    { q: "In Moss-Racusin et al. (2012) wurden identische Bewerbungen für eine Laborstelle …", o: ["gleich bewertet", "mit männlichem Namen kompetenter eingeschätzt und höher bezahlt", "mit weiblichem Namen besser bewertet", "nicht bewertet"], a: 1, e: "Feldnahe experimentelle Evidenz für Gender-Bias." },
+    { q: "Welche psychische Störung wird bei Frauen etwa doppelt so häufig diagnostiziert wie bei Männern?", o: ["Alkoholabhängigkeit", "Depression", "Antisoziale Persönlichkeitsstörung", "ADHS"], a: 1, e: "Ebenso viele Angststörungen." },
+    { q: "Backlash-Effekte treten auf, wenn …", o: ["Personen deskriptive Stereotype bestätigen", "Personen präskriptive Geschlechternormen verletzen und dafür sozial sanktioniert werden", "Gruppen kooperieren", "Stereotype unbewusst sind"], a: 1, e: "Z. B. durchsetzungsstarke Frauen werden als weniger sympathisch bewertet." }
+  ],
+  exam: [
+    { q: "Diskutieren Sie die Aussage „Männer und Frauen sind psychologisch grundverschieden“ anhand empirischer Befunde. Gehen Sie auf Effektgrößen, Verteilungsüberlappung und Kontextabhängigkeit ein.", p: 9,
+      s: "- Hyde 2005: Großteil kleiner Effekte; Beispiele (2 P.)\n- Ausnahmen mit größeren Effekten (Interessen, Wurfweite, mentale Rotation) (2 P.)\n- d = 0,5 bedeutet noch große Überlappung; kein Schluss auf Individuen (2 P.)\n- Kontextabhängigkeit: Stereotype Threat, kulturelle Variation, zeitlicher Wandel (2 P.)\n- Fazit: differenzierte Aussage statt pauschaler Dichotomie (1 P.)" },
+    { q: "Erklären Sie das Minderheitenstress-Modell und leiten Sie Implikationen für psychologische Beratung ab.", p: 7,
+      s: "- Allgemeine vs. minderheitenspezifische Stressoren; distal/proximal mit Beispielen (3 P.)\n- Folgen für psychische Gesundheit; Moderatoren/Schutzfaktoren (2 P.)\n- Beratung: affirmative Haltung, Stigma-Erfahrungen validieren, Ressourcen/Community, Verheimlichungsstress thematisieren, eigene Bias reflektieren (2 P.)" },
+    { q: "Was bedeutet Intersektionalität, und welche methodischen Herausforderungen ergeben sich für die quantitative psychologische Forschung?", p: 6,
+      s: "- Definition (Crenshaw), nicht-additive Überschneidung (2 P.)\n- Herausforderungen: kleine Untergruppen/Power, Interaktionsmodelle, Messinvarianz, Kategorienbildung ohne Essentialisierung, Kombination mit qualitativen Methoden (4 P.)" }
+  ],
+  glossary: [
+    ["Gender", "Soziales Geschlecht; gesellschaftlich geprägte Rollen und Erwartungen."],
+    ["Geschlechtsidentität", "Inneres Wissen bzw. Erleben des eigenen Geschlechts."],
+    ["Gender-Similarities-Hypothese", "Männer und Frauen sind sich in den meisten psychologischen Variablen ähnlich (Hyde)."],
+    ["Social-Role-Theorie", "Geschlechtsunterschiede entstehen aus geschlechtsspezifischer Rollenverteilung."],
+    ["Geschlechtsschema", "Kognitive Struktur, die geschlechtsbezogene Information organisiert."],
+    ["Glass Cliff", "Frauen werden eher in riskanten Krisensituationen in Führungspositionen berufen."],
+    ["Intersektionalität", "Verschränkung mehrerer sozialer Kategorien bei Benachteiligung und Identität."],
+    ["Minderheitenstress", "Chronischer Zusatzstress durch Stigmatisierung einer Minderheitengruppe."],
+    ["Messinvarianz", "Gleichwertigkeit der Messung eines Konstrukts über Gruppen hinweg."],
+    ["Testfairness", "Abwesenheit systematischer Benachteiligung von Gruppen durch ein Testverfahren."],
+    ["Ageism", "Stereotype, Vorurteile und Diskriminierung aufgrund des Alters."]
+  ]
+});
