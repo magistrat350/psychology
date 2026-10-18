@@ -14,6 +14,7 @@ PP.meta = {
   semesters: 6,
   curriculumVersion: "Version 2022 (inkl. 1. Änderung 2024)",
   lastChecked: "2026-10",
+  repo: "magistrat350/psychology",
   disclaimer:
     "Die Modulstruktur wurde aus dem öffentlich publizierten Curriculum (Version 2022) und dem Prüfungspass rekonstruiert. " +
     "Lehrveranstaltungstypen, ECTS-Aufteilungen innerhalb der Module und Prüfungsmodalitäten können sich durch Curriculumsänderungen " +
