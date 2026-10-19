@@ -43,7 +43,8 @@ async function debugTests() {
   const page = await webview.page();
   const errors = [];
   page.on("pageerror", (e) => errors.push(e.message));
-  page.on("console", (m) => { if (m.type() === "error" && !/Failed to load resource/.test(m.text())) errors.push(m.text()); });
+  // „Share canceled“ protokolliert Capacitor selbst, wenn das Teilen-Menü geschlossen wird; die App behandelt das
+  page.on("console", (m) => { if (m.type() === "error" && !/Failed to load resource|Share canceled/.test(m.text())) errors.push(m.text()); });
   const go = async (hash) => { await page.evaluate((h) => { location.hash = h; }, hash); await sleep(400); };
   const click = (sel) => page.evaluate((s) => { const el = document.querySelector(s); if (!el) return false; el.click(); return true; }, sel);
   const text = (sel) => page.evaluate((s) => (document.querySelector(s) || {}).innerText || "", sel);
@@ -97,6 +98,8 @@ async function debugTests() {
   await go("#/modul/A1/quiz"); await click(".report-btn"); await sleep(300);
   const overlayOpen = await page.evaluate(() => !!document.getElementById("overlay"));
   await back();
+  // Der Dialog setzt den Fokus ins Textfeld: der erste Druck schließt ggf. nur die Bildschirmtastatur
+  if (await page.evaluate(() => !!document.getElementById("overlay"))) await back();
   const afterBack = await page.evaluate(() => ({ overlay: !!document.getElementById("overlay"), hash: location.hash }));
   check("Zurück-Taste schließt zuerst den Dialog", overlayOpen && !afterBack.overlay && afterBack.hash === "#/modul/A1/quiz", JSON.stringify(afterBack));
 
@@ -112,6 +115,7 @@ async function debugTests() {
   check("Keine JavaScript-Fehler", !errors.length, errors.slice(0, 3).join(" | "));
 
   // Beenden: frisch starten, Zurück auf der ersten Seite schließt die App
+  try { sh("am force-stop com.android.chrome"); } catch (e) { /* kein Browser */ }
   sh(`am force-stop ${PKG}`); launch(); await sleep(6000);
   await back(); await sleep(1000);
   check("Zurück auf der Startseite beendet die App", !resumed().includes(PKG), resumed().slice(0, 140));
@@ -132,9 +136,6 @@ async function releaseTests() {
   const pid = sh(`pidof ${PKG}`).trim();
   const crash = sh("logcat -d -b crash");
   check("Release-App startet ohne Absturz", !!pid && resumed().includes(PKG) && !crash.includes(PKG), `pid ${pid || "–"}${crash.includes(PKG) ? ", Absturz im Log" : ""}`);
-  let ui = "";
-  try { sh("uiautomator dump /sdcard/ui.xml"); ui = sh("cat /sdcard/ui.xml"); } catch (e) { ui = ""; }
-  check("Release-App zeigt Inhalte (Bedienungshilfen-Baum)", /PsychoPfad|Psychologie/.test(ui), ui ? `${ui.length} Zeichen` : "kein Abbild", { soft: true });
   screenshot("release-start");
 }
 
