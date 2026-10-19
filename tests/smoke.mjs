@@ -23,10 +23,11 @@ const { ids, gens } = await page.evaluate(() => ({ ids: PP.modules.map((m) => m.
 
 // 1) Alle Routen
 const tabs = ["ueberblick", "wissen", "lernpfad", "materialien", "vorlesungen", "literatur", "karten", "quiz", "pruefung", "rechnen", "notizen"];
-const routes = ["#/", "#/plan", "#/wiederholen", "#/mischquiz", "#/rechentrainer", "#/datensaetze", "#/anki", "#/pruefmodus/curriculum", "#/pruefmodus/meldungen", "#/pruefmodus/links",
+const routes = ["#/", "#/plan", "#/wiederholen", "#/mischquiz", "#/rechentrainer", "#/datensaetze", "#/anki", "#/pruefmodus/curriculum", "#/pruefmodus/inhalte", "#/pruefmodus/meldungen", "#/pruefmodus/links",
   "#/bibliothek", "#/ressourcen", "#/karriere", "#/glossar", "#/fortschritt", "#/einstellungen", "#/suche/Bindung", "#/suche/t-Test"];
 for (const id of ids) for (const t of tabs) routes.push(`#/modul/${id}/${t}`);
 for (const g of gens) routes.push(`#/rechentrainer/${g}/7`);
+for (const id of ids) routes.push(`#/pruefmodus/inhalte/${id}`);
 for (const r of routes) {
   await go(r);
   const len = await page.evaluate(() => document.getElementById("app").innerText.length);
@@ -38,7 +39,7 @@ step(`${routes.length} Routen gerendert`);
 await go(`#/modul/A1/quiz`);
 for (;;) { const b = await page.$("button.opt:not([disabled])"); if (!b) break; await b.click(); }
 if (!(await page.$(".score-big"))) errors.push("Quiz-Ergebnis fehlt");
-let st = await state();
+let st = await state(), dl;
 const wrongInSrs = Object.keys(st.srs).filter((k) => k.startsWith("q:A1:")).length;
 if (!st.quiz.A1) errors.push("Quiz-Ergebnis nicht gespeichert");
 step(`Modul-Quiz beendet, ${wrongInSrs} falsche Antworten in der Wiederholung`);
@@ -73,6 +74,30 @@ st = await state();
 const vals = Object.values(st.verify);
 if (!vals.some((v) => v.s === "ok") || !vals.some((v) => v.s === "diff" && v.note.includes("S. 3"))) errors.push("Checkliste speichert nicht");
 step(`Checkliste mit ${nItems} Punkten bedienbar`);
+
+// 5b) Fachliche Prüfung: Vermerk nur mit Kürzel, ✓/✗, Beleg, Export, Anzeige im Lernpfad
+await go("#/pruefmodus/inhalte");
+if ((await page.$$eval("table tbody tr", (r) => r.length)) !== ids.length) errors.push("Prüfübersicht: nicht alle Module");
+await go("#/pruefmodus/inhalte/A1");
+await page.click('[data-rset][data-r="ok"]');
+if (Object.keys((await state()).review).length) errors.push("Prüfvermerk ohne Kürzel gespeichert");
+await page.fill("#reviewer", "TS"); await page.waitForTimeout(450);
+await page.click('[data-rset][data-r="ok"]');
+await page.fill("[data-rnote]", "Pinel & Pauli (2012), S. 12");
+await page.waitForTimeout(600);
+await page.click('.verify-row:nth-of-type(2) [data-rset][data-r="fehler"]');
+if (!(await page.$("#overlay"))) errors.push("✗ Fehler öffnet keine Fehlermeldung");
+await page.fill("#repComment", "Prüftest"); await page.click('[data-repsave="1"]');
+st = await state();
+const marks = Object.values(st.review);
+if (marks.filter((v) => v.s === "ok" && v.by === "TS" && (v.note || "").includes("S. 12")).length !== 1 || marks.filter((v) => v.s === "fehler").length !== 1) errors.push("Prüfvermerke nicht korrekt gespeichert: " + JSON.stringify(marks));
+[dl] = await Promise.all([page.waitForEvent("download"), page.click('[data-review="save"]')]);
+const exp = JSON.parse((await import("fs")).readFileSync(await dl.path(), "utf8"));
+if (exp.kind !== "review" || Object.keys(exp.items).length !== 2 || exp.reviewer !== "TS") errors.push("Export der Prüfvermerke unvollständig");
+await go("#/modul/A1/lernpfad");
+if (!(await page.textContent("#app")).includes("fachlich geprüft (von dir)")) errors.push("Prüfvermerk im Lernpfad nicht sichtbar");
+if (!(await page.$(".sources li"))) errors.push("Quellen im Lernpfad fehlen");
+step("Fachliche Prüfung: Vermerke, Beleg, Fehlermeldung, Export, Quellen im Lernpfad");
 
 // 6) Rechentrainer: richtige Werte werden akzeptiert, falsche markiert, Lösungsweg sichtbar
 for (const g of ["ttest_ind", "alpha", "bayes"]) {
@@ -125,7 +150,7 @@ step("Mischquiz mit 10 Fragen aus D1/D2/E1/E2");
 
 // 10) Downloads: Anki-Export und Datensatz
 await go("#/anki");
-let [dl] = await Promise.all([page.waitForEvent("download"), page.click('[data-anki="save"]')]);
+[dl] = await Promise.all([page.waitForEvent("download"), page.click('[data-anki="save"]')]);
 const ankiPath = await dl.path();
 const anki = (await import("fs")).readFileSync(ankiPath, "utf8");
 if (!anki.startsWith("#separator:tab") || anki.split("\n").length < 500) errors.push("Anki-Export unvollständig");
@@ -140,7 +165,7 @@ await go("#/fortschritt");
 const json = (await import("fs")).readFileSync(await dl.path(), "utf8");
 await page.fill("#importText", json);
 await page.click('[data-act="importText"]');
-if (Object.keys((await state()).reports).length !== 1) errors.push("Import stellt Zustand nicht wieder her");
+if (Object.keys((await state()).reports).length !== 2) errors.push("Import stellt Zustand nicht wieder her");
 step("Fortschritt exportiert und importiert");
 
 if (shotDir) {

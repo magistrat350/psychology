@@ -63,7 +63,34 @@ for (const d of PP.datasets || []) {
 }
 if (PP.linkStatus !== null && (!PP.linkStatus || !PP.linkStatus.results)) err("data/link-status.js: ungültiges Format");
 
+// Quellen der Lernthemen und Prüfvermerke
+const SRC = require("../js/sources.js"), RV = require("../js/review.js");
+let nSrc = 0, nTopicsWithSrc = 0;
+for (const [mod, map] of Object.entries(PP.topicSources || {})) {
+  const m = PP.modules.find((x) => x.id === mod);
+  if (!m) { err(`Quellen: unbekanntes Modul ${mod}`); continue; }
+  for (const [title, list] of Object.entries(map)) {
+    if (!m.topics.some((t) => t.title === title)) err(`Quellen ${mod}: kein Lernthema „${title}“`);
+    if (!Array.isArray(list) || !list.length || list.length > 4) err(`Quellen ${mod} „${title}“: 1–4 Einträge erwartet`);
+    (list || []).forEach((s, i) => { nSrc++; if (!SRC.resolve(s, m, PP.sourceCatalog)) err(`Quellen ${mod} „${title}“ Nr. ${i + 1}: nicht auflösbar ${JSON.stringify(s)}`); });
+  }
+}
+for (const m of PP.modules) {
+  const titles = new Set();
+  for (const t of m.topics) {
+    if (titles.has(t.title)) err(`${m.id}: doppelter Thementitel „${t.title}“`); titles.add(t.title);
+    if (((PP.topicSources || {})[m.id] || {})[t.title]) nTopicsWithSrc++; else err(`${m.id} „${t.title}“: keine Quelle in data/sources.js`);
+  }
+}
+const rItems = RV.collect(PP.modules), rIds = new Set();
+rItems.forEach((it) => { if (rIds.has(it.id)) err(`Prüfvermerke: doppelte ID ${it.id}`); rIds.add(it.id); });
+for (const [id, v] of Object.entries(PP.review || {})) {
+  if (!rIds.has(id)) err(`data/review.js: ${id} gehört zu keinem aktuellen Inhalt (Text geändert? Eintrag entfernen oder neu prüfen)`);
+  if (!v || !["ok", "fehler"].includes(v.s) || !/^\d{4}-\d{2}-\d{2}$/.test(v.date || "")) err(`data/review.js: ${id} hat kein gültiges s/date`);
+}
+
 console.log(`${PP.modules.length} Module · ${t} Themen · ${r} Materialien/Vorlesungen · ${b} Bücher · ${q} Quizfragen · ${e} Prüfungsfragen · ${g} Glossarbegriffe · ${ectsSum} ECTS`);
+console.log(`${nTopicsWithSrc}/${t} Themen mit Quellen (${nSrc} Angaben) · ${Object.keys(PP.review || {}).length} Prüfvermerke für ${rItems.length} prüfbare Inhalte`);
 console.log(`${T.generators.length} Rechenaufgaben-Typen · ${(PP.datasets || []).length} Datensätze · ${vIds.size} Checklistenpunkte (+ automatische je Modul)`);
 if (errors.length) { console.error("FEHLER:\n" + errors.join("\n")); process.exit(1); }
 console.log("OK – Daten valide.");

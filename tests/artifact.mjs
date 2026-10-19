@@ -43,6 +43,12 @@ await page.click('.verify-row [data-v="diff"]');
 await page.waitForTimeout(1500);
 const verify = await page.evaluate(() => __db.docs["verify/checklist"]);
 if (!verify || !Object.values(verify.items).some((v) => v.s === "diff")) errors.push("Checkliste nicht in Datenbank geschrieben");
+await page.evaluate(() => { location.hash = "#/pruefmodus/inhalte/B1"; });
+await page.fill("#reviewer", "AB"); await page.waitForTimeout(450);
+await page.click('[data-rset][data-r="ok"]');
+await page.waitForTimeout(1500);
+const marks = await page.evaluate(() => __db.docs["review/marks"]);
+if (!marks || !Object.values(marks.items).some((v) => v.s === "ok" && v.by === "AB")) errors.push("Prüfvermerke nicht in Datenbank geschrieben");
 await page.evaluate(() => { location.hash = "#/anki"; });
 await page.click('[data-anki="save"]');
 await page.evaluate(() => { location.hash = "#/datensaetze"; });
@@ -59,4 +65,4 @@ if ((await p2.textContent("#app")).length < 200) errors.push("Einzeldatei render
 await browser.close();
 fs.unlinkSync(tmp);
 if (errors.length) { console.error("FEHLER:\n" + errors.join("\n")); process.exit(1); }
-console.log("  ✓ Datenbank-Sync (Meldungen, Checkliste) und Downloads über Viewer-Schnittstelle\n  ✓ Offline-Einzeldatei rendert\nOK – Build-Ausgaben funktionieren.");
+console.log("  ✓ Datenbank-Sync (Meldungen, Checkliste, Prüfvermerke) und Downloads über Viewer-Schnittstelle\n  ✓ Offline-Einzeldatei rendert\nOK – Build-Ausgaben funktionieren.");

@@ -2,13 +2,13 @@
  * Routen (Hash): #/  #/plan  #/modul/<ID>/<tab>  #/wiederholen  #/mischquiz  #/rechentrainer[/<gen>[/<seed>]]
  *                #/datensaetze  #/anki  #/pruefmodus[/<bereich>]  #/bibliothek  #/ressourcen  #/karriere
  *                #/glossar  #/fortschritt  #/einstellungen  #/suche/<begriff>
- * Benötigt: data/*.js, js/version.js, js/update.js, js/stats.js, js/trainer.js, js/srs.js, js/anki.js
+ * Benötigt: data/*.js, js/version.js, js/update.js, js/stats.js, js/trainer.js, js/srs.js, js/sources.js, js/review.js, js/anki.js
  * In der Android-App zusätzlich js/capacitor.js (vom Build eingebunden). */
 (function () {
   "use strict";
 
   const STORE_KEY = "psychopfad_wien_v1";
-  const S = window.PPStats, T = window.PPTrainer, R = window.PPSrs, A = window.PPAnki;
+  const S = window.PPStats, T = window.PPTrainer, R = window.PPSrs, A = window.PPAnki, SRC = window.PPSources, RV = window.PPReview;
   const $app = document.getElementById("app");
   const $side = document.getElementById("sidebar");
   const IN_ARTIFACT = !!(window.claude && typeof window.claude.use === "function");
@@ -23,8 +23,8 @@
   const emptyState = () => ({
     comp: {}, quiz: {}, exam: {}, notes: {}, done: {}, cards: {}, read: {},
     srs: {}, srsCfg: { newPerDay: 15, modules: null, kinds: ["card", "quiz"], introduced: { day: "", count: 0 } },
-    reports: {}, verify: {}, trainer: {}, mix: [],
-    settings: { theme: "auto", libTemplates: {} }
+    reports: {}, verify: {}, review: {}, trainer: {}, mix: [],
+    settings: { theme: "auto", libTemplates: {}, reviewer: "" }
   });
   let state = load();
   function load() {
@@ -93,6 +93,8 @@
       snap.docs.forEach((d) => { const r = d.data(); if (r && !state.reports[d.id]) state.reports[d.id] = Object.assign({}, r, { synced: true }); });
       const v = await cloud.db.doc("verify/checklist").get();
       if (v.exists) { const items = (v.data() || {}).items || {}; Object.entries(items).forEach(([k, val]) => { if (!state.verify[k]) state.verify[k] = val; }); }
+      const rv = await cloud.db.doc("review/marks").get();
+      if (rv.exists) { const items = (rv.data() || {}).items || {}; Object.entries(items).forEach(([k, val]) => { if (!state.review[k]) state.review[k] = val; }); }
       save();
       if (location.hash.startsWith("#/pruefmodus")) keep(route);
     } catch (e) { /* offline oder nicht freigegeben – lokal weiterarbeiten */ }
@@ -101,17 +103,23 @@
     if (!cloud.db) return;
     try { const body = Object.assign({}, r); delete body.synced; await cloud.db.collection("reports").doc(r.id).set(body); r.synced = true; save(); } catch (e) { /* bleibt lokal */ }
   }
-  let verifyTimer = null, verifyWriting = false;
-  function pushVerify() {
-    if (!cloud.db) return;
-    clearTimeout(verifyTimer);
-    verifyTimer = setTimeout(async () => {
-      if (verifyWriting) return pushVerify();
-      verifyWriting = true;
-      try { await cloud.db.doc("verify/checklist").set({ items: state.verify, updatedAt: new Date().toISOString() }); } catch (e) { /* lokal gespeichert */ }
-      verifyWriting = false;
-    }, 1200);
+  /** Schreibt ein Dokument verzögert (Eingaben werden gebündelt, höchstens ein Schreibvorgang gleichzeitig). */
+  function docPusher(path, items) {
+    let timer = null, writing = false;
+    const push = () => {
+      if (!cloud.db) return;
+      clearTimeout(timer);
+      timer = setTimeout(async () => {
+        if (writing) return push();
+        writing = true;
+        try { await cloud.db.doc(path).set({ items: items(), updatedAt: new Date().toISOString() }); } catch (e) { /* lokal gespeichert */ }
+        writing = false;
+      }, 1200);
+    };
+    return push;
   }
+  const pushVerify = docPusher("verify/checklist", () => state.verify);
+  const pushReview = docPusher("review/marks", () => state.review);
   /** Datei anbieten: lokal als Download, auf der veröffentlichten Seite über die Speicherfunktion des Viewers,
    *  in der Android-App über das Teilen-Menü (WebViews können keine Blob-Downloads). */
   function saveFile(filename, data, mime) {
@@ -282,6 +290,24 @@
     return "";
   }
 
+  // ---------- Quellen & fachliche Prüfung ----------
+  const RITEMS = RV.collect(PP.modules), RITEM = new Map(RITEMS.map((it) => [it.id, it]));
+  const reviewOf = (id) => RV.status(id, PP.review, state.review);
+  function reviewBadge(id) {
+    const st = reviewOf(id);
+    if (!st) return `<span class="pill" title="Noch nicht fachlich geprüft – Inhalte wurden mit KI-Unterstützung erstellt">ungeprüft</span>`;
+    const who = [st.by, st.date && st.date.split("-").reverse().join("."), st.note].filter(Boolean).join(" · ");
+    if (st.s === "fehler") return `<span class="pill bad" title="${esc(who)}">Fehler gemeldet</span>`;
+    return `<span class="pill ok" title="${esc(who)}">✓ fachlich geprüft${st.local ? " (von dir)" : ""}</span>`;
+  }
+  function topicSources(m, t) { return ((PP.topicSources || {})[m.id] || {})[t.title] || []; }
+  function sourcesHtml(m, t) {
+    const list = topicSources(m, t).map((s) => SRC.resolve(s, m, PP.sourceCatalog)).filter(Boolean);
+    if (!list.length) return "";
+    return `<div class="sources small"><b>Zum Nachprüfen:</b><ul>${list.map((r) => `<li>${r.url ? `${link(r.url, r.text)} ${linkBadge(r.url)}` : esc(r.text)}${r.where ? ` – <span class="muted">${esc(r.where)}</span>` : ""}${r.free ? ' <span class="pill ok">frei</span>' : ""}</li>`).join("")}</ul></div>`;
+  }
+  function reviewCount(mod, kind) { const st = RV.stats(RITEMS.filter((it) => it.mod === mod && it.kind === kind), PP.review, state.review).all; return st; }
+
   // ---------- Bibliothekssuche ----------
   function libTemplate(lib) { const o = state.settings.libTemplates[lib.id]; return o != null && o !== "" ? o : lib.template; }
   function bookQuery(b) {
@@ -347,7 +373,8 @@
       <div class="progress" style="margin-top:12px"><span style="width:${(done / PP.meta.ects) * 100}%"></span></div></section>
       <div class="card today"><div><h3>Heute</h3><p>${q.due.length} fällige Wiederholungen · ${q.fresh.length} neue Karten verfügbar</p></div>
         <div class="btn-row"><a class="btn primary" href="#/wiederholen">Wiederholung starten</a><a class="btn" href="#/mischquiz">Mischquiz</a><a class="btn" href="#/rechentrainer">Rechentrainer</a></div></div>
-      <div class="notice small"><b>Hinweis:</b> ${esc(PP.meta.disclaimer)} <a href="#/pruefmodus">Im Prüfmodus</a> kannst du Angaben abgleichen und Fehler melden.</div>`;
+      <div class="notice small"><b>Hinweis:</b> ${esc(PP.meta.disclaimer)} <a href="#/pruefmodus">Im Prüfmodus</a> kannst du Angaben abgleichen und Fehler melden.
+        Fachlich geprüft sind bisher <b>${RV.stats(RITEMS, PP.review, state.review).all.ok} von ${RITEMS.length}</b> Lernthemen und Fragen – zu jedem Lernthema stehen Quellen zum Nachprüfen dabei (<a href="#/pruefmodus/inhalte">Inhalte prüfen</a>).</div>`;
     PP.groups.forEach((g) => {
       const mods = modulesOf(g.id);
       h += `<h2>${g.id !== "0" ? esc(g.id) + " – " : ""}${esc(g.title)} ${g.ects ? `<span class="pill accent">${g.ects} ECTS</span>` : ""}</h2><p class="muted">${esc(g.desc)}</p><div class="grid">`;
@@ -441,13 +468,15 @@
 
   function tabTopics(m) {
     const r = state.read[m.id] || {}, n = (m.topics || []).length, done = Object.values(r).filter(Boolean).length;
-    let h = `<p class="muted">Arbeite die Themen der Reihe nach durch und hake ab, was du verstanden hast. (${done}/${n})</p>
+    const rc = reviewCount(m.id, "topic");
+    let h = `<p class="muted">Arbeite die Themen der Reihe nach durch und hake ab, was du verstanden hast. (${done}/${n}) · Fachlich geprüft: ${rc.ok}/${rc.total} – <a href="#/pruefmodus/inhalte/${esc(m.id)}">prüfen</a></p>
       <div class="btn-row"><button class="btn small" data-expand="1">Alle aufklappen</button><button class="btn small" data-expand="0">Alle zuklappen</button></div>`;
     (m.topics || []).forEach((t, i) => {
       h += `<details class="topic"><summary><span>${i + 1}. ${esc(t.title)}</span>${r[i] ? '<span class="pill ok">✓</span>' : ""}</summary><div class="t-body">${rich(t.text)}`;
       if (t.concepts && t.concepts.length) h += `<div class="concepts">${t.concepts.map((c) => `<span class="pill">${esc(c)}</span>`).join("")}</div>`;
       if (t.read) h += `<p class="small" style="margin-top:10px"><b>Lesen/Ansehen:</b> ${esc(t.read)}</p>`;
-      h += `<div class="row-between"><label class="small"><input type="checkbox" data-read="${m.id}" data-i="${i}" ${r[i] ? "checked" : ""}> verstanden</label>${reportBtn({ kind: "Lernthema", mod: m.id, ref: "t:" + R.hash(t.title), text: t.title })}</div></div></details>`;
+      h += sourcesHtml(m, t);
+      h += `<div class="row-between"><label class="small"><input type="checkbox" data-read="${m.id}" data-i="${i}" ${r[i] ? "checked" : ""}> verstanden</label><span>${reviewBadge(RV.topicId(m.id, t))} ${reportBtn({ kind: "Lernthema", mod: m.id, ref: "t:" + R.hash(t.title), text: t.title })}</span></div></div></details>`;
     });
     return h;
   }
@@ -512,7 +541,7 @@
         if (chosen !== undefined) { if (k === q.a) cls = "correct"; else if (k === chosen) cls = "wrong"; }
         return `<button class="opt ${cls}" ${attrs} data-k="${k}" ${chosen !== undefined ? "disabled" : ""}>${esc(q.o[k])}</button>`;
       }).join("") + `</div>${chosen !== undefined ? `<div class="explain">${chosen === q.a ? "✓ Richtig." : "✗ Leider falsch – kommt in deine Wiederholung."} ${esc(q.e || "")}</div>` : ""}
-      <div class="q-foot">${reportBtn({ kind: "Quizfrage", mod: ctx.mod, ref: R.quizId(ctx.mod, q), text: q.q + " → " + q.o[q.a] })}</div></div>`;
+      <div class="q-foot">${reviewBadge(R.quizId(ctx.mod, q))} ${reportBtn({ kind: "Quizfrage", mod: ctx.mod, ref: R.quizId(ctx.mod, q), text: q.q + " → " + q.o[q.a] })}</div></div>`;
   }
 
   let quizSession = null;
@@ -524,7 +553,7 @@
     const correct = Object.entries(s.answers).filter(([i, a]) => qs[i].a === a).length;
     let h = `<div class="sticky-bar">${s.subset ? '<span class="pill warn">Wiederholung</span>' : ""}<b>${answered}/${total}</b> beantwortet · <b>${correct}</b> richtig ${answered ? `(${pct(correct / answered)} %)` : ""}
       <button class="btn small" data-quiz="reset">Neu mischen</button><button class="btn small" data-quiz="wrong">Nur falsche wiederholen</button>
-      ${state.quiz[m.id] ? `<span class="small muted">Bestes Ergebnis: ${pct(state.quiz[m.id].best)} %</span>` : ""}</div>`;
+      ${state.quiz[m.id] ? `<span class="small muted">Bestes Ergebnis: ${pct(state.quiz[m.id].best)} %</span>` : ""}<span class="small muted">Fachlich geprüft: ${reviewCount(m.id, "quiz").ok}/${qs.length}</span></div>`;
     s.order.forEach((qi, n) => {
       if (!s.optOrder[qi]) s.optOrder[qi] = shuffle(qs[qi].o.map((_, k) => k));
       h += quizCard(qs[qi], n + 1, s.answers[qi], s.optOrder[qi], `data-qa="${qi}"`, { mod: m.id });
@@ -564,7 +593,7 @@
         <p class="small muted">MC je 1 Punkt; offene Fragen mit angegebener Punktzahl. Bestanden ab 50 % (Beispielschlüssel).</p>
         <button class="btn primary" data-exam="start">Prüfung starten</button></div>
         ${hist ? `<div class="card"><h3>Bisherige Ergebnisse</h3><p>Bestes Ergebnis: <b>${pct(hist.best)} %</b> · letzte: ${pct(hist.last)} % · Versuche: ${hist.attempts}</p></div>` : ""}
-        <details class="topic"><summary>Alle offenen Prüfungsfragen mit Musterlösungen ansehen (${open.length})</summary><div class="t-body">${open.map((q, i) => `<p><b>${i + 1}. ${esc(q.q)}</b> <span class="pill">${q.p} P.</span></p><div class="solution small">${rich(q.s)}</div>${reportBtn({ kind: "Prüfungsfrage", mod: m.id, ref: "e:" + R.hash(q.q), text: q.q })}`).join("")}</div></details>`;
+        <details class="topic"><summary>Alle offenen Prüfungsfragen mit Musterlösungen ansehen (${open.length})</summary><div class="t-body">${open.map((q, i) => `<p><b>${i + 1}. ${esc(q.q)}</b> <span class="pill">${q.p} P.</span></p><div class="solution small">${rich(q.s)}</div>${reviewBadge(RV.examId(m.id, q))} ${reportBtn({ kind: "Prüfungsfrage", mod: m.id, ref: "e:" + R.hash(q.q), text: q.q })}`).join("")}</div></details>`;
     }
     if (exam.phase === "run") {
       let h = `<div class="sticky-bar"><span>⏱ <span class="timer" id="examTimer"></span></span><button class="btn primary" data-exam="submit">Abgeben</button><button class="btn small" data-exam="abort">Abbrechen</button></div>`;
@@ -590,7 +619,7 @@
       const q = open[oi];
       h += `<div class="card"><b>Offene Frage ${n + 1}:</b> ${esc(q.q)}<p class="small muted">Deine Antwort:</p><div class="explain">${esc(exam.openAns[oi] || "(keine Antwort)").replace(/\n/g, "<br>")}</div>
         <div class="solution"><b>Musterlösung / Bewertungskriterien:</b>${rich(q.s)}</div>
-        <p>Selbstbewertung: ${Array.from({ length: q.p + 1 }, (_, k) => `<button class="btn small ${exam.selfScore[oi] === k ? "primary" : ""}" data-self="${oi}" data-pts="${k}">${k}</button>`).join(" ")} / ${q.p}</p>${reportBtn({ kind: "Prüfungsfrage", mod: m.id, ref: "e:" + R.hash(q.q), text: q.q })}</div>`;
+        <p>Selbstbewertung: ${Array.from({ length: q.p + 1 }, (_, k) => `<button class="btn small ${exam.selfScore[oi] === k ? "primary" : ""}" data-self="${oi}" data-pts="${k}">${k}</button>`).join(" ")} / ${q.p}</p>${reviewBadge(RV.examId(m.id, q))} ${reportBtn({ kind: "Prüfungsfrage", mod: m.id, ref: "e:" + R.hash(q.q), text: q.q })}</div>`;
     });
     exam.mcIdx.forEach((qi, n) => {
       const q = mc[qi], a = exam.mcAns[qi];
@@ -816,13 +845,15 @@
     });
     return out;
   }
-  function viewVerify(sub) {
-    sub = ["curriculum", "meldungen", "links"].includes(sub) ? sub : "curriculum";
+  function viewVerify(sub, mod) {
+    sub = ["curriculum", "inhalte", "meldungen", "links"].includes(sub) ? sub : "curriculum";
     const reports = Object.values(state.reports).sort((a, b) => b.created.localeCompare(a.created));
     const open = reports.filter((r) => r.status !== "erledigt").length;
     let h = `<h1>Prüfmodus</h1><p class="muted">Inhalte prüfen und Fehler sammeln, damit die App verlässlich wird.</p>
-      <nav class="tabs"><a href="#/pruefmodus/curriculum" class="${sub === "curriculum" ? "active" : ""}">Curriculum-Abgleich</a><a href="#/pruefmodus/meldungen" class="${sub === "meldungen" ? "active" : ""}">Fehlermeldungen<span class="cnt">${open}</span></a><a href="#/pruefmodus/links" class="${sub === "links" ? "active" : ""}">Linkprüfung</a></nav>`;
-    if (sub === "curriculum") {
+      <nav class="tabs"><a href="#/pruefmodus/curriculum" class="${sub === "curriculum" ? "active" : ""}">Curriculum-Abgleich</a><a href="#/pruefmodus/inhalte" class="${sub === "inhalte" ? "active" : ""}">Inhalte prüfen</a><a href="#/pruefmodus/meldungen" class="${sub === "meldungen" ? "active" : ""}">Fehlermeldungen<span class="cnt">${open}</span></a><a href="#/pruefmodus/links" class="${sub === "links" ? "active" : ""}">Linkprüfung</a></nav>`;
+    if (sub === "inhalte") {
+      h += viewContentReview(mod);
+    } else if (sub === "curriculum") {
       const items = verifyItems(), st = (id) => (state.verify[id] || {}).s || "";
       const nOk = items.filter((i) => st(i.id) === "ok").length, nDiff = items.filter((i) => st(i.id) === "diff").length;
       h += `<div class="card"><h3>So gehst du vor</h3><ol>${PP.verification.howto.map((x) => `<li>${esc(x)}</li>`).join("")}</ol>
@@ -850,7 +881,7 @@
       });
     } else {
       const ls = PP.linkStatus;
-      h += `<div class="card"><h3>Linkprüfung ausführen</h3><p>Die App kann fremde Webseiten nicht selbst abfragen. Das Prüfskript läuft auf deinem Rechner (Node.js ab Version 18):</p>
+      h += `<div class="card"><h3>Linkprüfung</h3><p>Die Links werden jeden Montag automatisch auf GitHub geprüft (Workflow „Linkprüfung“). Defekte Links landen in einem Issue mit dem Label <code>linkpruefung</code>, die Befunde kommen mit dem nächsten Release in die App. Von Hand lässt sich die Prüfung auf GitHub unter <i>Actions → Linkprüfung → Run workflow</i> starten oder auf dem eigenen Rechner (Node.js ab Version 18):</p>
         <pre><code>npm install
 npm run check-links</code></pre>
         <p class="small">Es prüft alle ${PP.modules.reduce((s, m) => s + (m.materials || []).length + (m.lectures || []).length, 0)} Modul-Links sowie allgemeine Ressourcen, schreibt einen Bericht nach <code>reports/link-report.md</code> und aktualisiert <code>data/link-status.js</code>. Danach markiert die App defekte Links direkt an der Fundstelle. Optionen: <code>--no-search</code> (Suchlinks überspringen), <code>--only=youtube</code> (nur passende URLs), <code>--strict</code> (Fehlercode bei defekten Links, z. B. für CI).</p></div>`;
@@ -866,6 +897,72 @@ npm run check-links</code></pre>
     }
     return h;
   }
+  // Fachliche Prüfung: Übersicht je Modul bzw. alle Inhalte eines Moduls mit Prüfvermerk
+  // Gerade bearbeitete Einträge bleiben sichtbar, auch wenn sie nicht mehr zum Filter passen (Beleg nachtragen)
+  let reviewFilter = "offen", reviewSticky = { mod: "", ids: new Set() };
+  function viewContentReview(mod) {
+    const m = mod && byId(mod);
+    const all = RV.stats(RITEMS, PP.review, state.review);
+    let h = `<div class="card"><h3>So gehst du vor</h3><ol>
+        <li>Modul wählen und Thema bzw. Frage mit einem Lehrbuch oder der angegebenen Quelle vergleichen.</li>
+        <li>Stimmt alles: <b>✓ geprüft</b> und im Feld den Beleg festhalten (Buch, Auflage, Seite).</li>
+        <li>Fehler gefunden: <b>✗ Fehler</b> – das öffnet eine Fehlermeldung mit Korrekturvorschlag.</li>
+        <li>Ab und zu <b>exportieren</b> und die Datei weitergeben: Mit <code>node tools/merge-review.mjs</code> kommen die Vermerke in <code>data/review.js</code> und sind dann für alle als „fachlich geprüft“ sichtbar.</li></ol>
+      <p class="small muted">Alle Inhalte wurden mit KI-Unterstützung erstellt. Solange ein Inhalt nicht geprüft ist, steht an ihm „ungeprüft“. Ändert sich ein Text später, gilt er wieder als ungeprüft.</p>
+      <div class="form-row"><label for="reviewer">Dein Kürzel für Prüfvermerke</label><input type="text" id="reviewer" value="${esc(state.settings.reviewer)}" placeholder="z. B. JD" maxlength="20"></div></div>
+      <div class="sticky-bar"><b>${all.all.ok}/${all.all.total}</b> Inhalte geprüft${all.all.fehler ? ` · <span class="pill bad">${all.all.fehler} mit Fehler</span>` : ""}
+        <button class="btn small" data-review="copy" ${Object.keys(state.review).length ? "" : "disabled"}>Eigene Vermerke kopieren</button><button class="btn small" data-review="save" ${Object.keys(state.review).length ? "" : "disabled"}>Als Datei speichern</button>${IN_ARTIFACT ? `<span class="small muted">${cloud.db ? "wird gespeichert" : "nur lokal"}</span>` : ""}</div>`;
+    if (!m) {
+      h += `<div class="card table-wrap"><table><thead><tr><th>Modul</th><th>Lernthemen</th><th>Quizfragen</th><th>Prüfungsfragen</th><th></th></tr></thead><tbody>` +
+        PP.modules.map((x) => {
+          const p = all.per[x.id], cell = (k) => p[k].total ? `${p[k].ok}/${p[k].total}${p[k].fehler ? ` <span class="pill bad">${p[k].fehler}</span>` : ""}` : "–";
+          return `<tr><td><a href="#/pruefmodus/inhalte/${esc(x.id)}">${esc(x.id)} ${esc(x.short || x.title)}</a></td><td class="num">${cell("topic")}</td><td class="num">${cell("quiz")}</td><td class="num">${cell("exam")}</td><td><a class="btn small" href="#/pruefmodus/inhalte/${esc(x.id)}">prüfen</a></td></tr>`;
+        }).join("") + `</tbody></table></div>`;
+      return h;
+    }
+    const items = RITEMS.filter((it) => it.mod === m.id);
+    const matches = (it, f) => { const st = reviewOf(it.id); return f === "alle" || (f === "offen" ? !st : f === "geprueft" ? !!st && st.s === "ok" : !!st && st.s === "fehler"); };
+    if (reviewSticky.mod !== m.id) reviewSticky = { mod: m.id, ids: new Set() };
+    const show = (it) => matches(it, reviewFilter) || reviewSticky.ids.has(it.id);
+    h += `<p><a href="#/pruefmodus/inhalte">← alle Module</a></p><h2>${esc(m.id)} · ${esc(m.title)}</h2>
+      <div class="btn-row">${[["offen", "ungeprüft"], ["geprueft", "geprüft"], ["fehler", "mit Fehler"], ["alle", "alle"]].map(([k, l]) => `<button class="btn small ${reviewFilter === k ? "primary" : ""}" data-rfilter="${k}">${l} (${items.filter((it) => matches(it, k)).length})</button>`).join("")}</div>`;
+    ["topic", "quiz", "exam"].forEach((kind) => {
+      const list = items.filter((it) => it.kind === kind && show(it));
+      if (!list.length) return;
+      h += `<h3>${{ topic: "Lernthemen", quiz: "Quizfragen", exam: "Prüfungsfragen" }[kind]} (${list.length})</h3><div class="card verify-list">`;
+      list.forEach((it) => {
+        const v = state.review[it.id] || {}, st = reviewOf(it.id), x = it.item;
+        let body;
+        if (kind === "topic") body = `<b>${esc(x.title)}</b><details><summary class="small">Text anzeigen</summary>${rich(x.text)}</details>${sourcesHtml(m, x)}`;
+        else if (kind === "quiz") body = `<b>${esc(x.q)}</b><ol type="A" class="small">${x.o.map((o, k) => `<li class="${k === x.a ? "correct-opt" : ""}">${esc(o)}${k === x.a ? " ✓" : ""}</li>`).join("")}</ol><div class="small muted">${esc(x.e || "")}</div>`;
+        else body = `<b>${esc(x.q)}</b> <span class="pill">${x.p} P.</span><details><summary class="small">Musterlösung</summary><div class="solution small">${rich(x.s)}</div></details>`;
+        h += `<div class="verify-row ${st && st.s === "ok" ? "is-ok" : st && st.s === "fehler" ? "is-bad" : ""}"><div>${body}${st && !st.local ? `<div class="small muted">Gemeinsamer Vermerk: ${esc([st.by, st.date, st.note].filter(Boolean).join(" · "))}</div>` : ""}</div>
+          <div class="rating">${[["ok", "✓ geprüft"], ["fehler", "✗ Fehler"], ["", "offen"]].map(([k, l]) => `<button data-rset="${it.id}" data-r="${k}" class="${(v.s || "") === k ? "on" : ""}">${l}</button>`).join("")}</div>
+          <input type="text" data-rnote="${it.id}" aria-label="Beleg" value="${esc(v.note || "")}" placeholder="Beleg: Buch, Auflage, Seite …"></div>`;
+      });
+      h += `</div>`;
+    });
+    return h;
+  }
+  function setReview(id, s) {
+    const it = RITEM.get(id); if (!it) return;
+    if (!s) {
+      const v = state.review[id];
+      if (v) { delete v.s; delete v.by; delete v.date; if (!v.note) delete state.review[id]; }
+      save(); pushReview(); return;
+    }
+    const v = state.review[id] = state.review[id] || {};
+    v.s = s; v.by = state.settings.reviewer || ""; v.date = today();
+    save(); pushReview();
+    if (s === "fehler") {
+      const x = it.item, text = it.kind === "topic" ? x.title : it.kind === "quiz" ? x.q + " → " + x.o[x.a] : x.q;
+      openReport({ kind: RV.KINDS[it.kind], mod: it.mod, ref: id, text });
+    }
+  }
+  function reviewExport() {
+    return JSON.stringify(RV.exportData(state.review, { reviewer: state.settings.reviewer, version: V.version, exported: new Date().toISOString() }), null, 2);
+  }
+
   function verifyMarkdown() {
     const items = verifyItems();
     const diffs = items.filter((i) => (state.verify[i.id] || {}).s === "diff");
@@ -959,7 +1056,7 @@ npm run check-links</code></pre>
       case "rechentrainer": html = viewTrainer(parts[1], parts[2]); break;
       case "datensaetze": html = viewDatasets(); break;
       case "anki": html = viewAnki(); break;
-      case "pruefmodus": html = viewVerify(parts[1]); break;
+      case "pruefmodus": html = viewVerify(parts[1], parts[2]); break;
       case "bibliothek": html = viewLibrary(); break;
       case "ressourcen": html = viewResources(); break;
       case "karriere": html = viewCareer(); break;
@@ -1097,6 +1194,13 @@ npm run check-links</code></pre>
       v.s = d.v; v.t = new Date().toISOString(); save(); pushVerify(); keep(route); return;
     }
     if (d.verify === "copy") { copyText(verifyMarkdown(), "Abweichungen als Markdown kopiert."); return; }
+    if (d.rset !== undefined) {
+      if (d.r && !state.settings.reviewer) { toast("Bitte zuerst oben dein Kürzel eintragen."); const r = document.getElementById("reviewer"); if (r) r.focus(); return; }
+      reviewSticky.ids.add(d.rset); setReview(d.rset, d.r); keep(route); return;
+    }
+    if (d.rfilter) { reviewFilter = d.rfilter; reviewSticky.ids.clear(); keep(route); return; }
+    if (d.review === "copy") { copyText(reviewExport(), "Prüfvermerke kopiert."); return; }
+    if (d.review === "save") { saveFile(`psychopfad-pruefvermerke-${today()}.json`, reviewExport(), "application/json"); return; }
     if (d.reports) {
       const md = "# Fehlermeldungen PsychoPfad Wien\n\n" + Object.values(state.reports).filter((r) => r.status !== "erledigt").map(reportMarkdown).join("\n---\n\n");
       if (d.reports === "copy") copyText(md, "Meldungen kopiert."); else saveFile("psychopfad-fehlermeldungen.md", md, "text/markdown;charset=utf-8");
@@ -1165,6 +1269,11 @@ npm run check-links</code></pre>
     if (t.id === "notes") { state.notes[t.dataset.mod] = t.value; clearTimeout(t._s); t._s = setTimeout(save, 400); }
     if (t.dataset.open !== undefined && exam) exam.openAns[+t.dataset.open] = t.value;
     if (t.dataset.tr && trainer) trainer.inputs[t.dataset.tr] = t.value;
+    if (t.id === "reviewer") { state.settings.reviewer = t.value.trim(); clearTimeout(t._s); t._s = setTimeout(save, 400); }
+    if (t.dataset.rnote) {
+      const v = state.review[t.dataset.rnote] = state.review[t.dataset.rnote] || {};
+      v.note = t.value; clearTimeout(t._s); t._s = setTimeout(() => { save(); pushReview(); }, 500);
+    }
     if (t.dataset.vnote) { const v = state.verify[t.dataset.vnote] = state.verify[t.dataset.vnote] || {}; v.note = t.value; clearTimeout(t._s); t._s = setTimeout(() => { save(); pushVerify(); }, 500); }
     if (t.id === "litFilter" || t.id === "glFilter") {
       const v = t.value.toLowerCase();

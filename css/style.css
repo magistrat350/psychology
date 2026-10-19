@@ -250,3 +250,9 @@ table.data td:first-child { text-align: left; font-weight: 600; }
 .update-banner span { flex: 1 1 220px; }
 .sidebar .nav-foot { margin: 18px 10px 0; padding-top: 10px; border-top: 1px solid var(--border); font-size: .8rem; }
 .sidebar .nav-foot a { padding: 2px 0; color: var(--muted); }
+.sources { margin-top: 10px; padding: 8px 12px; border-left: 3px solid var(--border); background: var(--surface-2); border-radius: 0 8px 8px 0; }
+.sources ul { margin: 4px 0 0; padding-left: 18px; }
+.sources li { margin: 2px 0; }
+.verify-row ol { margin: 4px 0; padding-left: 22px; }
+.verify-row .correct-opt { color: var(--ok); font-weight: 600; }
+.verify-row details summary { cursor: pointer; color: var(--link); margin-top: 4px; }
