@@ -208,9 +208,98 @@
     const Xty = Array.from({ length: p }, (_, a) => sum(X.map((r, i) => r[a] * y[i])));
     const b = solve(XtX, Xty);
     const yhat = X.map((r) => sum(r.map((v, i) => v * b[i])));
-    const r2 = 1 - sum(y.map((v, i) => (v - yhat[i]) ** 2)) / ss(y);
+    const ssRes = sum(y.map((v, i) => (v - yhat[i]) ** 2)), ssTot = ss(y);
+    const r2 = 1 - ssRes / ssTot;
     const beta = b.slice(1).map((bi, i) => bi * sd(xs[i]) / sd(y));
-    return { b, beta, r2, adjR2: 1 - (1 - r2) * (n - 1) / (n - p) };
+    // Inferenz: SE(b_j) = √(MQ_Res · [(X'X)⁻¹]_jj), t = b / SE, df = n − p; Modelltest F = (QS_Reg / k) / MQ_Res
+    const k = p - 1, df2 = n - p, mse = ssRes / df2;
+    const inv = Array.from({ length: p }, (_, j) => solve(XtX, Array.from({ length: p }, (_, i) => (i === j ? 1 : 0))));
+    const se = b.map((_, j) => Math.sqrt(mse * inv[j][j]));
+    const t = b.map((bj, j) => bj / se[j]);
+    const F = ((ssTot - ssRes) / k) / mse;
+    return { b, beta, r2, adjR2: 1 - (1 - r2) * (n - 1) / (n - p), R: Math.sqrt(Math.max(0, r2)), yhat, ssRes, ssTot,
+      se, t, p: t.map((tj) => tTwoSided(tj, df2)), F, df1: k, df2, pF: fUpper(F, k, df2) };
+  }
+  function corTest(x, y) { // Pearson-r mit t-Test (H₀: ρ = 0), df = n − 2
+    const r = pearson(x, y), df = x.length - 2, t = r * Math.sqrt(df / (1 - r * r));
+    return { r, t, df, p: tTwoSided(t, df) };
+  }
+  function levene(groups) { // Levene-Test: einfaktorielle ANOVA über |x − Gruppenmittelwert|
+    const a = anovaOneWay(groups.map((g) => { const m = mean(g); return g.map((v) => Math.abs(v - m)); }));
+    return { F: a.F, df1: a.df1, df2: a.df2, p: a.p };
+  }
+
+  // ---------- Exakte Verteilungen rangbasierter Tests (ohne Bindungen) ----------
+  const mwuMemo = new Map();
+  function mannWhitneyDist(n1, n2) {
+    // Häufigkeiten von U = 0 … n1·n2 über alle C(n1 + n2, n1) gleich wahrscheinlichen Rangaufteilungen unter H₀.
+    // Dynamische Programmierung über den größten Wert: gehört er zu Gruppe 1, ist er größer als alle n2 Werte
+    // der Gruppe 2 (U + n2) → Rest (n1 − 1, n2); gehört er zu Gruppe 2, ändert sich U nicht → Rest (n1, n2 − 1).
+    const key = n1 + "," + n2;
+    if (!mwuMemo.has(key)) {
+      let res = [1];
+      if (n1 > 0 && n2 > 0) {
+        const a = mannWhitneyDist(n1 - 1, n2), c = mannWhitneyDist(n1, n2 - 1);
+        res = new Array(n1 * n2 + 1).fill(0);
+        a.forEach((cnt, u) => { res[u + n2] += cnt; });
+        c.forEach((cnt, u) => { res[u] += cnt; });
+      }
+      mwuMemo.set(key, res);
+    }
+    return mwuMemo.get(key).slice();
+  }
+  function wilcoxonDist(n) {
+    // Häufigkeiten von W₊ = 0 … n(n + 1)/2 über alle 2ⁿ gleich wahrscheinlichen Vorzeichenkombinationen unter H₀
+    // (Teilmengensummen der Ränge 1 … n, dynamische Programmierung).
+    let c = [1];
+    for (let k = 1; k <= n; k++) {
+      const nx = new Array(c.length + k).fill(0);
+      c.forEach((cnt, s) => { nx[s] += cnt; nx[s + k] += cnt; });
+      c = nx;
+    }
+    return c;
+  }
+  function exactTwoSided(counts, stat) { // symmetrische Verteilung: p = min(1, 2 · P(S ≤ min(s, max − s)))
+    const max = counts.length - 1, u = Math.floor(Math.min(stat, max - stat) + 1e-9), total = sum(counts);
+    let c = 0; for (let k = 0; k <= u; k++) c += counts[k];
+    return Math.min(1, 2 * c / total);
+  }
+  function exactCrit(counts, alpha) { // größter Wert mit zweiseitigem exaktem p ≤ α (−1, falls keiner)
+    const total = sum(counts); let c = 0, crit = -1;
+    for (let k = 0; k < counts.length; k++) { c += counts[k]; if (2 * c / total <= alpha + 1e-12) crit = k; else break; }
+    return crit;
+  }
+  const mannWhitneyP = (U, n1, n2) => exactTwoSided(mannWhitneyDist(n1, n2), U);
+  const mannWhitneyCrit = (n1, n2, alpha = 0.05) => exactCrit(mannWhitneyDist(n1, n2), alpha);
+  const wilcoxonP = (T, n) => exactTwoSided(wilcoxonDist(n), T);
+  const wilcoxonCrit = (n, alpha = 0.05) => exactCrit(wilcoxonDist(n), alpha);
+  function mannWhitney(x, y) { // U-Test; exakter p-Wert nur ohne Bindungen (sonst NaN), z ohne Stetigkeitskorrektur
+    const n1 = x.length, n2 = y.length, N = n1 + n2, all = x.concat(y), r = ranks(all);
+    const ranks1 = r.slice(0, n1), ranks2 = r.slice(n1), R1 = sum(ranks1), R2 = sum(ranks2);
+    const U1 = n1 * n2 + n1 * (n1 + 1) / 2 - R1, U2 = n1 * n2 + n2 * (n2 + 1) / 2 - R2, U = Math.min(U1, U2);
+    const mu = n1 * n2 / 2, sigma = Math.sqrt(n1 * n2 * (N + 1) / 12), z = (U - mu) / sigma, ties = new Set(all).size < N;
+    return { n1, n2, ranks1, ranks2, R1, R2, U1, U2, U, mu, sigma, z, pNormal: 2 * normCdf(-Math.abs(z)), ties, p: ties ? NaN : mannWhitneyP(U, n1, n2) };
+  }
+  function wilcoxonSignedRank(x, y) { // Vorzeichen-Rang-Test für d = x − y; Nulldifferenzen werden entfernt
+    const diffs = x.map((v, i) => v - y[i]), nz = diffs.filter((d) => d !== 0), n = nz.length, r = ranks(nz.map(Math.abs));
+    let j = 0; const signedRanks = diffs.map((d) => (d === 0 ? 0 : Math.sign(d) * r[j++]));
+    const Wplus = sum(signedRanks.filter((s) => s > 0)), Wminus = sum(signedRanks.filter((s) => s < 0).map((s) => -s)), T = Math.min(Wplus, Wminus);
+    const mu = n * (n + 1) / 4, sigma = Math.sqrt(n * (n + 1) * (2 * n + 1) / 24), z = (T - mu) / sigma, ties = new Set(nz.map(Math.abs)).size < n;
+    return { diffs, n, zeros: diffs.length - n, signedRanks, Wplus, Wminus, T, mu, sigma, z, pNormal: 2 * normCdf(-Math.abs(z)), ties, p: ties ? NaN : wilcoxonP(T, n) };
+  }
+
+  // ---------- Teststärke, Stichprobenplanung, Fisher-z ----------
+  // t-Test für unabhängige Stichproben, n je Gruppe, Normalapproximation: 1 − β ≈ Φ(|d| · √(n/2) − z(1 − α/2))
+  const powerTInd = (d, n, alpha = 0.05) => normCdf(Math.abs(d) * Math.sqrt(n / 2) - normInv(1 - alpha / 2));
+  function sampleSizeTInd(d, power = 0.8, alpha = 0.05) { // n je Gruppe = ⌈2 · (z(1 − α/2) + z(1 − β))² / d²⌉
+    const z = normInv(1 - alpha / 2) + normInv(power);
+    return Math.ceil(2 * z * z / (d * d) - 1e-9);
+  }
+  const fisherZ = (r) => 0.5 * Math.log((1 + r) / (1 - r));
+  const fisherZInv = (z) => Math.tanh(z);
+  function corrCI(r, n, zc = 1.96) { // Konfidenzintervall für ρ über Fisher-z: z′ ± zc / √(n − 3), Rücktransformation tanh
+    const z = fisherZ(r), se = 1 / Math.sqrt(n - 3), zLo = z - zc * se, zHi = z + zc * se;
+    return { z, se, zLo, zHi, lo: fisherZInv(zLo), hi: fisherZInv(zHi) };
   }
   function diag2x2(tp, fn, fp, tn) {
     return { sens: tp / (tp + fn), spec: tn / (tn + fp), ppv: tp / (tp + fp), npv: tn / (tn + fn), acc: (tp + tn) / (tp + fn + fp + tn) };
@@ -232,6 +321,8 @@
     mulberry32, makeRng, round, sum, mean, median, modes, ss, variance, sd, cov, pearson, regression, ranks,
     erf, normCdf, normInv, lgamma, ibeta, gammaP, tCdf, tTwoSided, fUpper, chi2Upper, tCrit, fCrit, chi2Crit, choose, binomPmf,
     tTestOne, tTestInd, tTestPaired, anovaOneWay, kruskal, chi2Table, kappa, cronbachAlpha, itemTotal, solve, multipleRegression, diag2x2,
+    corTest, levene, mannWhitneyDist, mannWhitneyP, mannWhitneyCrit, mannWhitney, wilcoxonDist, wilcoxonP, wilcoxonCrit, wilcoxonSignedRank,
+    powerTInd, sampleSizeTInd, fisherZ, fisherZInv, corrCI,
     fmt, parseNum
   };
 });

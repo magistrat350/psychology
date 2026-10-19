@@ -1,6 +1,6 @@
 /* PsychoPfad Wien – Single-Page-App ohne Build-Schritt.
- * Routen (Hash): #/  #/plan  #/modul/<ID>/<tab>  #/wiederholen  #/mischquiz  #/rechentrainer[/<gen>[/<seed>]]
- *                #/datensaetze  #/anki  #/pruefmodus[/<bereich>]  #/bibliothek  #/ressourcen  #/karriere
+ * Routen (Hash): #/  #/plan  #/modul/<ID>/<tab>  #/wiederholen  #/verlauf  #/mischquiz  #/rechentrainer[/<gen>[/<seed>]]
+ *                #/datensaetze  #/anki  #/pruefmodus[/<bereich>]  #/bibliothek  #/ressourcen  #/podcasts  #/karriere
  *                #/glossar  #/fortschritt  #/einstellungen  #/suche/<begriff>
  * Benötigt: data/*.js, js/version.js, js/update.js, js/backup.js, js/stats.js, js/trainer.js, js/srs.js, js/sources.js, js/review.js, js/anki.js
  * In der Android-App zusätzlich js/capacitor.js (vom Build eingebunden). */
@@ -22,9 +22,9 @@
   // ---------- Zustand ----------
   const emptyState = () => ({
     comp: {}, quiz: {}, exam: {}, notes: {}, done: {}, cards: {}, read: {},
-    srs: {}, srsCfg: { newPerDay: 15, modules: null, kinds: ["card", "quiz"], introduced: { day: "", count: 0 } },
-    reports: {}, verify: {}, review: {}, trainer: {}, mix: [], backup: { last: "", snoozeUntil: "" },
-    settings: { theme: "auto", libTemplates: {}, reviewer: "", backupDays: 7 }
+    srs: {}, srsCfg: { newPerDay: 15, modules: null, kinds: ["card", "quiz"], retention: 0.9, introduced: { day: "", count: 0, mods: {} } },
+    reports: {}, verify: {}, review: {}, trainer: {}, mix: [], log: {}, exams: [], backup: { last: "", snoozeUntil: "" },
+    settings: { theme: "auto", libTemplates: {}, reviewer: "", backupDays: 7, reminder: { on: false, time: "18:00" } }
   });
   let state = load();
   // Automatische Sicherung im GitHub-Gist: Zugangsschlüssel und Abgleich-Stand getrennt vom Lernstand (nicht im Export)
@@ -40,6 +40,8 @@
     st.srsCfg = Object.assign(emptyState().srsCfg, st.srsCfg || {});
     st.settings = Object.assign(emptyState().settings, st.settings || {});
     st.backup = Object.assign(emptyState().backup, st.backup || {});
+    if (!st.log || typeof st.log !== "object" || Array.isArray(st.log)) st.log = {};
+    if (!Array.isArray(st.exams)) st.exams = [];
     if (st.cards && Object.keys(st.cards).length && !st.cardsMigrated) { R.migrateCards(st.cards, PP.modules, st.srs, R.today()); st.cardsMigrated = true; }
     return st;
   }
@@ -337,14 +339,39 @@
   function srsQueue() {
     return R.buildQueue(ITEMS, state.srs, today(), { newLimit: state.srsCfg.newPerDay, introducedToday: introducedToday(), newModules: state.srsCfg.modules, kinds: state.srsCfg.kinds });
   }
-  function grade_srs(id, correct) {
+  const retention = () => state.srsCfg.retention || R.RETENTION;
+  /** Bewertung 1–4 (nochmal, schwer, gut, leicht) bzw. true/false; FSRS berechnet Stabilität, Schwierigkeit und nächsten Termin. */
+  function grade_srs(id, grade) {
     const isNew = !state.srs[id];
-    state.srs[id] = R.review(state.srs[id], correct, today());
-    if (isNew) { const d = today(), c = state.srsCfg.introduced; state.srsCfg.introduced = { day: d, count: (c && c.day === d ? c.count : 0) + 1 }; }
+    state.srs[id] = R.review(state.srs[id], grade, today(), { retention: retention() });
+    if (isNew) {
+      const d = today(), c = state.srsCfg.introduced, same = c && c.day === d, mod = (ITEM.get(id) || {}).mod;
+      const mods = Object.assign({}, same && c.mods ? c.mods : {}); if (mod) mods[mod] = (mods[mod] || 0) + 1;
+      state.srsCfg.introduced = { day: d, count: (same ? c.count : 0) + 1, mods };
+    }
+    logActivity("rev", grade !== false && grade !== 1);
     save();
   }
-  function markWrong(modId, q) { const id = R.quizId(modId, q); state.srs[id] = R.markWrong(state.srs[id], today()); save(); }
+  function markWrong(modId, q) { const id = R.quizId(modId, q); state.srs[id] = R.markWrong(state.srs[id], today(), { retention: retention() }); save(); }
   function dueCount() { return ITEMS.filter((it) => R.isDue(state.srs[it.id], today())).length; }
+  const GRADES = [[1, "Nochmal"], [2, "Schwer"], [3, "Gut"], [4, "Leicht"]];
+  function fmtDays(n) {
+    n = Math.round(n);
+    if (n <= 0) return "heute"; if (n === 1) return "1 Tag"; if (n < 31) return n + " Tage";
+    if (n < 365) return "≈ " + Math.round(n / 30.4) + " Mon."; return "≈ " + S.fmt(n / 365, 1) + " J.";
+  }
+  /** Bewertungsknöpfe mit dem Abstand, den die jeweilige Bewertung ergäbe. */
+  function gradeRow(attr, card, only) {
+    const iv = R.preview(card, today(), { retention: retention() }), list = GRADES.filter(([g]) => !only || only.includes(g));
+    return `<div class="grade-row" style="--n:${list.length}">${list.map(([g, label]) =>
+      `<button class="btn grade${g === 3 ? " primary" : ""}" ${attr}="${g}" aria-keyshortcuts="${g}" title="Taste ${g}"><b>${label}</b><span class="small">${fmtDays(iv[g - 1])}</span></button>`).join("")}</div>
+      <p class="small muted grade-hint">Tasten ${list[0][0]}–${list[list.length - 1][0]} · Abstand bis zur nächsten Wiederholung</p>`;
+  }
+  function memLabel(c) {
+    if (!c) return "neu";
+    const m = R.memory(c), r = R.cardRetrievability(c, today());
+    return `Stabilität ${m.s < 1 ? "< 1 Tag" : fmtDays(m.s)}${r == null ? "" : ` · Abruf ${pct(r)} %`}`;
+  }
 
   // ---------- Fehlermeldungen ----------
   function reportBtn(ctx) { return `<button class="report-btn" data-report="${esc(JSON.stringify(ctx))}" title="Inhaltlichen Fehler oder kaputten Link melden">⚑ Fehler melden</button>`; }
@@ -442,9 +469,9 @@
     const due = dueCount();
     const openReports = Object.values(state.reports).filter((r) => r.status !== "erledigt").length;
     let h = `<div class="nav-group">Lernen</div>` + a("#/", "🏠 Übersicht") + a("#/plan", "🗓️ Semesterplan") +
-      a("#/wiederholen", "🔁 Wiederholen", due ? `<span class="nav-count">${due}</span>` : "") + a("#/mischquiz", "🎲 Mischquiz") +
+      a("#/wiederholen", "🔁 Wiederholen", due ? `<span class="nav-count">${due}</span>` : "") + a("#/verlauf", "📅 Lernverlauf & Termine") + a("#/mischquiz", "🎲 Mischquiz") +
       a("#/rechentrainer", "🧮 Rechentrainer") + a("#/datensaetze", "📊 Übungsdatensätze") +
-      `<div class="nav-group">Nachschlagen</div>` + a("#/bibliothek", "📚 Literatur & Bibliotheken") + a("#/ressourcen", "🌐 Offene Ressourcen") + a("#/glossar", "🔤 Glossar") +
+      `<div class="nav-group">Nachschlagen</div>` + a("#/bibliothek", "📚 Literatur & Bibliotheken") + a("#/ressourcen", "🌐 Offene Ressourcen") + a("#/podcasts", "🎧 Podcasts") + a("#/glossar", "🔤 Glossar") +
       `<div class="nav-group">Verwalten</div>` + a("#/fortschritt", "📈 Fortschritt") + a("#/anki", "🃏 Anki-Export") +
       a("#/pruefmodus", "🔍 Prüfmodus", openReports ? `<span class="nav-count">${openReports}</span>` : "") + a("#/karriere", "🧭 Nach dem Bachelor") + a("#/einstellungen", "⚙️ Einstellungen");
     PP.groups.forEach((g) => {
@@ -478,8 +505,8 @@
         <div class="stat"><b>${done}/${PP.meta.ects}</b>ECTS abgehakt</div>
       </div>
       <div class="progress" style="margin-top:12px"><span style="width:${(done / PP.meta.ects) * 100}%"></span></div></section>
-      <div class="card today"><div><h3>Heute</h3><p>${q.due.length} fällige Wiederholungen · ${q.fresh.length} neue Karten verfügbar</p></div>
-        <div class="btn-row"><a class="btn primary" href="#/wiederholen">Wiederholung starten</a><a class="btn" href="#/mischquiz">Mischquiz</a><a class="btn" href="#/rechentrainer">Rechentrainer</a></div></div>
+      <div class="card today"><div><h3>Heute</h3><p>${q.due.length} fällige Wiederholungen · ${q.fresh.length} neue Karten verfügbar</p>${homeExtras()}</div>
+        <div class="btn-row"><a class="btn primary" href="#/wiederholen">Wiederholung starten</a><a class="btn" href="#/verlauf">Lernverlauf</a><a class="btn" href="#/mischquiz">Mischquiz</a><a class="btn" href="#/rechentrainer">Rechentrainer</a></div></div>
       <div class="notice small"><b>Hinweis:</b> ${esc(PP.meta.disclaimer)} <a href="#/pruefmodus">Im Prüfmodus</a> kannst du Angaben abgleichen und Fehler melden.
         Fachlich geprüft sind bisher <b>${RV.stats(RITEMS, PP.review, state.review).all.ok} von ${RITEMS.length}</b> Lernthemen und Fragen – zu jedem Lernthema stehen Quellen zum Nachprüfen dabei (<a href="#/pruefmodus/inhalte">Inhalte prüfen</a>).</div>`;
     PP.groups.forEach((g) => {
@@ -513,13 +540,13 @@
   // ---------- Modulansicht ----------
   const TABS = [
     ["ueberblick", "Überblick"], ["wissen", "Wissen & Qualifikationen"], ["lernpfad", "Lernpfad"], ["materialien", "Materialien"],
-    ["vorlesungen", "Vorlesungen"], ["literatur", "Fachliteratur"], ["karten", "Karteikarten"], ["quiz", "Quiz"], ["pruefung", "Prüfung"],
+    ["vorlesungen", "Vorlesungen"], ["podcasts", "Podcasts"], ["literatur", "Fachliteratur"], ["karten", "Karteikarten"], ["quiz", "Quiz"], ["pruefung", "Prüfung"],
     ["rechnen", "Rechentrainer"], ["notizen", "Notizen"]
   ];
   const gensFor = (m) => T.generators.filter((g) => g.modules.includes(m.id));
   const datasetsFor = (m) => (PP.datasets || []).filter((d) => d.modules.includes(m.id));
   function tabCount(m, t) {
-    return { wissen: (m.competencies || []).length, lernpfad: (m.topics || []).length, materialien: (m.materials || []).length, vorlesungen: (m.lectures || []).length,
+    return { wissen: (m.competencies || []).length, lernpfad: (m.topics || []).length, materialien: (m.materials || []).length, vorlesungen: (m.lectures || []).length, podcasts: podcastsFor(m).length,
       literatur: (m.literature || []).length, karten: (m.glossary || []).length, quiz: (m.quiz || []).length, pruefung: (m.exam || []).length, rechnen: gensFor(m).length }[t];
   }
   function viewModule(id, tab) {
@@ -532,7 +559,7 @@
       <h1>${esc(m.id)} · ${esc(m.title)}</h1>
       <div class="pills">${m.ects ? `<span class="pill accent">${m.ects} ECTS</span>` : ""}${m.steop ? '<span class="pill warn">StEOP</span>' : ""}${m.semester ? `<span class="pill">empf. Semester: ${esc(m.semester)}</span>` : ""}${(m.lvs || []).map((l) => `<span class="pill">${esc(l.type)}${l.pi ? " · prüfungsimmanent" : ""}</span>`).join("")}</div>
       <nav class="tabs">${tabs.map(([k, label]) => { const c = tabCount(m, k); return `<a href="#/modul/${m.id}/${k}" class="${k === tab ? "active" : ""}">${label}${c ? `<span class="cnt">${c}</span>` : ""}</a>`; }).join("")}</nav>`;
-    const fn = { ueberblick: tabOverview, wissen: tabWissen, lernpfad: tabTopics, materialien: tabMaterials, vorlesungen: tabLectures, literatur: tabLit, karten: tabCards, quiz: tabQuiz, pruefung: tabExam, rechnen: tabRechnen, notizen: tabNotes }[tab];
+    const fn = { ueberblick: tabOverview, wissen: tabWissen, lernpfad: tabTopics, materialien: tabMaterials, vorlesungen: tabLectures, podcasts: tabPodcasts, literatur: tabLit, karten: tabCards, quiz: tabQuiz, pruefung: tabExam, rechnen: tabRechnen, notizen: tabNotes }[tab];
     h += fn(m);
     h += `<div class="btn-row" style="margin-top:30px;justify-content:space-between">${prev ? `<a class="btn" href="#/modul/${prev.id}">← ${esc(prev.id)} ${esc(prev.short || prev.title)}</a>` : "<span></span>"}${next ? `<a class="btn" href="#/modul/${next.id}">${esc(next.id)} ${esc(next.short || next.title)} →</a>` : ""}</div>`;
     return h;
@@ -600,6 +627,28 @@
   function tabLectures(m) {
     return `<p class="muted">Frei zugängliche Vorlesungsaufzeichnungen und Videokurse. Uni-interne Aufzeichnungen (u:stream/Moodle) sind nur mit u:account verfügbar.</p>` + resourceList(m.lectures, "Noch keine Vorlesungen hinterlegt.", m.id);
   }
+  // Podcasts: Empfehlung des Podcasts plus Suchlink nach passenden Folgen (keine einzelnen Folgen verlinkt, die ändern sich)
+  const podSearch = (p, q) => "https://duckduckgo.com/?q=" + encodeURIComponent(`"${p.title}" ${q}`);
+  const podcastsFor = (m) => (PP.podcasts || []).filter((p) => p.modules[m.id]);
+  function podcastItem(p, mod) {
+    const x = mod ? p.modules[mod] : null;
+    return `<li class="resource"><div class="r-title">🎧 ${link(p.url, p.title)} ${linkBadge(p.url)}</div>
+      <div class="r-meta pills"><span class="pill">${esc(p.lang === "DE" ? "Deutsch" : "Englisch")}</span><span class="pill">${esc(p.by)}</span></div>
+      ${x ? `<div><b>${esc(x.hint)}</b></div>` : ""}<div class="small muted">${esc(p.about)}</div>
+      ${x ? `<div class="btn-row"><a class="btn small" href="${esc(podSearch(p, x.q))}" target="_blank" rel="noopener noreferrer">🔎 Passende Folgen suchen</a>${reportBtn({ kind: "Link", mod, ref: "l:" + R.hash(p.url), text: p.title, url: p.url })}</div>`
+        : `<div class="pills" style="margin-top:4px">${Object.keys(p.modules).map((id) => `<a class="pill" href="#/modul/${esc(id)}/podcasts" title="${esc(p.modules[id].hint)}">${esc(id)}</a>`).join("")}</div>`}</li>`;
+  }
+  function tabPodcasts(m) {
+    const list = podcastsFor(m).sort((a, b) => (a.lang === b.lang ? 0 : a.lang === "DE" ? -1 : 1));
+    return `<p class="muted">Zum Weiterhören unterwegs: frei abrufbare Podcasts, die Themen dieses Moduls behandeln. Der Suchlink findet passende Folgen. Podcasts ersetzen keine Fachliteratur – prüfe Aussagen wie bei jeder Quelle. <a href="#/podcasts">Alle Podcasts</a></p>` +
+      (list.length ? `<div class="card"><ul class="clean">${list.map((p) => podcastItem(p, m.id)).join("")}</ul></div>` : `<p class="muted">Für dieses Modul ist noch kein Podcast hinterlegt.</p>`);
+  }
+  function viewPodcasts() {
+    const all = PP.podcasts || [], de = all.filter((p) => p.lang === "DE"), en = all.filter((p) => p.lang !== "DE");
+    return `<h1>Podcasts <span class="pill">${all.length}</span></h1><p class="muted">Psychologie zum Hören – Fach- und Wissenschaftspodcasts sowie Sendungen von Ö1, Deutschlandfunk Nova, SWR, BR und BBC. Die Kürzel führen zu den Modulen, dort gibt es je Podcast einen Suchlink für passende Folgen. Abgerufen und geprüft im Oktober 2026; Adressen werden wöchentlich automatisch auf Erreichbarkeit getestet.</p>
+      <h2>Deutschsprachig</h2><div class="card"><ul class="clean">${de.map((p) => podcastItem(p)).join("")}</ul></div>
+      <h2>Englischsprachig</h2><div class="card"><ul class="clean">${en.map((p) => podcastItem(p)).join("")}</ul></div>`;
+  }
   function tabLit(m) {
     const order = { Standard: 0, Einstieg: 1, Vertiefung: 2, Klassiker: 3, Nachschlagen: 4 };
     const list = (m.literature || []).slice().sort((a, b) => (order[a.tag] ?? 9) - (order[b.tag] ?? 9));
@@ -622,12 +671,12 @@
     if (!cardSession || cardSession.mod !== m.id) cardSession = { mod: m.id, flipped: false, id: null };
     if (!cardSession.id || !ITEM.has(cardSession.id)) cardSession.id = pickCard(items);
     const it = ITEM.get(cardSession.id), c = state.srs[it.id];
-    return `<p class="muted">Die Karten nutzen dieselben Wiederholungsabstände wie die <a href="#/wiederholen">modulübergreifende Wiederholung</a> (gewusst → längere Pause: 1, 3, 7, 16, 35, 80 Tage; nicht gewusst → morgen wieder).</p>
+    return `<p class="muted">Die Karten teilen ihre Lerndaten mit der <a href="#/wiederholen">modulübergreifenden Wiederholung</a>: Nach dem Umdrehen bewertest du, wie gut du den Begriff wusstest, und der Planer (FSRS) legt fest, wann er wiederkommt.</p>
       <div class="pills"><span class="pill">${st.total} Begriffe</span><span class="pill">${st.learned} begonnen</span><span class="pill warn">${st.due} heute fällig</span><span class="pill ok">${st.mature} gefestigt</span></div>
       <div class="card flash ${cardSession.flipped ? "back" : ""}" id="flash" data-flip="1" role="button" tabindex="0">
-        ${cardSession.flipped ? `<div><div class="small muted">${esc(it.term)}</div>${esc(it.def)}</div>` : `<div><div class="small muted">Begriff · ${c ? `Box ${c.box}` : "neu"}</div><b>${esc(it.term)}</b><div class="small muted" style="margin-top:8px">Klicken oder Leertaste zum Umdrehen</div></div>`}
+        ${cardSession.flipped ? `<div><div class="small muted">${esc(it.term)}</div>${esc(it.def)}</div>` : `<div><div class="small muted">Begriff · ${memLabel(c)}</div><b>${esc(it.term)}</b><div class="small muted" style="margin-top:8px">Klicken oder Leertaste zum Umdrehen</div></div>`}
       </div>
-      <div class="btn-row" style="justify-content:center">${cardSession.flipped ? `<button class="btn" data-cardgrade="0">✗ Nicht gewusst</button><button class="btn primary" data-cardgrade="1">✓ Gewusst</button>` : ""}${reportBtn({ kind: "Karteikarte", mod: m.id, ref: it.id, text: it.term + ": " + it.def })}</div>
+      ${cardSession.flipped ? gradeRow("data-cardgrade", c) : ""}<div class="btn-row" style="justify-content:center">${reportBtn({ kind: "Karteikarte", mod: m.id, ref: it.id, text: it.term + ": " + it.def })}</div>
       <details class="topic"><summary>Alle Begriffe als Liste (${items.length})</summary><div class="t-body"><dl>${items.map((x) => `<dt><b>${esc(x.term)}</b></dt><dd class="small">${esc(x.def)}</dd>`).join("")}</dl></div></details>`;
   }
   function pickCard(items) {
@@ -636,7 +685,7 @@
     if (due.length) return due[Math.floor(Math.random() * due.length)].id;
     const fresh = items.filter((it) => !state.srs[it.id]);
     if (fresh.length) return fresh[0].id;
-    const sorted = items.slice().sort((a, b) => state.srs[a.id].box - state.srs[b.id].box);
+    const sorted = items.slice().sort((a, b) => R.cardRetrievability(state.srs[a.id], d) - R.cardRetrievability(state.srs[b.id], d));
     return sorted[Math.floor(Math.random() * Math.min(5, sorted.length))].id;
   }
 
@@ -675,7 +724,8 @@
     const s = quizSession; if (s.answers[qi] !== undefined) return;
     s.answers[qi] = k;
     const qs = m.quiz;
-    if (qs[qi].a !== k) markWrong(m.id, qs[qi]);
+    logActivity("quiz", qs[qi].a === k);
+    if (qs[qi].a !== k) markWrong(m.id, qs[qi]); else save();
     if (!s.subset && Object.keys(s.answers).length === qs.length) {
       const p = Object.entries(s.answers).filter(([i, a]) => qs[i].a === a).length / qs.length;
       const prev = state.quiz[m.id] || { best: 0, attempts: 0 };
@@ -737,7 +787,12 @@
   }
   function finishExam(m) {
     exam.phase = "result"; clearInterval(startTimer._i);
-    exam.mcIdx.forEach((qi) => { if (exam.mcAns[qi] !== m.quiz[qi].a) markWrong(m.id, m.quiz[qi]); });
+    exam.mcIdx.forEach((qi) => {
+      const ok = exam.mcAns[qi] === m.quiz[qi].a;
+      if (exam.mcAns[qi] !== undefined) logActivity("quiz", ok);
+      if (!ok) markWrong(m.id, m.quiz[qi]);
+    });
+    logActivity("ex"); save();
   }
   function startTimer() {
     const el = document.getElementById("examTimer"); if (!el || !exam || exam.phase !== "run") return;
@@ -765,24 +820,24 @@
   // ---------- Wiederholen ----------
   let rev = null;
   function viewReview() {
-    const q = srsQueue(), st = R.stats(ITEMS, state.srs, today()), cfg = state.srsCfg;
     if (rev && rev.active) return reviewSession();
-    const upcoming = [1, 2, 3, 4, 5, 6, 7].map((n) => { const d = R.addDays(today(), n); return ITEMS.filter((it) => state.srs[it.id] && state.srs[it.id].due === d).length; });
-    const maxBox = Math.max(1, ...st.byBox);
-    let h = `<h1>Wiederholen</h1><p class="muted">Begriffe und Quizfragen aus allen Modulen, verzahnt gemischt. Gewusstes kommt in wachsenden Abständen (1, 3, 7, 16, 35, 80 Tage) wieder, Falsches am nächsten Tag. Im Modul-Quiz oder in Prüfungen falsch beantwortete Fragen landen automatisch hier.</p>
-      ${rev && rev.finished ? `<div class="notice info"><b>Runde beendet:</b> ${rev.correct} von ${rev.done} richtig.</div>` : ""}
+    const q = srsQueue(), st = R.stats(ITEMS, state.srs, today()), cfg = state.srsCfg;
+    const fc = R.forecast(ITEMS, state.srs, today(), 8).slice(1);
+    let h = `<h1>Wiederholen</h1><p class="muted">Begriffe und Quizfragen aus allen Modulen, verzahnt gemischt. Nach jeder Karte bewertest du, wie gut du sie wusstest – <b>Nochmal</b>, <b>Schwer</b>, <b>Gut</b> oder <b>Leicht</b>. Der Planer (FSRS, dasselbe Gedächtnismodell wie in Anki) schätzt daraus für jedes Element, wie stabil es im Gedächtnis ist, und legt die nächste Wiederholung so, dass du es dann mit etwa ${pct(retention())} % Wahrscheinlichkeit noch weißt. Im Modul-Quiz oder in Prüfungen falsch beantwortete Fragen landen automatisch hier.</p>
+      ${rev && rev.finished ? `<div class="notice info"><b>Runde beendet:</b> ${rev.correct} von ${rev.done} gewusst.${rev.mod ? ` <a href="#/verlauf">Zurück zu den Prüfungsterminen</a>` : ""}</div>` : ""}
       <div class="card today"><div><h3>Heute</h3><p><b>${q.due.length}</b> fällig · <b>${q.fresh.length}</b> neu (Limit ${cfg.newPerDay}/Tag, heute schon ${introducedToday()} eingeführt)</p></div>
-        <div class="btn-row"><button class="btn primary" data-rev="start" ${q.all.length ? "" : "disabled"}>${q.all.length ? `Runde starten (${q.all.length})` : "Für heute alles erledigt"}</button></div></div>
+        <div class="btn-row"><button class="btn primary" data-rev="start" ${q.all.length ? "" : "disabled"}>${q.all.length ? `Runde starten (${q.all.length})` : "Für heute alles erledigt"}</button><a class="btn" href="#/verlauf">Lernverlauf & Prüfungstermine</a></div></div>
       <div class="grid">
-        <div class="card"><h3>Stand</h3><p class="small">${st.learned} von ${st.total} Elementen begonnen · ${st.mature} gefestigt (Box ≥ 4)</p>
-          <div class="boxes">${st.byBox.map((n, b) => `<div class="box-col"><div class="box-bar" style="height:${Math.round(60 * n / maxBox)}px"></div><span class="small">${b}</span><span class="small muted">${n}</span></div>`).join("")}</div>
-          <p class="small muted">Boxen 0–6 (höher = länger gefestigt)</p></div>
-        <div class="card"><h3>Nächste 7 Tage</h3><div class="table-wrap"><table><tbody>${upcoming.map((n, i) => `<tr><td>${i === 0 ? "morgen" : `in ${i + 1} Tagen`}</td><td class="num">${n}</td></tr>`).join("")}</tbody></table></div></div>
+        <div class="card"><h3>Gedächtnisstabilität</h3><p class="small">${st.learned} von ${st.total} Elementen begonnen · ${st.mature} gefestigt (Stabilität ≥ 3 Wochen)</p>${spanChart(st)}</div>
+        <div class="card"><h3>Nächste 7 Tage</h3><div class="table-wrap"><table><thead><tr><th>Tag</th><th class="num">fällig</th></tr></thead><tbody>${fc.map((n, i) => `<tr><td>${i === 0 ? "morgen" : esc(dayLabel(R.addDays(today(), i + 1)))}</td><td class="num">${n}</td></tr>`).join("")}</tbody></table></div>
+          <p class="small muted">Ohne neue Elemente – mehr im <a href="#/verlauf">Lernverlauf</a>.</p></div>
       </div>
       <div class="card"><h3>Einstellungen</h3>
         <div class="form-row"><label>Neue Elemente pro Tag <input type="number" id="srsNew" min="0" max="200" value="${cfg.newPerDay}"></label>
+        <label>Ziel-Behaltensquote <select id="srsRet">${[0.8, 0.85, 0.9, 0.95].map((r) => `<option value="${r}" ${Math.abs(retention() - r) < 1e-9 ? "selected" : ""}>${pct(r)} %${r === 0.9 ? " (empfohlen)" : ""}</option>`).join("")}</select></label>
         <label><input type="checkbox" class="srsKind" value="card" ${cfg.kinds.includes("card") ? "checked" : ""}> Begriffe</label>
         <label><input type="checkbox" class="srsKind" value="quiz" ${cfg.kinds.includes("quiz") ? "checked" : ""}> Quizfragen</label></div>
+        <p class="small muted">Die Behaltensquote bestimmt die Abstände: Bei 95 % sind sie nur etwa 40 % so lang wie bei 90 % (deutlich mehr Wiederholungen), bei 80 % rund dreimal so lang (weniger Aufwand, mehr Vergessenes). Sie gilt ab der nächsten Bewertung.</p>
         <p class="small">Neue Elemente aus diesen Modulen (in Curriculumsreihenfolge):</p>
         <div class="btn-row"><button class="btn small" data-srsmods="all">alle</button><button class="btn small" data-srsmods="none">keine</button><button class="btn small" data-srsmods="steop">nur StEOP</button></div>
         <div class="mod-checks">${PP.modules.map((m) => `<label><input type="checkbox" class="srsMod" value="${m.id}" ${!cfg.modules || cfg.modules.includes(m.id) ? "checked" : ""}> ${esc(m.id)} <span class="muted small">${esc(m.short || m.title)}</span></label>`).join("")}</div>
@@ -793,26 +848,196 @@
     const id = rev.queue[rev.idx];
     if (!id) { rev.active = false; rev.finished = true; return viewReview(); }
     const it = ITEM.get(id), c = state.srs[id];
-    const head = `<div class="sticky-bar"><b>${rev.idx + 1}/${rev.queue.length}</b> · ${rev.correct} richtig ${modPill(it.mod)} <span class="pill">${c ? `Box ${c.box}` : "neu"}</span><button class="btn small" data-rev="stop">Runde beenden</button></div>
+    const head = `<div class="sticky-bar"><b>${rev.idx + 1}/${rev.queue.length}</b> · ${rev.correct} richtig ${modPill(it.mod)} <span class="pill">${memLabel(c)}</span>${rev.mod ? `<span class="pill accent">Prüfungsvorbereitung</span>` : ""}<button class="btn small" data-rev="stop">Runde beenden</button></div>
       <div class="progress" style="margin:8px 0 14px"><span style="width:${pct(rev.idx / rev.queue.length)}%"></span></div>`;
     if (it.kind === "card") {
       return head + `<div class="card flash ${rev.flipped ? "back" : ""}" data-rev="flip" role="button" tabindex="0">${rev.flipped ? `<div><div class="small muted">${esc(it.term)}</div>${esc(it.def)}</div>` : `<div><div class="small muted">Begriff</div><b>${esc(it.term)}</b><div class="small muted" style="margin-top:8px">Klicken oder Leertaste</div></div>`}</div>
-        <div class="btn-row" style="justify-content:center">${rev.flipped ? `<button class="btn" data-rev="0">✗ Nicht gewusst (1)</button><button class="btn primary" data-rev="1">✓ Gewusst (2)</button>` : ""}${reportBtn({ kind: "Karteikarte", mod: it.mod, ref: it.id, text: it.term + ": " + it.def })}</div>`;
+        ${rev.flipped ? gradeRow("data-revgrade", c) : ""}<div class="btn-row" style="justify-content:center">${reportBtn({ kind: "Karteikarte", mod: it.mod, ref: it.id, text: it.term + ": " + it.def })}</div>`;
     }
     if (!rev.opt[id]) rev.opt[id] = shuffle(it.q.o.map((_, k) => k));
     return head + quizCard(it.q, rev.idx + 1, rev.chosen, rev.opt[id], `data-revq="1"`, { mod: it.mod }) +
-      (rev.chosen !== undefined ? `<div class="btn-row"><button class="btn primary" data-rev="next">Weiter (Enter)</button></div>` : "");
+      (rev.chosen === undefined ? "" : rev.chosen === it.q.a
+        ? `<p class="small" style="text-align:center">Richtig – wie leicht fiel es dir? (Enter = Gut)</p>${gradeRow("data-revgrade", c, [2, 3, 4])}`
+        : `<div class="btn-row" style="justify-content:center"><button class="btn primary" data-revgrade="1">Weiter (Enter) – kommt heute noch einmal</button></div>`);
   }
-  function startReview() {
-    const q = srsQueue();
-    rev = { active: true, queue: q.all.map((x) => x.id), idx: 0, done: 0, correct: 0, requeued: {}, flipped: false, chosen: undefined, opt: {} };
+  /** Runde starten – ohne Optionen die tägliche Wiederholung, mit `mod` die Vorbereitung auf eine Prüfung (fällige + `newLimit` neue Elemente des Moduls). */
+  function startReview(opts = {}) {
+    const q = opts.mod ? R.buildQueue(ITEMS.filter((it) => it.mod === opts.mod), state.srs, today(), { newLimit: opts.newLimit || 0, kinds: state.srsCfg.kinds }) : srsQueue();
+    rev = { active: true, mod: opts.mod || null, queue: q.all.map((x) => x.id), idx: 0, done: 0, correct: 0, requeued: {}, flipped: false, chosen: undefined, opt: {} };
   }
-  function gradeReview(correct) {
-    const id = rev.queue[rev.idx];
-    grade_srs(id, correct);
-    rev.done++; if (correct) rev.correct++;
-    if (!correct && !rev.requeued[id]) { rev.requeued[id] = true; rev.queue.push(id); }
+  function gradeReview(grade) {
+    const id = rev.queue[rev.idx], ok = grade > 1;
+    grade_srs(id, grade);
+    rev.done++; if (ok) rev.correct++;
+    if (!ok && !rev.requeued[id]) { rev.requeued[id] = true; rev.queue.push(id); }
     rev.idx++; rev.flipped = false; rev.chosen = undefined;
+  }
+
+  // ---------- Lernverlauf & Prüfungstermine ----------
+  const WD = ["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"], MON = ["Jan", "Feb", "Mär", "Apr", "Mai", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Dez"];
+  const parseDay = (day) => { const [y, m, d] = day.split("-").map(Number); return new Date(y, m - 1, d); };
+  const dayLabel = (day, year) => { const dt = parseDay(day); return `${WD[dt.getDay()]} ${dt.getDate()}.${dt.getMonth() + 1}.${year ? dt.getFullYear() : ""}`; };
+  const mondayOf = (day) => R.addDays(day, -((parseDay(day).getDay() + 6) % 7));
+  /** Tageszähler: rev = Wiederholungen, quiz = Quiz-/Mischquiz-/Prüfungs-MC-Fragen, tr = Rechenaufgaben (erster Versuch), ex = Prüfungssimulationen; jeweils mit …Ok. */
+  function logActivity(kind, ok) {
+    const d = today(), e = state.log[d] || (state.log[d] = {});
+    e[kind] = (e[kind] || 0) + 1; if (ok) e[kind + "Ok"] = (e[kind + "Ok"] || 0) + 1;
+    const days = Object.keys(state.log); if (days.length > 800) days.sort().slice(0, days.length - 800).forEach((k) => delete state.log[k]);
+  }
+  const LOG_KINDS = ["rev", "quiz", "tr"];
+  function dayTotals(day) {
+    const e = state.log[day] || {}; let n = 0, ok = 0;
+    LOG_KINDS.forEach((k) => { n += e[k] || 0; ok += e[k + "Ok"] || 0; });
+    return { n, ok, ex: e.ex || 0 };
+  }
+  const isActive = (day) => { const t = dayTotals(day); return t.n + t.ex > 0; };
+  function streak() {
+    let d = today(), n = 0;
+    if (!isActive(d)) d = R.addDays(d, -1); // heute noch nichts gemacht: die Serie bis gestern zählt noch
+    while (isActive(d)) { n++; d = R.addDays(d, -1); }
+    return n;
+  }
+  function examTitle(x) { const m = byId(x.mod); return x.title || (m ? `${m.id} ${m.short || m.title}` : x.mod); }
+  function upcomingExams() { const d = today(); return state.exams.filter((x) => x.date >= d).sort((a, b) => a.date.localeCompare(b.date)); }
+  /**
+   * Tagesziel bis zur Prüfung: die noch neuen Elemente des Moduls gleichmäßig auf die Tage bis zum Vortag verteilen
+   * (der Vortag bleibt fürs Wiederholen), dazu alle fälligen. `recall` = erwarteter Anteil abrufbarer Elemente am
+   * Prüfungstag, wenn ab jetzt nicht mehr wiederholt wird (neue zählen als 0).
+   */
+  function examPlan(x) {
+    const d = today(), left = R.daysBetween(d, x.date);
+    const items = ITEMS.filter((it) => it.mod === x.mod && state.srsCfg.kinds.includes(it.kind));
+    const learned = items.filter((it) => state.srs[it.id]), fresh = items.length - learned.length;
+    const c = state.srsCfg.introduced, introToday = c && c.day === d && c.mods ? c.mods[x.mod] || 0 : 0;
+    const newGoal = left > 0 ? Math.max(0, Math.ceil((fresh + introToday) / Math.max(1, left - 1)) - introToday) : 0;
+    const due = items.filter((it) => R.isDue(state.srs[it.id], d)).length;
+    const recall = items.length ? learned.reduce((s, it) => s + (R.cardRetrievability(state.srs[it.id], x.date) || 0), 0) / items.length : 0;
+    return { left, total: items.length, learned: learned.length, fresh, newGoal: Math.min(fresh, newGoal), due, recall };
+  }
+  function homeExtras() {
+    const s = streak(), next = upcomingExams()[0], parts = [];
+    if (s) parts.push(`🔥 ${s} ${s === 1 ? "Tag" : "Tage"} in Folge gelernt`);
+    if (next) {
+      const p = examPlan(next), todo = p.newGoal + p.due;
+      parts.push(`📅 <a href="#/verlauf">${esc(examTitle(next))}</a> ${p.left === 0 ? "heute" : `in ${p.left} ${p.left === 1 ? "Tag" : "Tagen"}`} · ${todo ? `Tagesziel: ${todo} Elemente` : "Tagesziel erreicht ✓"}`);
+    } else parts.push(`📅 <a href="#/verlauf">Prüfungstermin eintragen</a> – mit Countdown und Tagesziel`);
+    return `<p class="small">${parts.join(" · ")}</p>`;
+  }
+
+  // Diagramme in HTML/CSS (Beschriftungen bleiben auf dem Handy lesbar). Je Diagramm eine Datenreihe, daher ohne
+  // Legende; Werte per Tooltip (data-tip) und vollständig in der Tabellenansicht darunter.
+  function niceMax(v) { if (v <= 4) return 4; if (v <= 10) return 10; const p = Math.pow(10, Math.floor(Math.log10(v))), f = v / p; return (f <= 1 ? 1 : f <= 2 ? 2 : f <= 5 ? 5 : 10) * p; }
+  function chartFrame(ticks, fmtTick, plot, xLabels, n) {
+    return `<div class="chart"><div class="ch-area">${ticks.map((t) => `<div class="ch-tick" style="bottom:${t.pos}%"><span>${esc(fmtTick(t.v))}</span></div>`).join("")}<div class="ch-plot">${plot}</div></div>
+      <div class="ch-x" style="grid-template-columns:repeat(${n},minmax(0,1fr))" aria-hidden="true">${xLabels.map((l) => `<span class="${l.center ? "c" : ""}" style="grid-column:${l.col + 1} / span ${l.span}">${esc(l.text)}</span>`).join("")}</div></div>`;
+  }
+  const tableView = (head, rows) => `<details class="ch-table"><summary class="small">Als Tabelle</summary><div class="table-wrap"><table><thead><tr>${head.map((x, i) => `<th${i ? ' class="num"' : ""}>${esc(x)}</th>`).join("")}</tr></thead><tbody>${rows.map((r) => `<tr>${r.map((x, i) => `<td${i ? ' class="num"' : ""}>${esc(x)}</td>`).join("")}</tr>`).join("")}</tbody></table></div></details>`;
+  function forecastChart(days) {
+    const d = today(), fc = R.forecast(ITEMS, state.srs, d, days), max = niceMax(Math.max(...fc));
+    const lab = (i) => (i === 0 ? "heute" : dayLabel(R.addDays(d, i)));
+    const plot = `<div class="ch-bars" style="grid-template-columns:repeat(${days},minmax(0,1fr))">${fc.map((n, i) => `<div class="ch-col" data-tip="${esc(lab(i))}: ${n} fällig"><span class="ch-bar" style="height:${(100 * n / max).toFixed(1)}%"></span></div>`).join("")}</div>`;
+    const xl = []; for (let i = 0; i < days; i += 7) xl.push({ col: i, span: Math.min(7, days - i), text: i === 0 ? "heute" : dayLabel(R.addDays(d, i)).slice(3) });
+    return `<div role="img" aria-label="Säulendiagramm: fällige Wiederholungen pro Tag, Werte in der Tabelle darunter">` + chartFrame([0, max / 2, max].map((v) => ({ v, pos: 100 * v / max })), String, plot, xl, days) + `</div>` +
+      tableView(["Tag", "fällig"], fc.map((n, i) => [lab(i), n]));
+  }
+  function weekStats(weeks) {
+    const end = today(), mon = mondayOf(end), out = [];
+    for (let w = weeks - 1; w >= 0; w--) {
+      const start = R.addDays(mon, -7 * w); let n = 0, ok = 0;
+      for (let i = 0; i < 7; i++) { const day = R.addDays(start, i); if (day > end) break; const t = dayTotals(day); n += t.n; ok += t.ok; }
+      out.push({ start, n, ok, acc: n ? Math.min(1, ok / n) : null });
+    }
+    return out;
+  }
+  function accuracyChart(weeks) {
+    const ws = weekStats(weeks), n = ws.length, x = (i) => 100 * (i + 0.5) / n, y = (a) => 100 - 100 * a;
+    // Linie nur zwischen benachbarten Wochen mit Daten, Lücken bleiben sichtbar
+    let path = ""; ws.forEach((w, i) => { if (w.acc == null) return; path += `${i && ws[i - 1].acc != null ? " L" : " M"}${x(i).toFixed(2)} ${y(w.acc).toFixed(2)}`; });
+    const plot = `<svg class="ch-line" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><path d="${path.trim()}"/></svg>` +
+      ws.map((w, i) => (w.acc == null ? "" : `<span class="ch-dot" style="left:${x(i).toFixed(2)}%;top:${y(w.acc).toFixed(2)}%"></span>`)).join("") +
+      `<div class="ch-hit" style="grid-template-columns:repeat(${n},minmax(0,1fr))">${ws.map((w) => `<div data-tip="Woche ab ${esc(dayLabel(w.start))}: ${w.n ? `${pct(w.acc)} % richtig (${w.ok} von ${w.n})` : "keine Aufgaben"}"></div>`).join("")}</div>`;
+    const xl = ws.map((w, i) => ({ col: i, span: 1, center: true, text: (n - 1 - i) % 2 === 0 ? dayLabel(w.start).slice(3) : "" })).filter((l) => l.text);
+    return `<div role="img" aria-label="Liniendiagramm: Anteil richtiger Antworten pro Woche, Werte in der Tabelle darunter">` + chartFrame([0, 50, 100].map((v) => ({ v, pos: v })), (v) => v + " %", plot, xl, n) + `</div>` +
+      tableView(["Woche ab", "Aufgaben", "richtig", "Quote"], ws.map((w) => [dayLabel(w.start, true), w.n, w.ok, w.n ? pct(w.acc) + " %" : "–"]));
+  }
+  // Stabilitätsverteilung: waagrechte Balken mit Zahl am Ende (Text liest sich auch ohne Grafik)
+  function spanChart(st) {
+    const max = Math.max(1, ...st.bySpan);
+    return `<div class="hbars">${st.spans.map((l, i) => `<span class="small">${esc(l)}</span><span class="hbar-track" aria-hidden="true"><span class="hbar" style="width:${(100 * st.bySpan[i] / max).toFixed(1)}%"></span></span><span class="small num">${st.bySpan[i]}</span>`).join("")}</div>`;
+  }
+  // Lernkalender: ein Kästchen pro Tag, Spalten = Wochen (Mo–So), Farbstufen nach Anzahl bearbeiteter Aufgaben
+  const HEAT = [1, 15, 40, 80], HEAT_LABELS = ["0", "1–14", "15–39", "40–79", "≥ 80"];
+  const heatLevel = (n) => HEAT.filter((t) => n >= t).length;
+  function heatmap(weeks) {
+    const end = today(), start = R.addDays(mondayOf(end), -7 * (weeks - 1)), rows = [];
+    let cells = ["Mo", "", "Mi", "", "Fr", "", "So"].map((l) => `<span class="hm-wd">${l}</span>`).join(""), months = "";
+    for (let w = 0; w < weeks; w++) {
+      const wStart = R.addDays(start, 7 * w);
+      const first = [0, 1, 2, 3, 4, 5, 6].map((i) => R.addDays(wStart, i)).find((day) => day.endsWith("-01"));
+      // Monatsname über der Woche mit dem Monatsersten; ganz links auch der angeschnittene Monat, wenn Platz ist
+      const showStart = w === 0 && !first && ![1, 2].some((k) => [0, 1, 2, 3, 4, 5, 6].some((i) => R.addDays(wStart, 7 * k + i).endsWith("-01")));
+      if (first || showStart) months += `<span style="grid-column:${w + 2} / span 3">${MON[parseDay(first || wStart).getMonth()]}</span>`;
+      for (let i = 0; i < 7; i++) {
+        const day = R.addDays(wStart, i);
+        if (day > end) { cells += `<span class="hm-cell hm-none"></span>`; continue; }
+        const t = dayTotals(day);
+        if (t.n || t.ex) rows.push([dayLabel(day, true), t.n, t.n ? pct(t.ok / t.n) + " %" : "–", t.ex]);
+        const tip = `${dayLabel(day, true)}: ${t.n ? `${t.n} ${t.n === 1 ? "Aufgabe" : "Aufgaben"}, ${pct(t.ok / t.n)} % richtig` : "nichts gelernt"}${t.ex ? `, ${t.ex} Prüfungssimulation${t.ex > 1 ? "en" : ""}` : ""}`;
+        cells += `<span class="hm-cell hm${heatLevel(t.n)}${day === end ? " hm-today" : ""}" data-tip="${esc(tip)}"></span>`;
+      }
+    }
+    return `<div class="heat" style="--w:${weeks}" role="img" aria-label="Lernkalender der letzten ${weeks} Wochen, Werte in der Tabelle darunter"><div class="hm-months" aria-hidden="true">${months}</div><div class="hm-grid">${cells}</div></div>
+      <div class="hm-legend small muted"><span>Aufgaben pro Tag:</span>${HEAT_LABELS.map((l, i) => `<span class="hm-key"><span class="hm-cell hm${i}"></span>${l}</span>`).join("")}</div>
+      ${tableView(["Tag", "Aufgaben", "richtig", "Prüfungen"], rows.reverse())}`;
+  }
+  let tipEl = null;
+  function showTip(el) {
+    if (!tipEl) { tipEl = document.createElement("div"); tipEl.className = "ch-tip"; tipEl.setAttribute("aria-hidden", "true"); document.body.appendChild(tipEl); }
+    tipEl.textContent = el.dataset.tip; tipEl.style.display = "block";
+    const r = el.getBoundingClientRect(), w = tipEl.offsetWidth, h = tipEl.offsetHeight;
+    const left = Math.min(Math.max(8, r.left + r.width / 2 - w / 2), document.documentElement.clientWidth - w - 8);
+    const top = r.top - h - 8 < 0 ? r.bottom + 8 : r.top - h - 8;
+    tipEl.style.left = left + window.scrollX + "px"; tipEl.style.top = top + window.scrollY + "px";
+    document.querySelectorAll(".tip-on").forEach((x) => x.classList.remove("tip-on")); el.classList.add("tip-on");
+  }
+  function hideTip() { if (tipEl) tipEl.style.display = "none"; document.querySelectorAll(".tip-on").forEach((x) => x.classList.remove("tip-on")); }
+  const tipTarget = (ev) => ev.target && ev.target.closest && ev.target.closest(".chart [data-tip], .heat [data-tip]");
+  document.addEventListener("pointerover", (ev) => { const el = tipTarget(ev); if (el) showTip(el); });
+  document.addEventListener("pointerout", (ev) => { const el = tipTarget(ev); if (el && !(ev.relatedTarget && el.contains(ev.relatedTarget))) hideTip(); });
+
+  function examCard(x) {
+    const p = examPlan(x), todo = p.newGoal + p.due;
+    return `<div class="card exam-card"><div class="exam-head"><div><b>${esc(examTitle(x))}</b>${x.title ? ` <span class="small muted">${esc(x.mod)}</span>` : ""}<div class="small muted">${esc(dayLabel(x.date, true))}</div></div>
+        <div class="countdown"><b>${p.left === 0 ? "heute" : p.left}</b>${p.left === 0 ? "" : `<span class="small">${p.left === 1 ? "Tag" : "Tage"}</span>`}</div></div>
+      <div class="progress" title="${p.learned} von ${p.total} begonnen"><span style="width:${pct(p.total ? p.learned / p.total : 0)}%"></span></div>
+      <p class="small">${p.learned} von ${p.total} Elementen begonnen · <b>heute:</b> ${p.newGoal} neue + ${p.due} fällige · am Prüfungstag ohne weitere Wiederholung voraussichtlich abrufbar: ≈ ${pct(p.recall)} %</p>
+      <div class="btn-row"><button class="btn primary" data-exstudy="${esc(x.id)}" ${todo ? "" : "disabled"}>${todo ? `Heute lernen (${todo})` : "Tagesziel erreicht ✓"}</button><a class="btn small" href="#/modul/${esc(x.mod)}/pruefung">Prüfungssimulation</a><button class="btn small" data-exdel="${esc(x.id)}">Entfernen</button></div></div>`;
+  }
+  function viewHistory() {
+    const d = today(), st = R.stats(ITEMS, state.srs, d), q = srsQueue(), s = streak();
+    let n7 = 0, ok7 = 0, act30 = 0;
+    for (let i = 0; i < 30; i++) { const day = R.addDays(d, -i), t = dayTotals(day); if (i < 7) { n7 += t.n; ok7 += t.ok; } if (t.n + t.ex) act30++; }
+    const next = upcomingExams(), past = state.exams.filter((x) => x.date < d).sort((a, b) => b.date.localeCompare(a.date));
+    let h = `<h1>Lernverlauf & Prüfungstermine</h1><p class="muted">Wann du was gelernt hast, was in den nächsten Wochen fällig wird und wie du dich auf Prüfungen vorbereitest. Gezählt werden Wiederholungen, Fragen aus Quiz, Mischquiz und Prüfungssimulation sowie Rechenaufgaben (erster Versuch). Alles bleibt auf diesem Gerät und ist Teil der Sicherung.</p>
+      <div class="stats">
+        <div class="stat"><b>${s}</b>${s === 1 ? "Tag" : "Tage"} in Folge</div><div class="stat"><b>${act30}</b>Lerntage (30 Tage)</div>
+        <div class="stat"><b>${n7}</b>Aufgaben (7 Tage)</div><div class="stat"><b>${n7 ? pct(ok7 / n7) + " %" : "–"}</b>richtig (7 Tage)</div><div class="stat"><b>${q.due.length}</b>heute fällig</div>
+      </div>
+      <h2>Prüfungstermine</h2>${next.length ? next.map(examCard).join("") : `<p class="muted">Noch keine Termine eingetragen.</p>`}
+      <div class="card"><h3>Termin eintragen</h3><div class="form-row">
+        <label>Modul <select id="exMod">${PP.modules.filter((m) => ITEMS.some((it) => it.mod === m.id)).map((m) => `<option value="${m.id}">${esc(m.id)} ${esc(m.short || m.title)}</option>`).join("")}</select></label>
+        <label>Datum <input type="date" id="exDate" min="${d}"></label>
+        <label>Bezeichnung <input type="text" id="exTitle" maxlength="80" placeholder="optional, z. B. 1. Termin"></label></div>
+        <button class="btn primary" data-examadd="1">Termin speichern</button>
+        <p class="small muted">Termine und Anmeldefristen stehen in u:find bzw. u:space. Das Tagesziel verteilt die noch neuen Begriffe und Quizfragen des Moduls gleichmäßig auf die Tage bis zum Vortag der Prüfung; dazu kommen die fälligen Wiederholungen.</p></div>
+      ${past.length ? `<details class="topic"><summary>Vergangene Termine (${past.length})</summary><div class="t-body"><ul class="clean">${past.map((x) => `<li>${esc(dayLabel(x.date, true))} · ${esc(examTitle(x))} <button class="btn small" data-exdel="${esc(x.id)}">Entfernen</button></li>`).join("")}</ul></div></details>` : ""}
+      <h2>Lernkalender</h2><div class="card">${heatmap(26)}</div>
+      <div class="grid">
+        <div class="card"><h3>Fällig in den nächsten 30 Tagen</h3><p class="small muted">Ohne neue Elemente; „heute“ enthält Überfälliges.</p>${forecastChart(30)}</div>
+        <div class="card"><h3>Trefferquote pro Woche</h3><p class="small muted">Anteil richtig beantworteter Aufgaben, letzte 12 Wochen.</p>${accuracyChart(12)}</div>
+      </div>
+      <div class="card"><h3>Gedächtnisstabilität</h3><p class="small muted">Stabilität = Zeit, bis die Abrufwahrscheinlichkeit laut Modell auf 90 % sinkt. ${st.learned} von ${st.total} Elementen begonnen, ${st.mature} gefestigt (≥ 3 Wochen).</p>${spanChart(st)}</div>`;
+    return h;
   }
 
   // ---------- Mischquiz ----------
@@ -858,6 +1083,13 @@
       return `<a class="card module-card" href="#/rechentrainer/${g.id}"><span class="mc-title">${esc(g.title)}</span><span class="pills">${g.modules.map((x) => `<span class="pill">${x}</span>`).join("")}${st ? `<span class="pill ${st.solved ? "ok" : ""}">${st.solved || 0}/${st.tries} gelöst</span>` : ""}</span></a>`;
     }).join("")}</div>`).join("");
   }
+  // Spalten mit ausschließlich Zahlen (inkl. „< .001“, leer, „—“) werden wie in jamovi rechtsbündig gesetzt
+  function swTable(o) {
+    const isNum = (c) => /^\s*(?:[<>]\s*)?[-−]?\.?\d/.test(String(c)), blank = (c) => c === "" || c === "—" || c == null;
+    const num = o.head.map((_, i) => o.rows.some((r) => isNum(r[i])) && o.rows.every((r) => blank(r[i]) || isNum(r[i])));
+    const cls = (i) => (num[i] ? ' class="num"' : "");
+    return `<div class="sw-table"><div class="sw-title">${esc(o.title)}</div><div class="table-wrap"><table><thead><tr>${o.head.map((c, i) => `<th${cls(i)}>${esc(c)}</th>`).join("")}</tr></thead><tbody>${o.rows.map((r) => `<tr>${r.map((c, i) => `<td${cls(i)}>${esc(c)}</td>`).join("")}</tr>`).join("")}</tbody></table></div>${o.note ? `<div class="sw-note">${esc(o.note)}</div>` : ""}</div>`;
+  }
   function viewTrainer(genId, seedStr) {
     if (!genId) {
       return `<h1>Statistik-Rechentrainer</h1><p class="muted">Aufgaben zu Statistik (D1), Testtheorie (D2) und Diagnostik (E1) mit neuen Zahlen bei jedem Durchgang. Gib Ergebnisse mit Komma oder Punkt ein; gerundete Werte werden mit kleiner Toleranz akzeptiert. Für Tests werden kritische Werte angegeben – wie in einer Klausur mit Tabellenanhang.</p>
@@ -873,6 +1105,8 @@
       <div class="pills">${t.modules.map((x) => modPill(x)).join("")}<span class="pill">Aufgabe Nr. ${seed}</span></div>
       <div class="card"><p>${esc(t.intro)}</p>`;
     if (t.table) h += `<div class="table-wrap"><table class="data"><thead><tr>${t.table.head.map((c) => `<th>${esc(c)}</th>`).join("")}</tr></thead><tbody>${t.table.rows.map((r) => `<tr>${r.map((c) => `<td class="num">${esc(c)}</td>`).join("")}</tr>`).join("")}</tbody></table></div>`;
+    // Software-Ausgabe im Stil von jamovi/SPSS (Zahlen mit Dezimalpunkt, wie in den Programmen)
+    if (t.output) h += `<div class="sw-output"><div class="sw-label">Ausgabe (nachgebildet, simulierte Daten)</div>${t.output.map(swTable).join("")}</div>`;
     h += `</div><form class="card answers" id="trainerForm" autocomplete="off">`;
     t.answers.forEach((a, i) => {
       const ok = trainer.result ? trainer.result[i] : null, val = trainer.inputs[a.key] || "";
@@ -892,7 +1126,7 @@
     const allOk = trainer.result.every(Boolean);
     if (!trainer.counted) {
       const st = state.trainer[t.id] || { tries: 0, solved: 0 };
-      st.tries++; if (allOk) st.solved++; state.trainer[t.id] = st; trainer.counted = true; save();
+      st.tries++; if (allOk) st.solved++; state.trainer[t.id] = st; trainer.counted = true; logActivity("tr", allOk); save();
     } else if (allOk && !trainer.solvedCounted) { state.trainer[t.id].solved++; save(); }
     if (allOk) trainer.solvedCounted = true;
     toast(allOk ? "Alles richtig!" : `${trainer.result.filter(Boolean).length} von ${trainer.result.length} richtig.`);
@@ -1141,6 +1375,7 @@ npm run check-links</code></pre>
       (m.materials || []).concat(m.lectures || []).forEach((r) => { if ((r.title + " " + (r.note || "")).toLowerCase().includes(ql)) res.push({ href: `#/modul/${m.id}/materialien`, m, kind: "Material", text: r.title, ctx: r.note }); });
       (m.quiz || []).forEach((x) => { if ((x.q + " " + x.e).toLowerCase().includes(ql)) res.push({ href: `#/modul/${m.id}/quiz`, m, kind: "Quizfrage", text: x.q }); });
     });
+    (PP.podcasts || []).forEach((p) => { if ((p.title + " " + p.by + " " + p.about).toLowerCase().includes(ql)) res.push({ href: "#/podcasts", m: byId(Object.keys(p.modules)[0]), kind: "Podcast", text: p.title, ctx: p.about }); });
     T.generators.forEach((g) => { if ((g.title + " " + g.topic).toLowerCase().includes(ql)) res.push({ href: `#/rechentrainer/${g.id}`, m: byId(g.modules[0]), kind: "Rechenaufgabe", text: g.title }); });
     return `<h1>Suche: „${esc(q)}“ <span class="pill">${res.length} Treffer</span></h1>` + (res.length ? `<div class="card"><ul class="clean">` + res.slice(0, 300).map((r) => `<li class="resource"><span class="pill">${r.kind}</span> <a href="${r.href}"><b>${hl(r.text)}</b></a> <span class="small muted">· ${esc(r.m.id)} ${esc(r.m.short || r.m.title)}</span>${r.ctx ? `<div class="small muted">${hl(r.ctx)}</div>` : ""}</li>`).join("") + `</ul></div>` : "<p>Keine Treffer.</p>");
   }
@@ -1152,6 +1387,7 @@ npm run check-links</code></pre>
 
   // ---------- Router ----------
   function route() {
+    hideTip();
     const parts = (location.hash.replace(/^#\/?/, "") || "").split("/").map((p) => { try { return decodeURIComponent(p); } catch (e) { return p; } });
     let html;
     switch (parts[0]) {
@@ -1159,6 +1395,7 @@ npm run check-links</code></pre>
       case "plan": html = viewPlan(); break;
       case "modul": html = viewModule(parts[1], parts[2]); break;
       case "wiederholen": html = viewReview(); break;
+      case "verlauf": html = viewHistory(); break;
       case "mischquiz": html = viewMix(); break;
       case "rechentrainer": html = viewTrainer(parts[1], parts[2]); break;
       case "datensaetze": html = viewDatasets(); break;
@@ -1166,6 +1403,7 @@ npm run check-links</code></pre>
       case "pruefmodus": html = viewVerify(parts[1], parts[2]); break;
       case "bibliothek": html = viewLibrary(); break;
       case "ressourcen": html = viewResources(); break;
+      case "podcasts": html = viewPodcasts(); break;
       case "karriere": html = viewCareer(); break;
       case "glossar": html = viewGlossary(); break;
       case "fortschritt": html = viewProgress(); break;
@@ -1215,7 +1453,7 @@ npm run check-links</code></pre>
     if (d.copy) { copyText(d.copy, "Quellenangabe kopiert."); return; }
     if (d.comp) { state.comp[d.comp] = state.comp[d.comp] || {}; state.comp[d.comp][d.i] = +d.lv; save(); keep(route); return; }
     if (d.expand) { document.querySelectorAll("details.topic").forEach((x) => { x.open = d.expand === "1"; }); return; }
-    if (d.cardgrade !== undefined && cardSession) { grade_srs(cardSession.id, d.cardgrade === "1"); cardSession.id = null; cardSession.flipped = false; keep(route); return; }
+    if (d.cardgrade !== undefined && cardSession) { grade_srs(cardSession.id, +d.cardgrade); cardSession.id = null; cardSession.flipped = false; keep(route); return; }
     if (d.qa !== undefined && cur) { answerQuiz(cur, +d.qa, +d.k); keep(route); return; }
     if (d.quiz && cur) {
       if (d.quiz === "reset") quizSession = null;
@@ -1252,9 +1490,21 @@ npm run check-links</code></pre>
     // Wiederholen
     if (d.rev === "start") { startReview(); route(); window.scrollTo(0, 0); return; }
     if (d.rev === "stop") { rev.active = false; rev.finished = true; route(); return; }
-    if ((d.rev === "0" || d.rev === "1") && rev && rev.active) { gradeReview(d.rev === "1"); route(); return; }
-    if (d.rev === "next" && rev && rev.active) { gradeReview(rev.chosen === ITEM.get(rev.queue[rev.idx]).q.a); route(); return; }
+    if (d.revgrade !== undefined && rev && rev.active) { gradeReview(+d.revgrade); route(); return; }
     if (d.revq !== undefined && rev && rev.active && rev.chosen === undefined) { rev.chosen = +d.k; keep(route); return; }
+    // Lernverlauf: Prüfungstermine
+    if (d.examadd) {
+      const mod = document.getElementById("exMod").value, date = document.getElementById("exDate").value, title = document.getElementById("exTitle").value.trim();
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) { toast("Bitte ein Datum wählen."); return; }
+      if (date < today()) { toast("Das Datum liegt in der Vergangenheit."); return; }
+      state.exams.push({ id: "x" + Date.now().toString(36), mod, date, title: title.slice(0, 80) });
+      save(); toast("Prüfungstermin gespeichert."); keep(route); return;
+    }
+    if (d.exdel) { state.exams = state.exams.filter((x) => x.id !== d.exdel); save(); keep(route); return; }
+    if (d.exstudy) {
+      const x = state.exams.find((e) => e.id === d.exstudy); if (!x) return;
+      startReview({ mod: x.mod, newLimit: examPlan(x).newGoal }); location.hash = "#/wiederholen"; window.scrollTo(0, 0); return;
+    }
     if (d.srsmods) {
       const v = d.srsmods === "all" ? PP.modules.map((m) => m.id) : d.srsmods === "none" ? [] : ["V0", "A1", "A2"];
       document.querySelectorAll(".srsMod").forEach((c) => { c.checked = v.includes(c.value); }); return;
@@ -1263,7 +1513,9 @@ npm run check-links</code></pre>
       const n = Math.max(0, Math.min(200, parseInt(document.getElementById("srsNew").value, 10) || 0));
       const mods = [...document.querySelectorAll(".srsMod")].filter((c) => c.checked).map((c) => c.value);
       const kinds = [...document.querySelectorAll(".srsKind")].filter((c) => c.checked).map((c) => c.value);
+      const ret = parseFloat(document.getElementById("srsRet").value);
       state.srsCfg.newPerDay = n; state.srsCfg.modules = mods.length === PP.modules.length ? null : mods; state.srsCfg.kinds = kinds.length ? kinds : ["card", "quiz"];
+      if ([0.8, 0.85, 0.9, 0.95].includes(ret)) state.srsCfg.retention = ret;
       save(); toast("Einstellungen gespeichert."); keep(route); return;
     }
     // Mischquiz
@@ -1279,7 +1531,8 @@ npm run check-links</code></pre>
     if (d.mix === "new") { mix = mix ? { sel: mix.sel, n: mix.n } : null; route(); window.scrollTo(0, 0); return; }
     if (d.mixq !== undefined && mix && mix.answers[+d.mixq] === undefined) {
       const i = +d.mixq, x = mix.items[i]; mix.answers[i] = +d.k;
-      if (+d.k !== x.q.a) markWrong(x.mod, x.q);
+      logActivity("quiz", +d.k === x.q.a);
+      if (+d.k !== x.q.a) markWrong(x.mod, x.q); else save();
       keep(route); return;
     }
     // Rechentrainer
@@ -1419,13 +1672,18 @@ npm run check-links</code></pre>
       const it = ITEM.get(rev.queue[rev.idx]); if (!it) return;
       if (it.kind === "card") {
         if (ev.key === " " || ev.key === "Enter") { ev.preventDefault(); rev.flipped = !rev.flipped; keep(route); }
-        else if (rev.flipped && (ev.key === "1" || ev.key === "2")) { gradeReview(ev.key === "2"); route(); }
+        else if (rev.flipped && /^[1-4]$/.test(ev.key)) { gradeReview(+ev.key); route(); }
       } else if (rev.chosen === undefined && /^[1-9]$/.test(ev.key)) {
         const k = rev.opt[it.id][+ev.key - 1]; if (k !== undefined) { rev.chosen = k; keep(route); }
-      } else if (rev.chosen !== undefined && ev.key === "Enter") { ev.preventDefault(); gradeReview(rev.chosen === it.q.a); route(); }
+      } else if (rev.chosen !== undefined) {
+        const ok = rev.chosen === it.q.a;
+        if (ev.key === "Enter") { ev.preventDefault(); gradeReview(ok ? 3 : 1); route(); }
+        else if (ok && /^[2-4]$/.test(ev.key)) { gradeReview(+ev.key); route(); }
+      }
       return;
     }
     if (cardSession && document.getElementById("flash") && (ev.key === " " || ev.key === "Enter") && ev.target.id === "flash") { ev.preventDefault(); cardSession.flipped = !cardSession.flipped; keep(route); }
+    else if (cardSession && cardSession.flipped && document.getElementById("flash") && /^[1-4]$/.test(ev.key)) { grade_srs(cardSession.id, +ev.key); cardSession.id = null; cardSession.flipped = false; keep(route); }
   });
 
   document.getElementById("searchForm").addEventListener("submit", (ev) => { ev.preventDefault(); location.hash = "#/suche/" + encodeURIComponent(document.getElementById("searchInput").value); });

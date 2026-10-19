@@ -89,8 +89,21 @@ for (const [id, v] of Object.entries(PP.review || {})) {
   if (!v || !["ok", "fehler"].includes(v.s) || !/^\d{4}-\d{2}-\d{2}$/.test(v.date || "")) err(`data/review.js: ${id} hat kein gültiges s/date`);
 }
 
+// Podcasts: echte Adressen, bekannte Module, jedes Modul mit mindestens einer Empfehlung
+const podIds = new Set();
+for (const p of PP.podcasts || []) {
+  if (podIds.has(p.id)) err(`Podcast ${p.id}: doppelte ID`); podIds.add(p.id);
+  if (!p.title || !p.by || !p.about || !["DE", "EN"].includes(p.lang)) err(`Podcast ${p.id}: title/by/about/lang fehlen`);
+  if (!/^https:\/\/[^\s]+$/.test(p.url || "")) err(`Podcast ${p.id}: keine https-Adresse`);
+  for (const [mod, x] of Object.entries(p.modules || {})) {
+    if (!PP.modules.some((m) => m.id === mod)) err(`Podcast ${p.id}: unbekanntes Modul ${mod}`);
+    if (!x || !x.hint || !x.q) err(`Podcast ${p.id} ${mod}: hint/q fehlen`);
+  }
+}
+PP.modules.forEach((m) => { if (!(PP.podcasts || []).some((p) => p.modules[m.id])) err(`Modul ${m.id}: kein Podcast in data/podcasts.js`); });
+
 console.log(`${PP.modules.length} Module · ${t} Themen · ${r} Materialien/Vorlesungen · ${b} Bücher · ${q} Quizfragen · ${e} Prüfungsfragen · ${g} Glossarbegriffe · ${ectsSum} ECTS`);
 console.log(`${nTopicsWithSrc}/${t} Themen mit Quellen (${nSrc} Angaben) · ${Object.keys(PP.review || {}).length} Prüfvermerke für ${rItems.length} prüfbare Inhalte`);
-console.log(`${T.generators.length} Rechenaufgaben-Typen · ${(PP.datasets || []).length} Datensätze · ${vIds.size} Checklistenpunkte (+ automatische je Modul)`);
+console.log(`${(PP.podcasts || []).length} Podcasts · ${T.generators.length} Rechenaufgaben-Typen · ${(PP.datasets || []).length} Datensätze · ${vIds.size} Checklistenpunkte (+ automatische je Modul)`);
 if (errors.length) { console.error("FEHLER:\n" + errors.join("\n")); process.exit(1); }
 console.log("OK – Daten valide.");

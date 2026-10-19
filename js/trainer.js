@@ -10,11 +10,21 @@
   const f = S.fmt;
   const SIG = "signifikant (H₀ verwerfen)", NSIG = "nicht signifikant (H₀ beibehalten)";
   const decision = (sig) => ({ key: "dec", label: "Entscheidung (α = .05, zweiseitig)", type: "choice", options: [SIG, NSIG], value: sig ? SIG : NSIG });
-  const num = (key, label, value, tol, unit) => ({ key, label, value, tol, unit, type: "num" });
+  // dec (optional): Nachkommastellen der angezeigten Lösung, z. B. 0 für Personenzahlen trotz Toleranz 1
+  const num = (key, label, value, tol, unit, dec) => Object.assign({ key, label, value, tol, unit, type: "num" }, dec != null ? { dec } : {});
+  const choice = (key, label, options, value) => ({ key, label, type: "choice", options, value });
   const list = (a, d = 0) => a.map((x) => f(x, d)).join("; ");
   const ints = (rng, n, lo, hi) => Array.from({ length: n }, () => rng.int(lo, hi));
   const clamp = (x, lo, hi) => Math.max(lo, Math.min(hi, x));
   const notConst = (a) => new Set(a).size > 1;
+  function shuffle(rng, a) { const b = a.slice(); for (let i = b.length - 1; i > 0; i--) { const j = Math.floor(rng() * (i + 1)); [b[i], b[j]] = [b[j], b[i]]; } return b; }
+  function distinctScores(rng, latent, start, maxStep) { // streng monotone ganze Zahlen in der Rangfolge der latenten Werte → keine Bindungen
+    const out = new Array(latent.length); let v = start;
+    latent.map((x, i) => [x, i]).sort((p, q) => p[0] - q[0]).forEach(([, i]) => { v += rng.int(1, maxStep); out[i] = v; });
+    return out;
+  }
+  const pTxt = (p) => (p < 0.001 ? "p < 0,001" : `p = ${f(p, 3)}`);
+  const signed = (x, d = 3) => (x < 0 ? `− ${f(-x, d)}` : `+ ${f(x, d)}`);
 
   const G = [];
   const def = (g) => G.push(g);
@@ -145,6 +155,25 @@
           `b = SP / QSx = ${f(b, 3)}`,
           `a = ȳ − b · x̄ = ${f(my, 3)} − ${f(b, 3)} · ${f(mx, 3)} = ${f(a, 3)}`,
           `ŷ = a + b · ${x0} = ${f(a + b * x0, 3)}`
+        ]
+      };
+    } });
+
+  def({ id: "ki_korrelation", modules: ["D1"], topic: "Zusammenhang", title: "Konfidenzintervall für r (Fisher-z-Transformation)",
+    gen(rng) {
+      const [a, b] = rng.pick([["Prüfungsangst", "Schlafqualität"], ["Lernzeit", "Prüfungsleistung"], ["Extraversion", "Anzahl enger Freundschaften"], ["Bildschirmzeit", "Wohlbefinden"]]);
+      const r = (rng() < 0.35 ? -1 : 1) * rng.int(10, 80) / 100, n = rng.pick([20, 25, 30, 40, 50, 60, 80, 100, 150, 200]);
+      const ci = S.corrCI(r, n), hw = 1.96 * ci.se, sig = ci.lo > 0 || ci.hi < 0;
+      return {
+        intro: `In einer Stichprobe von n = ${n} Personen korrelieren ${a} und ${b} zu r = ${f(r)}. Berechne mit der Fisher-z-Transformation z′ und das 95 %-Konfidenzintervall für die Populationskorrelation ρ (z = 1,96).`,
+        answers: [num("z", "Fisher-z′", ci.z, 0.01), num("lo", "Untergrenze des KI (r-Skala)", ci.lo, 0.01), num("hi", "Obergrenze des KI (r-Skala)", ci.hi, 0.01)],
+        steps: [
+          `z′ = artanh(r) = ½ · ln((1 + r) / (1 − r)) = ½ · ln(${f(1 + r)} / ${f(1 - r)}) = ${f(ci.z, 4)}`,
+          `Standardfehler von z′: SE = 1 / √(n − 3) = 1 / √${n - 3} = ${f(ci.se, 4)}`,
+          `KI auf der z′-Skala: z′ ± 1,96 · SE = ${f(ci.z, 4)} ± ${f(hw, 4)} → [${f(ci.zLo, 4)}; ${f(ci.zHi, 4)}]`,
+          `Rücktransformation r = tanh(z) = (e²ᶻ − 1) / (e²ᶻ + 1): untere Grenze tanh(${f(ci.zLo, 4)}) = ${f(ci.lo, 3)}; obere Grenze tanh(${f(ci.zHi, 4)}) = ${f(ci.hi, 3)}`,
+          `95 %-KI für ρ: [${f(ci.lo, 3)}; ${f(ci.hi, 3)}] – ${sig ? "0 liegt nicht im Intervall → die Korrelation ist auf dem 5 %-Niveau signifikant." : "0 liegt im Intervall → die Korrelation ist nicht signifikant (α = .05)."}`,
+          `Das Intervall liegt nicht symmetrisch um r = ${f(r)}, weil r auf [−1; 1] begrenzt ist; erst auf der z′-Skala ist die Stichprobenverteilung annähernd normal.`
         ]
       };
     } });
@@ -313,6 +342,73 @@
       };
     } });
 
+  const SMALL_N = "Hinweis: Bei so kleinen Stichproben ist die Normalapproximation nur eine grobe Näherung. Entschieden wird mit der Tabelle der exakten kritischen Werte bzw. dem exakten p-Wert (R z. B. berechnet ihn bei kleinen Stichproben ohne Bindungen automatisch).";
+  const pExactTxt = (pOne) => (2 * pOne >= 1 ? `zweiseitig p = min(1; 2 · ${f(pOne, 4)}) = 1` : `zweiseitig p = 2 · ${f(pOne, 4)} = ${f(2 * pOne, 4)}`);
+
+  def({ id: "mann_whitney", modules: ["D1"], topic: "Nonparametrisch", title: "Mann-Whitney-U-Test (zwei unabhängige Gruppen)",
+    gen(rng) {
+      const c = rng.pick([
+        { a: "Achtsamkeitsgruppe", b: "Kontrollgruppe", av: "Grübelneigung (Punkte)" },
+        { a: "mit Lernpausen", b: "ohne Lernpausen", av: "Behaltensleistung (Punkte)" },
+        { a: "Schichtarbeit", b: "Tagarbeit", av: "Einschlafdauer (Minuten)" },
+        { a: "Online-Seminar", b: "Präsenzseminar", av: "Zufriedenheit (Punkte)" }
+      ]);
+      const n1 = rng.int(5, 8), n2 = rng.int(5, 8), N = n1 + n2, eff = rng.pick([0, 0.7, 1.4, 2]) * (rng() < 0.5 ? -1 : 1);
+      const latent = Array.from({ length: n1 }, () => rng.normal(eff, 1)).concat(Array.from({ length: n2 }, () => rng.normal(0, 1)));
+      const vals = distinctScores(rng, latent, rng.int(2, 20), 4), x = vals.slice(0, n1), y = vals.slice(n1);
+      const r = S.mannWhitney(x, y), crit = S.mannWhitneyCrit(n1, n2), dist = S.mannWhitneyDist(n1, n2), total = S.choose(N, n1);
+      const cnt = S.sum(dist.slice(0, r.U + 1)), sig = r.p <= 0.05;
+      const order = vals.map((v, i) => [v, i < n1 ? "A" : "B"]).sort((p, q) => p[0] - q[0]);
+      return {
+        intro: `${c.av} in zwei unabhängigen Gruppen: A = ${c.a} (n₁ = ${n1}), B = ${c.b} (n₂ = ${n2}). Da keine Normalverteilung angenommen werden kann, rechnest du den Mann-Whitney-U-Test (zweiseitig, α = .05). Berechne die Rangsumme R₁ der Gruppe A, U = min(U₁, U₂) und den z-Wert der Normalapproximation (ohne Stetigkeitskorrektur). Kritischer Wert aus der exakten Tabelle: U_krit(${n1}, ${n2}) = ${crit} (signifikant, wenn U ≤ U_krit).`,
+        table: { head: ["Gruppe", "n", "Werte"], rows: [[`A: ${c.a}`, n1, list(x)], [`B: ${c.b}`, n2, list(y)]] },
+        answers: [num("r1", "Rangsumme R₁ (Gruppe A)", r.R1, 0), num("u", "U = min(U₁, U₂)", r.U, 0), num("z", "z-Wert (Normalapproximation, aus U)", r.z, 0.02), decision(sig)],
+        steps: [
+          `Alle N = ${N} Werte gemeinsam aufsteigend ordnen (Rang 1 = kleinster Wert; keine Bindungen): ${order.map(([v, g], i) => `${v} (${g}) → ${i + 1}`).join("; ")}`,
+          `Ränge Gruppe A: ${list(r.ranks1)} → R₁ = ${f(r.R1, 0)}; Ränge Gruppe B: ${list(r.ranks2)} → R₂ = ${f(r.R2, 0)} (Kontrolle: R₁ + R₂ = N(N + 1)/2 = ${N * (N + 1) / 2})`,
+          `U₁ = n₁n₂ + n₁(n₁ + 1)/2 − R₁ = ${n1 * n2} + ${n1 * (n1 + 1) / 2} − ${f(r.R1, 0)} = ${f(r.U1, 0)}`,
+          `U₂ = n₁n₂ + n₂(n₂ + 1)/2 − R₂ = ${n1 * n2} + ${n2 * (n2 + 1) / 2} − ${f(r.R2, 0)} = ${f(r.U2, 0)} (Kontrolle: U₁ + U₂ = n₁n₂ = ${n1 * n2}) → U = min(U₁, U₂) = ${f(r.U, 0)}`,
+          `Normalapproximation: μ_U = n₁n₂/2 = ${f(r.mu, 1)}; σ_U = √(n₁n₂(N + 1)/12) = √(${n1 * n2} · ${N + 1} / 12) = ${f(r.sigma, 3)}; z = (U − μ_U) / σ_U = (${f(r.U, 0)} − ${f(r.mu, 1)}) / ${f(r.sigma, 3)} = ${f(r.z, 3)} (Näherung: p ≈ ${f(r.pNormal, 3)})`,
+          `Exakter p-Wert: Unter H₀ sind alle (${N} über ${n1}) = ${total} Aufteilungen der Ränge auf die Gruppen gleich wahrscheinlich. Davon haben ${cnt} ein U ≤ ${f(r.U, 0)} → P(U ≤ ${f(r.U, 0)}) = ${cnt} / ${total} = ${f(cnt / total, 4)}; ${pExactTxt(cnt / total)}`,
+          `Entscheidung: U = ${f(r.U, 0)} ${r.U <= crit ? "≤" : ">"} U_krit = ${crit} bzw. exakt p = ${f(r.p, 4)} ${sig ? "≤" : ">"} .05 → ${sig ? SIG : NSIG}`,
+          SMALL_N
+        ]
+      };
+    } });
+
+  def({ id: "wilcoxon", modules: ["D1"], topic: "Nonparametrisch", title: "Wilcoxon-Vorzeichen-Rang-Test (abhängige Stichproben)",
+    gen(rng) {
+      const c = rng.pick([
+        { who: "Teilnehmende einer Expositionstherapie", av: "ihren Angstwert", when: "vor und nach der vierten Sitzung" },
+        { who: "Studierende eines Schlaftrainings", av: "das Ausmaß ihrer Schlafprobleme", when: "vor und nach dem Training" },
+        { who: "Teilnehmende eines Achtsamkeitskurses", av: "ihren Stresswert", when: "vor und nach dem Kurs" }
+      ]);
+      const n = rng.int(6, 10), pPos = rng.pick([0.5, 0.65, 0.8, 0.95]), flip = rng() < 0.5;
+      const mags = shuffle(rng, Array.from({ length: n + 6 }, (_, i) => i + 1)).slice(0, n); // verschiedene |d| > 0
+      const d = mags.map((m) => ((rng() < pPos) !== flip ? m : -m));
+      const pre = d.map(() => rng.int(20, 40)), post = pre.map((v, i) => v - d[i]);
+      const r = S.wilcoxonSignedRank(pre, post), crit = S.wilcoxonCrit(n), dist = S.wilcoxonDist(n), total = Math.pow(2, n), sig = r.p <= 0.05;
+      const cnt = S.sum(dist.slice(0, r.T + 1)), max = n * (n + 1) / 2;
+      const byAbs = d.map((v, i) => [v, i]).sort((p, q) => Math.abs(p[0]) - Math.abs(q[0]));
+      const pos = r.signedRanks.filter((s) => s > 0), neg = r.signedRanks.filter((s) => s < 0).map((s) => -s);
+      return {
+        intro: `${n} ${c.who} gaben ${c.when} ${c.av} an. Da für die Differenzen keine Normalverteilung angenommen werden kann, rechnest du den Wilcoxon-Vorzeichen-Rang-Test (zweiseitig, α = .05). Berechne W₊, W₋ und T = min(W₊, W₋). Kritischer Wert aus der exakten Tabelle: T_krit(n = ${n}) = ${crit} (signifikant, wenn T ≤ T_krit).`,
+        table: { head: ["Person", "Prä", "Post", "d = Prä − Post"], rows: pre.map((v, i) => [i + 1, v, post[i], d[i]]) },
+        answers: [num("wp", "W₊ (Rangsumme der positiven Differenzen)", r.Wplus, 0), num("wm", "W₋ (Rangsumme der negativen Differenzen)", r.Wminus, 0), num("t", "T = min(W₊, W₋)", r.T, 0), decision(sig)],
+        steps: [
+          `Differenzen d = Prä − Post: ${list(d)} (keine Nulldifferenzen, alle Beträge verschieden)`,
+          `Beträge |d| aufsteigend ordnen und Ränge vergeben, Vorzeichen merken: ${byAbs.map(([v, i], k) => `|d| = ${Math.abs(v)} (Person ${i + 1}, ${v > 0 ? "+" : "−"}) → ${k + 1}`).join("; ")}`,
+          `W₊ = Summe der Ränge mit positivem d = ${pos.length ? pos.join(" + ") : "0"} = ${r.Wplus}`,
+          `W₋ = Summe der Ränge mit negativem d = ${neg.length ? neg.join(" + ") : "0"} = ${r.Wminus} (Kontrolle: W₊ + W₋ = n(n + 1)/2 = ${max})`,
+          `T = min(W₊, W₋) = ${r.T}`,
+          `z-Näherung: μ_T = n(n + 1)/4 = ${f(r.mu, 1)}; σ_T = √(n(n + 1)(2n + 1)/24) = √(${n} · ${n + 1} · ${2 * n + 1} / 24) = ${f(r.sigma, 3)}; z = (T − μ_T) / σ_T = ${f(r.z, 3)} (Näherung: p ≈ ${f(r.pNormal, 3)})`,
+          `Exakter p-Wert: Unter H₀ sind alle 2^${n} = ${total} Vorzeichenkombinationen der Ränge gleich wahrscheinlich. Davon haben ${cnt} ein W₊ ≤ ${r.T} (wegen der Symmetrie gilt dasselbe für W₋) → P(W ≤ ${r.T}) = ${cnt} / ${total} = ${f(cnt / total, 4)}; ${pExactTxt(cnt / total)}`,
+          `Entscheidung: T = ${r.T} ${r.T <= crit ? "≤" : ">"} T_krit = ${crit} bzw. exakt p = ${f(r.p, 4)} ${sig ? "≤" : ">"} .05 → ${sig ? SIG : NSIG}`,
+          SMALL_N
+        ]
+      };
+    } });
+
   def({ id: "effekt", modules: ["D1"], topic: "Effektgrößen", title: "Cohens d aus Mittelwerten und Umrechnung in r",
     gen(rng) {
       const m1 = rng.int(20, 60), m2 = m1 - rng.int(1, 12), s1 = rng.int(5, 15), s2 = rng.int(5, 15);
@@ -328,6 +424,47 @@
       };
     } });
 
+  const GPOWER = "G*Power rechnet nicht mit der Normalverteilung, sondern exakt mit der nonzentralen t-Verteilung (df = 2n − 2); die Ergebnisse weichen deshalb leicht ab";
+
+  def({ id: "teststaerke", modules: ["D1"], topic: "Teststärke und Stichprobenplanung", title: "Teststärke des t-Tests für unabhängige Stichproben",
+    gen(rng) {
+      let d, n, pw;
+      do {
+        d = rng.pick([0.2, 0.3, 0.4, 0.5, 0.6, 0.8, 1]); n = rng.pick([10, 15, 20, 25, 30, 40, 50, 64, 80, 100, 150, 200]);
+        pw = S.powerTInd(d, n);
+      } while (pw < 0.15 || pw > 0.97);
+      const zc = S.normInv(0.975), delta = d * Math.sqrt(n / 2);
+      return {
+        intro: `Eine Studie vergleicht zwei unabhängige Gruppen mit je n = ${n} Personen (t-Test, α = .05, zweiseitig). Angenommen wird ein wahrer Effekt von d = ${f(d, 1)}. Wie groß ist die Teststärke 1 − β? Verwende die Normalapproximation 1 − β ≈ Φ(d · √(n/2) − z(.975)) mit z(.975) = 1,96.`,
+        answers: [num("pw", "Teststärke 1 − β", pw * 100, 1.5, "%")],
+        steps: [
+          `Kritischer z-Wert für α = .05, zweiseitig: z(.975) = ${f(zc, 3)}`,
+          `Erwartete Lage der Teststatistik unter H₁: δ = d · √(n/2) = ${f(d, 1)} · √(${n}/2) = ${f(d, 1)} · ${f(Math.sqrt(n / 2), 3)} = ${f(delta, 3)}`,
+          `1 − β ≈ Φ(δ − z(.975)) = Φ(${f(delta, 3)} − ${f(zc, 3)}) = Φ(${f(delta - zc, 3)}) = ${f(pw, 4)} → ${f(pw * 100, 1)} %`,
+          `β ≈ ${f(100 - pw * 100, 1)} %: So wahrscheinlich wird der Effekt übersehen. ${pw >= 0.8 ? "Die übliche Mindestanforderung von 80 % ist erfüllt." : "Die übliche Mindestanforderung von 80 % wird nicht erreicht."}`,
+          `Die Wahrscheinlichkeit, auf der „falschen“ Seite signifikant zu werden (Φ(−δ − 1,96)), ist hier vernachlässigbar klein.`,
+          `Hinweis: ${GPOWER} – meist ist die Teststärke dort etwas kleiner, vor allem bei kleinen Stichproben (z. B. d = 0,5, n = 64: Normalapproximation 80,7 %, G*Power ≈ 80 %).`
+        ]
+      };
+    } });
+
+  def({ id: "stichprobenplanung", modules: ["D1"], topic: "Teststärke und Stichprobenplanung", title: "Stichprobenplanung für den t-Test (A-priori-Power-Analyse)",
+    gen(rng) {
+      const d = rng.pick([0.2, 0.3, 0.5, 0.8]), pw = rng.pick([0.8, 0.9]);
+      const pwT = pw === 0.8 ? ".80" : ".90", za = S.normInv(0.975), zb = S.normInv(pw), raw = 2 * (za + zb) ** 2 / (d * d), n = S.sampleSizeTInd(d, pw);
+      return {
+        intro: `Du planst eine Studie mit zwei unabhängigen Gruppen (t-Test, α = .05, zweiseitig) und erwartest einen Effekt von d = ${f(d, 1)}. Wie viele Personen brauchst du je Gruppe und insgesamt für eine Teststärke von ${pwT}? Verwende n = 2 · (z(1 − α/2) + z(1 − β))² / d² mit z(.975) = 1,960 und z(${pwT}) = ${f(zb, 3)}.`,
+        answers: [num("n", "n je Gruppe", n, 1, undefined, 0), num("N", "N gesamt", 2 * n, 2, undefined, 0)],
+        steps: [
+          `z(1 − α/2) = z(.975) = ${f(za, 3)}; z(1 − β) = z(${pwT}) = ${f(zb, 3)}`,
+          `n = 2 · (${f(za, 3)} + ${f(zb, 3)})² / ${f(d, 1)}² = 2 · ${f((za + zb) ** 2, 3)} / ${f(d * d, 2)} = ${f(raw, 2)}`,
+          `Stichprobengrößen immer aufrunden: n = ${n} je Gruppe → N = 2 · ${n} = ${2 * n}`,
+          `Hinweis: ${GPOWER}. Durch die t-Korrektur braucht man dort meist etwa eine Person mehr je Gruppe (z. B. d = 0,5, Teststärke .80: 64 statt 63).`,
+          `Merke: n wächst mit 1/d² – halbiert sich der erwartete Effekt, braucht man etwa viermal so viele Personen.`
+        ]
+      };
+    } });
+
   def({ id: "alphafehler", modules: ["D1"], topic: "Inferenzstatistik", title: "Multiples Testen: α-Kumulierung und Bonferroni",
     gen(rng) {
       const k = rng.int(2, 20), a = rng.pick([0.05, 0.01, 0.1]);
@@ -338,6 +475,169 @@
         steps: [`P(mind. ein Fehler) = 1 − (1 − α)ᵏ = 1 − ${f(1 - a)}^${k} = ${f(fw / 100, 4)} → ${f(fw, 1)} %`, `α_Bonferroni = α / k = ${f(a)} / ${k} = ${f(a / k, 4)}`]
       };
     } });
+
+  // ===================== D1 – Software-Ausgaben lesen =====================
+  // Tabellen im Stil von jamovi/SPSS, alle Zahlen aus simulierten Daten mit PPStats berechnet.
+  // Zahlen in der Ausgabe mit Dezimalpunkt (wie in Statistikprogrammen), p-Werte als „.032“ bzw. „< .001“.
+  const oNum = (x, d = 3) => { const s = S.round(x, d).toFixed(d); return /^-0\.0*$/.test(s) ? s.slice(1) : s; };
+  const oP = (p) => (p < 0.001 ? "< .001" : oNum(p, 3).replace(/^0\./, "."));
+  const near05 = (p) => p >= 0.04 && p <= 0.06;
+  const OUT_INTRO = "Die Ausgabe ist im Stil von jamovi/SPSS nachgebildet (simulierte Daten); wie in Statistikprogrammen steht dort ein Dezimalpunkt, „< .001“ bedeutet p < 0,001. Beantworte die Fragen anhand der Ausgabe.";
+  const dClass = (d) => (Math.abs(d) >= 0.8 ? "großer" : Math.abs(d) >= 0.5 ? "mittlerer" : Math.abs(d) >= 0.2 ? "kleiner" : "sehr kleiner");
+
+  function outTTest(rng) {
+    const c = rng.pick([
+      { av: "Stresswert", g: ["Training", "Warteliste"], dir: -1, txt: "Studierende nahmen an einem Stressbewältigungstraining teil oder standen auf der Warteliste; danach wurde ihr Stresswert erhoben." },
+      { av: "Behaltensleistung", g: ["Abruflernen", "Wiederlesen"], dir: 1, txt: "Zwei Lerngruppen lernten einen Text mit Abruflernen bzw. durch Wiederlesen; eine Woche später wurde die Behaltensleistung getestet." },
+      { av: "Lebenszufriedenheit", g: ["Stadt", "Land"], dir: 0, txt: "Personen aus städtischen und ländlichen Wohnorten bewerteten ihre Lebenszufriedenheit." }
+    ]);
+    let x, y, r, lev;
+    do {
+      const n1 = rng.int(12, 30), n2 = rng.int(12, 30), mu = rng.int(20, 60), sd = rng.int(5, 12);
+      const eff = rng.pick([0, 0.3, 0.6, 1]) * (c.dir || (rng() < 0.5 ? -1 : 1)), ratio = rng.pick([1, 1, 1.3, 2, 2.5]);
+      x = Array.from({ length: n1 }, () => Math.round(mu + eff * sd + rng.normal(0, sd)));
+      y = Array.from({ length: n2 }, () => Math.round(mu + rng.normal(0, sd * ratio)));
+      r = S.tTestInd(x, y); lev = S.levene([x, y]);
+    } while (!notConst(x) || !notConst(y) || near05(r.p) || near05(lev.p) || Math.abs(r.m1 - r.m2) < 0.05);
+    const n1 = x.length, n2 = y.length, s1 = S.sd(x), s2 = S.sd(y), sig = r.p <= 0.05, levSig = lev.p < 0.05, hi = r.m1 > r.m2 ? c.g[0] : c.g[1];
+    const LEV = ["ja – Varianzhomogenität verletzt", "nein – Varianzhomogenität kann angenommen werden"];
+    return {
+      intro: `${c.txt} Ausgewertet wurde mit dem t-Test für unabhängige Stichproben. ${OUT_INTRO}`,
+      output: [
+        { title: "Gruppendeskriptive", head: ["Gruppe", "N", "Mittelwert", "SD", "SE"],
+          rows: [[c.g[0], String(n1), oNum(r.m1, 2), oNum(s1, 2), oNum(s1 / Math.sqrt(n1), 2)], [c.g[1], String(n2), oNum(r.m2, 2), oNum(s2, 2), oNum(s2 / Math.sqrt(n2), 2)]] },
+        { title: "Levene-Test auf Varianzhomogenität", head: ["F", "df1", "df2", "p"], rows: [[oNum(lev.F), String(lev.df1), String(lev.df2), oP(lev.p)]] },
+        { title: "t-Test für unabhängige Stichproben", head: ["Abhängige Variable", "Test", "t", "df", "p", "Mittelwertsdifferenz", "SE der Differenz", "Cohens d"],
+          rows: [[c.av, "Student-t", oNum(r.t), String(r.df), oP(r.p), oNum(r.m1 - r.m2), oNum(r.se), oNum(r.d)]],
+          note: `H₁: μ(${c.g[0]}) ≠ μ(${c.g[1]}); Mittelwertsdifferenz = ${c.g[0]} − ${c.g[1]}.` }
+      ],
+      answers: [decision(sig), choice("hi", "Welche Gruppe hat den höheren Mittelwert?", c.g.slice(), hi),
+        num("d", "Cohens d (mit Vorzeichen, wie ausgegeben)", r.d, 0.006), choice("lev", "Ist die Varianzhomogenität verletzt (Levene-Test)?", LEV, levSig ? LEV[0] : LEV[1])],
+      steps: [
+        `Signifikanz: Zeile „Student-t“: t(${r.df}) = ${f(r.t, 2)}, ${pTxt(r.p)} ${sig ? "≤" : ">"} .05 → ${sig ? SIG : NSIG}`,
+        `Höherer Mittelwert: ${c.g[0]} M = ${f(r.m1, 2)}, ${c.g[1]} M = ${f(r.m2, 2)} → ${hi}. Das Vorzeichen der Mittelwertsdifferenz (${c.g[0]} − ${c.g[1]} = ${f(r.m1 - r.m2, 2)}) und von t zeigt dasselbe.`,
+        `Cohens d = Mittelwertsdifferenz / gepoolte SD = ${f(r.d, 3)} → ${dClass(r.d)} Effekt nach Cohen (|d| ab 0,2 klein, ab 0,5 mittel, ab 0,8 groß)`,
+        `Levene-Test: F(${lev.df1}, ${lev.df2}) = ${f(lev.F, 2)}, ${pTxt(lev.p)} → ${levSig ? "p < .05: Varianzhomogenität verletzt; berichtet würde dann der Welch-Test (ohne Annahme gleicher Varianzen)." : "p ≥ .05: kein Hinweis auf ungleiche Varianzen; der Student-t-Test ist angemessen."}`,
+        `Zusammenhang der Werte: SE der Differenz = s_p · √(1/n₁ + 1/n₂) = ${f(r.se, 3)}; t = ${f(r.m1 - r.m2, 3)} / ${f(r.se, 3)} = ${f(r.t, 3)}; df = n₁ + n₂ − 2 = ${r.df}`
+      ]
+    };
+  }
+
+  function outAnova(rng) {
+    const c = rng.pick([
+      { factor: "Lernmethode", levels: ["Karteikarten", "Zusammenfassen", "Abruftests", "Mindmaps"], av: "Prüfungspunkte" },
+      { factor: "Musikbedingung", levels: ["Stille", "Klassik", "Pop", "Naturgeräusche"], av: "Konzentrationsleistung" },
+      { factor: "Altersgruppe", levels: ["18–29", "30–49", "50–64", "65+"], av: "Lebenszufriedenheit" }
+    ]);
+    let gs, a;
+    do {
+      const k = rng.pick([3, 3, 4]), n = rng.int(8, 20), mu = rng.int(20, 60), sd = rng.int(5, 12), spread = rng.pick([0, 0.25, 0.5, 0.8]);
+      gs = Array.from({ length: k }, () => { const e = rng.normal(0, spread * sd); return Array.from({ length: n }, () => Math.round(mu + e + rng.normal(0, sd))); });
+      a = gs.every(notConst) ? S.anovaOneWay(gs) : null;
+    } while (!a || near05(a.p) || a.eta2 < 0.015 || Math.abs(a.eta2 - 0.06) < 0.005 || Math.abs(a.eta2 - 0.14) < 0.005);
+    const k = gs.length, N = k * gs[0].length, sig = a.p <= 0.05;
+    const EFF = ["kleiner Effekt", "mittlerer Effekt", "großer Effekt"], eff = a.eta2 >= 0.14 ? EFF[2] : a.eta2 >= 0.06 ? EFF[1] : EFF[0];
+    return {
+      intro: `Verglichen wurden ${k} Gruppen (je n = ${gs[0].length}) des Faktors „${c.factor}“; abhängige Variable: ${c.av}. Ausgewertet wurde mit einer einfaktoriellen Varianzanalyse. ${OUT_INTRO}`,
+      output: [
+        { title: "Deskriptive Statistiken", head: ["Gruppe", "N", "Mittelwert", "SD"], rows: gs.map((g, i) => [c.levels[i], String(g.length), oNum(S.mean(g), 2), oNum(S.sd(g), 2)]) },
+        { title: `Einfaktorielle ANOVA – ${c.av}`, head: ["Quelle", "Quadratsumme", "df", "Mittlere Quadrate", "F", "p", "η²"],
+          rows: [[c.factor, oNum(a.ssb, 2), String(a.df1), oNum(a.msb, 2), oNum(a.F), oP(a.p), oNum(a.eta2)],
+            ["Residuen", oNum(a.ssw, 2), String(a.df2), oNum(a.msw, 2), "", "", ""],
+            ["Gesamt", oNum(a.sst, 2), String(N - 1), "", "", "", ""]] }
+      ],
+      answers: [decision(sig), num("eta", "η² (ablesen)", a.eta2, 0.006), choice("eff", "Einordnung von η² nach Cohen", EFF, eff), num("df2", "df Fehler (Residuen)", a.df2, 0)],
+      steps: [
+        `Signifikanz: Zeile „${c.factor}“: F(${a.df1}, ${a.df2}) = ${f(a.F, 2)}, ${pTxt(a.p)} ${sig ? "≤" : ">"} .05 → ${sig ? SIG : NSIG}${sig ? ". Die ANOVA zeigt nur, dass sich mindestens zwei Gruppen unterscheiden – welche, klären Post-hoc-Tests." : ""}`,
+        `η² = QS ${c.factor} / QS Gesamt = ${f(a.ssb, 2)} / ${f(a.sst, 2)} = ${f(a.eta2, 3)} → ${f(a.eta2 * 100, 1)} % der Varianz gehen auf den Faktor zurück`,
+        `Einordnung nach Cohen: η² ab .01 klein, ab .06 mittel, ab .14 groß → ${eff}`,
+        `df Fehler = N − k = ${N} − ${k} = ${a.df2} (Zeile „Residuen“); df ${c.factor} = k − 1 = ${a.df1}; df Gesamt = N − 1 = ${N - 1}`,
+        `Kontrolle: MQ = QS / df; F = MQ ${c.factor} / MQ Residuen = ${f(a.msb, 2)} / ${f(a.msw, 2)} = ${f(a.F, 3)}`
+      ]
+    };
+  }
+
+  function outCorr(rng) {
+    const { v, sg } = rng.pick([ // sg: Vorzeichen der simulierten Pfade X→Y, X→Z, Y→Z
+      { v: ["Stress", "Schlafdauer", "Lebenszufriedenheit"], sg: [-1, -1, 1] },
+      { v: ["Lernzeit", "Prüfungsangst", "Prüfungspunkte"], sg: [-1, 1, -1] },
+      { v: ["Extraversion", "Neurotizismus", "Wohlbefinden"], sg: [-1, 1, -1] }
+    ]);
+    let n, tests;
+    do {
+      n = rng.int(30, 120);
+      const a = sg[0] * rng() * 0.9, b = sg[1] * rng() * 0.9, cc = sg[2] * rng() * 0.7;
+      const lx = Array.from({ length: n }, () => rng.normal()), ly = lx.map((x) => a * x + rng.normal()), lz = lx.map((x, i) => b * x + cc * ly[i] + rng.normal());
+      const X = lx.map((x) => Math.round(50 + 10 * x)), Y = ly.map((y) => Math.round(30 + 6 * y)), Z = lz.map((z) => Math.round(40 + 8 * z));
+      tests = [[X, Y], [X, Z], [Y, Z]].map(([p, q]) => (notConst(p) && notConst(q) ? S.corTest(p, q) : null));
+    } while (tests.some((t) => !t) || (() => { const s = tests.map((t) => Math.abs(t.r)).sort((p, q) => q - p); return s[0] - s[1] < 0.05 || s[0] > 0.9; })() || near05(tests[1].p));
+    const PAIRS = [[0, 1], [0, 2], [1, 2]], label = ([i, j]) => `${v[i]} und ${v[j]}`;
+    const strongest = tests.reduce((m, t, i) => (Math.abs(t.r) > Math.abs(tests[m].r) ? i : m), 0), ask = rng.int(0, 2);
+    const [rXY, rXZ, rYZ] = tests, sigXZ = rXZ.p <= 0.05;
+    return {
+      intro: `Bei N = ${n} Personen wurden ${v[0]}, ${v[1]} und ${v[2]} erhoben und paarweise korreliert (Pearson). ${OUT_INTRO}`,
+      output: [
+        { title: "Korrelationsmatrix", head: ["", "", v[0], v[1], v[2]],
+          rows: [[v[0], "Pearson r", "—", "", ""], ["", "p", "—", "", ""],
+            [v[1], "Pearson r", oNum(rXY.r), "—", ""], ["", "p", oP(rXY.p), "—", ""],
+            [v[2], "Pearson r", oNum(rXZ.r), oNum(rYZ.r), "—"], ["", "p", oP(rXZ.p), oP(rYZ.p), "—"]],
+          note: `N = ${n}; zweiseitige Tests (H₀: ρ = 0).` }
+      ],
+      answers: [choice("max", "Welches Variablenpaar hängt am stärksten zusammen?", PAIRS.map(label), label(PAIRS[strongest])),
+        choice("sig", `Ist die Korrelation zwischen ${v[0]} und ${v[2]} signifikant (α = .05, zweiseitig)?`, [SIG, NSIG], sigXZ ? SIG : NSIG),
+        num("r", `Korrelation r zwischen ${label(PAIRS[ask])} (ablesen)`, tests[ask].r, 0.006)],
+      steps: [
+        `Stärke des Zusammenhangs = Betrag |r| (das Vorzeichen zeigt nur die Richtung): ${PAIRS.map((p, i) => `|r(${v[p[0]]}, ${v[p[1]]})| = ${f(Math.abs(tests[i].r), 3)}`).join("; ")} → am stärksten: ${label(PAIRS[strongest])} (r = ${f(tests[strongest].r, 3)})`,
+        `${v[0]} und ${v[2]}: r = ${f(rXZ.r, 3)}, ${pTxt(rXZ.p)} ${sigXZ ? "≤" : ">"} .05 → ${sigXZ ? SIG : NSIG}`,
+        `r(${v[PAIRS[ask][0]]}, ${v[PAIRS[ask][1]]}) = ${f(tests[ask].r, 3)} (Zeile ${v[PAIRS[ask][1]]}, Spalte ${v[PAIRS[ask][0]]}); r² = ${f(tests[ask].r ** 2, 3)} → ${f(tests[ask].r ** 2 * 100, 1)} % gemeinsame Varianz`,
+        `Die Matrix ist symmetrisch, deshalb steht jeder Koeffizient nur einmal (unterhalb der Diagonale); auf der Diagonale stünde r = 1.`,
+        `Der p-Wert beruht auf t = r · √(N − 2) / √(1 − r²) mit df = N − 2 = ${n - 2}.`
+      ]
+    };
+  }
+
+  function outReg(rng) {
+    const c = rng.pick([
+      { y: "Prüfungspunkte", x: ["Lernzeit", "Prüfungsangst"], unit: ["Stunden pro Woche", "Punkte"], sg: [1, -1], m: [[10, 4], [25, 6]], my: [60, 12] },
+      { y: "Wohlbefinden", x: ["Soziale Unterstützung", "Bildschirmzeit"], unit: ["Punkte", "Stunden pro Tag"], sg: [1, -1], m: [[30, 6], [5, 2]], my: [40, 8] },
+      { y: "Arbeitszufriedenheit", x: ["Autonomie", "Pendelzeit"], unit: ["Punkte", "Minuten"], sg: [1, -1], m: [[20, 5], [35, 15]], my: [50, 10] }
+    ]);
+    let n, x1, x2, reg, which;
+    do {
+      n = rng.int(40, 120); which = rng.int(0, 1);
+      const bet = [0, 0], rho = rng.pick([0, 0.2, -0.2]);
+      bet[which] = rng.pick([0.3, 0.4, 0.5]) * c.sg[which]; bet[1 - which] = rng.pick([0, 0.05, -0.05]);
+      const z1 = Array.from({ length: n }, () => rng.normal()), z2 = z1.map((z) => rho * z + Math.sqrt(1 - rho * rho) * rng.normal());
+      x1 = z1.map((z) => Math.max(0, Math.round(c.m[0][0] + c.m[0][1] * z)));
+      x2 = z2.map((z) => Math.max(0, Math.round(c.m[1][0] + c.m[1][1] * z)));
+      const y = z1.map((z, i) => Math.round(c.my[0] + c.my[1] * (bet[0] * z + bet[1] * z2[i] + rng.normal(0, 0.85))));
+      reg = notConst(x1) && notConst(x2) && notConst(y) ? S.multipleRegression(y, [x1, x2]) : null;
+    } while (!reg || !((reg.p[1] < 0.04 && reg.p[2] > 0.06) || (reg.p[2] < 0.04 && reg.p[1] > 0.06)));
+    const sigName = reg.p[1] < 0.05 ? c.x[0] : c.x[1];
+    const bR = reg.b.map((b) => S.round(b, 3)); // so wie in der Ausgabe angezeigt
+    const v1 = Math.max(0, Math.round(c.m[0][0] + c.m[0][1] * (rng.int(-15, 15) / 10))), v2 = Math.max(0, Math.round(c.m[1][0] + c.m[1][1] * (rng.int(-15, 15) / 10)));
+    const yh = bR[0] + bR[1] * v1 + bR[2] * v2;
+    const coefRow = (name, j) => [name, oNum(reg.b[j]), oNum(reg.se[j]), oNum(reg.t[j]), oP(reg.p[j]), j === 0 ? "" : oNum(reg.beta[j - 1])];
+    return {
+      intro: `Bei N = ${n} Personen wurde eine multiple lineare Regression gerechnet: Kriterium ${c.y}, Prädiktoren ${c.x[0]} (${c.unit[0]}) und ${c.x[1]} (${c.unit[1]}). ${OUT_INTRO}`,
+      output: [
+        { title: "Modellanpassung", head: ["Modell", "R", "R²", "F", "df1", "df2", "p"], rows: [["1", oNum(reg.R), oNum(reg.r2), oNum(reg.F, 2), String(reg.df1), String(reg.df2), oP(reg.pF)]] },
+        { title: `Modellkoeffizienten – ${c.y}`, head: ["Prädiktor", "Schätzer", "SE", "t", "p", "Stand. Schätzer"],
+          rows: [coefRow("Konstante", 0), coefRow(c.x[0], 1), coefRow(c.x[1], 2)], note: "Schätzer = unstandardisierter Regressionskoeffizient b; Stand. Schätzer = β." }
+      ],
+      answers: [num("r2", "R²", reg.r2, 0.006), choice("sig", "Welcher Prädiktor ist signifikant (α = .05)?", [c.x[0], c.x[1], "beide", "keiner"], sigName),
+        num("yh", `vorhergesagter Wert ŷ für ${c.x[0]} = ${v1} und ${c.x[1]} = ${v2}`, yh, 0.05)],
+      steps: [
+        `R² = ${f(reg.r2, 3)} (Tabelle „Modellanpassung“): Beide Prädiktoren zusammen erklären ${f(reg.r2 * 100, 1)} % der Varianz des Kriteriums (${c.y}); Modelltest F(${reg.df1}, ${reg.df2}) = ${f(reg.F, 2)}, ${pTxt(reg.pF)}`,
+        `Koeffizienten: ${c.x[0]}: t = ${f(reg.t[1], 2)}, ${pTxt(reg.p[1])}; ${c.x[1]}: t = ${f(reg.t[2], 2)}, ${pTxt(reg.p[2])} → nur ${sigName} ist signifikant (p ≤ .05)`,
+        `Vorhersage mit den unstandardisierten Schätzern: ŷ = ${f(bR[0], 3)} ${signed(bR[1])} · ${v1} ${signed(bR[2])} · ${v2} = ${f(yh, 2)}`,
+        `Die standardisierten Schätzer (β = ${f(reg.beta[0], 3)} bzw. ${f(reg.beta[1], 3)}) machen die Prädiktoren trotz unterschiedlicher Einheiten vergleichbar; t = Schätzer / SE, df = N − k − 1 = ${reg.df2}.`
+      ]
+    };
+  }
+
+  def({ id: "ausgabe_lesen", modules: ["D1"], topic: "Software-Ausgaben", title: "Software-Ausgaben interpretieren (t-Test, ANOVA, Korrelation, Regression)",
+    gen(rng) { return [outTTest, outAnova, outCorr, outReg][rng.int(0, 3)](rng); } });
 
   // ===================== D2 – Testtheorie =====================
   def({ id: "sem", modules: ["D2", "E1"], topic: "Klassische Testtheorie", title: "Standardmessfehler und Konfidenzintervall",
@@ -509,6 +809,6 @@
       return isFinite(v) && Math.abs(v - a.value) <= a.tol + 1e-9;
     });
   }
-  const display = (a) => (a.type === "choice" ? a.value : f(a.value, a.tol === 0 ? 0 : a.tol >= 0.5 ? 1 : a.tol >= 0.05 ? 2 : a.tol >= 0.005 ? 3 : 4));
+  const display = (a) => (a.type === "choice" ? a.value : f(a.value, a.dec != null ? a.dec : a.tol === 0 ? 0 : a.tol >= 0.5 ? 1 : a.tol >= 0.05 ? 2 : a.tol >= 0.005 ? 3 : 4));
   return { generators: G.map(({ id, modules, topic, title }) => ({ id, modules, topic, title })), make, check, display, SIG, NSIG };
 });

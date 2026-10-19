@@ -39,6 +39,7 @@ export function collectLinks(PP) {
   (PP.careerLinks || []).forEach((l) => add(l.url, l.title, "Nach dem Bachelor"));
   (PP.libraries || []).forEach((l) => { add(l.home, l.name, "Bibliotheken"); (l.links || []).forEach((x) => add(x.url, x.title, `Bibliotheken · ${l.short}`)); });
   if (PP.sourceCatalog) PPSources.urls(PP).forEach((s) => add(s.url, s.title, s.where));
+  (PP.podcasts || []).forEach((p) => add(p.url, p.title, `Podcasts · ${Object.keys(p.modules).join(", ")}`));
   return out;
 }
 

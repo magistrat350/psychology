@@ -22,8 +22,8 @@ await page.goto(root);
 const { ids, gens } = await page.evaluate(() => ({ ids: PP.modules.map((m) => m.id), gens: PPTrainer.generators.map((g) => g.id) }));
 
 // 1) Alle Routen
-const tabs = ["ueberblick", "wissen", "lernpfad", "materialien", "vorlesungen", "literatur", "karten", "quiz", "pruefung", "rechnen", "notizen"];
-const routes = ["#/", "#/plan", "#/wiederholen", "#/mischquiz", "#/rechentrainer", "#/datensaetze", "#/anki", "#/pruefmodus/curriculum", "#/pruefmodus/inhalte", "#/pruefmodus/meldungen", "#/pruefmodus/links",
+const tabs = ["ueberblick", "wissen", "lernpfad", "materialien", "vorlesungen", "podcasts", "literatur", "karten", "quiz", "pruefung", "rechnen", "notizen"];
+const routes = ["#/", "#/plan", "#/wiederholen", "#/verlauf", "#/podcasts", "#/mischquiz", "#/rechentrainer", "#/datensaetze", "#/anki", "#/pruefmodus/curriculum", "#/pruefmodus/inhalte", "#/pruefmodus/meldungen", "#/pruefmodus/links",
   "#/bibliothek", "#/ressourcen", "#/karriere", "#/glossar", "#/fortschritt", "#/einstellungen", "#/suche/Bindung", "#/suche/t-Test"];
 for (const id of ids) for (const t of tabs) routes.push(`#/modul/${id}/${t}`);
 for (const g of gens) routes.push(`#/rechentrainer/${g}/7`);
@@ -34,6 +34,20 @@ for (const r of routes) {
   if (len < 50) errors.push(`Route ${r} fast leer`);
 }
 step(`${routes.length} Routen gerendert`);
+
+// 1b) Podcasts je Modul mit Suchlink, Software-Ausgaben im Rechentrainer
+for (const id of ids) {
+  await go(`#/modul/${id}/podcasts`);
+  const n = await page.$$eval("#app a[href^='https://duckduckgo.com/?q=']", (x) => x.length);
+  if (!n) errors.push(`Modul ${id}: keine Podcast-Empfehlung mit Suchlink`);
+}
+await go("#/podcasts");
+if ((await page.$$("#app li.resource")).length < 15) errors.push("Podcast-Übersicht unvollständig");
+for (const seed of [1, 4, 7, 12]) {
+  await go(`#/rechentrainer/ausgabe_lesen/${seed}`);
+  if (!(await page.$(".sw-output .sw-table table td"))) errors.push(`Software-Ausgabe fehlt (Aufgabe ${seed})`);
+}
+step("Podcasts in allen Modulen, Software-Ausgaben im Rechentrainer");
 
 // 2) Modul-Quiz komplett: falsche Antworten landen in der Wiederholung
 await go(`#/modul/A1/quiz`);
@@ -120,20 +134,49 @@ step("Rechentrainer prüft Eingaben und zeigt Lösungsweg");
 // 7) Wiederholungsrunde
 await go("#/wiederholen");
 await page.click('[data-rev="start"]');
+let checkedPreview = false;
 for (let i = 0; i < 12; i++) {
-  if (await page.$('[data-rev="flip"]')) { await page.click('[data-rev="flip"]'); await page.click('[data-rev="1"]'); }
-  else if (await page.$("button.opt:not([disabled])")) { await page.click("button.opt:not([disabled])"); await page.click('[data-rev="next"]'); }
+  if (await page.$('[data-rev="flip"]')) {
+    await page.click('[data-rev="flip"]');
+    if (!checkedPreview) {
+      // neue Karte: Nochmal heute, Schwer 1 Tag, Gut 2 Tage, Leicht 8 Tage (FSRS-6-Standardparameter)
+      const labels = await page.$$eval("[data-revgrade]", (b) => b.map((x) => x.textContent));
+      if (labels.length !== 4 || !labels[1].includes("1 Tag") || !labels[3].includes("8 Tage")) errors.push("Bewertungsknöpfe ohne richtige Vorschau: " + labels.join(" | "));
+      checkedPreview = true;
+    }
+    await page.click(i % 3 ? '[data-revgrade="3"]' : '[data-revgrade="4"]');
+  } else if (await page.$("button.opt:not([disabled])")) { await page.click("button.opt:not([disabled])"); await page.click("[data-revgrade]"); }
   else break;
 }
 const rv = await page.evaluate(() => window.PPApp.review);
 if (!rv || rv.done < 5) errors.push(`Wiederholung: nur ${rv && rv.done} Elemente bearbeitet`);
 st = await state();
 if (st.srsCfg.introduced.count < 1) errors.push("Neue Karten werden nicht gezählt");
+if (!Object.values(st.srs).some((c) => c.s > 0 && c.d >= 1 && c.due)) errors.push("FSRS-Zustand (Stabilität/Schwierigkeit) fehlt");
+if (!Object.values(st.log).some((e) => e.rev >= 5)) errors.push("Lernverlauf zählt Wiederholungen nicht");
 step(`Wiederholungsrunde: ${rv.done} Elemente bewertet`);
+
+// 7b) Lernverlauf, Prüfungstermin mit Countdown und Tagesziel
+await go("#/verlauf");
+if ((await page.$$(".hm-cell[data-tip]")).length < 150) errors.push("Lernkalender unvollständig");
+if (!(await page.$(".hm-cell.hm-today:not(.hm0)"))) errors.push("Heutiger Lerntag im Kalender nicht markiert");
+if ((await page.$$(".ch-bar")).length !== 30) errors.push("Vorschau der fälligen Wiederholungen fehlt");
+await page.hover(".ch-col"); if (!(await page.isVisible(".ch-tip"))) errors.push("Diagramm-Tooltip fehlt");
+const examDay = await page.evaluate(() => PPSrs.addDays(PPSrs.today(), 10));
+await page.selectOption("#exMod", "C3"); await page.fill("#exDate", examDay); await page.click('[data-examadd="1"]');
+const examText = await page.textContent(".exam-card");
+if (!/\b10\s*Tage/.test(examText) || !/heute:\s*\d+ neue/.test(examText)) errors.push("Prüfungstermin ohne Countdown/Tagesziel: " + examText.slice(0, 200));
+await page.click("[data-exstudy]"); await page.waitForTimeout(30);
+const prep = await page.evaluate(() => window.PPApp.review);
+if (!page.url().endsWith("#/wiederholen") || !prep || prep.mod !== "C3" || !prep.queue.length || !prep.queue.every((id) => id.includes(":C3:"))) errors.push("Prüfungsvorbereitung startet nicht mit Modul C3");
+await page.click('[data-rev="stop"]');
+await go("#/");
+if (!(await page.textContent(".card.today")).includes("in 10 Tagen")) errors.push("Startseite zeigt Prüfungs-Countdown nicht");
+step("Lernverlauf: Kalender, Vorschau, Prüfungstermin mit Countdown und Tagesziel");
 
 // 8) Karteikarten im Modul
 await go("#/modul/C3/karten");
-await page.click("#flash"); await page.click('[data-cardgrade="1"]');
+await page.click("#flash"); await page.click('[data-cardgrade="3"]');
 if (!Object.keys((await state()).srs).some((k) => k.startsWith("g:C3:"))) errors.push("Karteikarte nicht in Wiederholung gespeichert");
 step("Karteikarte bewertet");
 
@@ -169,7 +212,7 @@ if (Object.keys((await state()).reports).length !== 2) errors.push("Import stell
 step("Fortschritt exportiert und importiert");
 
 if (shotDir) {
-  for (const [r, n] of [["#/", "home"], ["#/wiederholen", "wiederholen"], ["#/rechentrainer/ttest_ind/42", "trainer"], ["#/datensaetze", "datensaetze"], ["#/pruefmodus/curriculum", "pruefmodus"], ["#/anki", "anki"]]) {
+  for (const [r, n] of [["#/", "home"], ["#/wiederholen", "wiederholen"], ["#/verlauf", "verlauf"], ["#/rechentrainer/ttest_ind/42", "trainer"], ["#/datensaetze", "datensaetze"], ["#/pruefmodus/curriculum", "pruefmodus"], ["#/anki", "anki"]]) {
     await go(r); await page.waitForTimeout(80);
     await page.screenshot({ path: `${shotDir}/${n}.png` });
   }
