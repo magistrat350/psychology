@@ -13,6 +13,8 @@ const [debugApk, releaseApk, outDir = "android-screenshots"] = process.argv.slic
 if (!debugApk || !releaseApk) { console.error("Aufruf: node tests/android-device.mjs <debug.apk> <release.apk> [screenshot-ordner]"); process.exit(2); }
 const PKG = "io.github.magistrat350.psychopfad";
 const results = [], screenshots = [];
+// Notbremse: hängt eine Verbindung zum Gerät, bricht der Test nach 8 Minuten mit Fehler ab (statt den Job zu blockieren)
+setTimeout(() => { console.error("FEHLER: Zeitlimit von 8 Minuten überschritten"); finish(1); }, 8 * 60 * 1000).unref();
 fs.mkdirSync(outDir, { recursive: true });
 
 const adb = (...args) => execFileSync("adb", args, { encoding: "utf8", maxBuffer: 64 * 1024 * 1024 });
@@ -38,9 +40,11 @@ async function debugTests() {
   adb("install", "-r", debugApk);
   launch();
   const pw = loadPlaywright();
-  const [device] = await pw._android.devices();
+  const [device] = (await within(pw._android.devices(), 60000, null)) || [];
+  if (!device) throw new Error("Kein Gerät über adb erreichbar");
   const webview = await device.webView({ pkg: PKG }, { timeout: 90000 });
-  const page = await webview.page();
+  const page = await within(webview.page(), 60000, null);
+  if (!page) throw new Error("Keine Verbindung zur WebView der App");
   const errors = [];
   page.on("pageerror", (e) => errors.push(e.message));
   // „Share canceled“ protokolliert Capacitor selbst, wenn das Teilen-Menü geschlossen wird; die App behandelt das
@@ -142,9 +146,12 @@ async function releaseTests() {
 try { await debugTests(); } catch (e) { check("Teil 1 abgeschlossen", false, e.message.split("\n")[0]); try { screenshot("fehler-debug"); } catch (x) { /* egal */ } }
 try { await releaseTests(); } catch (e) { check("Teil 2 abgeschlossen", false, e.message.split("\n")[0]); }
 
+finish();
+function finish(forceCode) {
 const failed = results.filter((r) => !r.ok && !r.soft);
 const summary = `### Android-Emulator\n\n| | Prüfung | Details |\n|---|---|---|\n${results.map((r) => `| ${r.ok ? "✅" : r.soft ? "⚠️" : "❌"} | ${r.name} | ${String(r.detail).replace(/\|/g, "/").replace(/\n/g, " ")} |`).join("\n")}\n\nScreenshots: ${screenshots.map((s) => path.basename(s)).join(", ")}\n`;
 if (process.env.GITHUB_STEP_SUMMARY) fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, summary);
 fs.writeFileSync(path.join(outDir, "ergebnis.md"), summary);
 console.log(failed.length ? `FEHLER: ${failed.length} Prüfungen fehlgeschlagen` : `OK – ${results.length} Prüfungen auf dem Gerät`);
-process.exit(failed.length ? 1 : 0);
+process.exit(forceCode || (failed.length ? 1 : 0));
+}

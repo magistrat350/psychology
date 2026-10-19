@@ -184,12 +184,12 @@ jobs:
       # Debug-APK: WebView per Playwright steuerbar (Ansichten, Plugins, Teilen, Zurück-Taste, Update-Abfrage);
       # Release-APK: Installation, Version, Start ohne Absturz. Details: tests/android-device.mjs
       - name: App im Emulator testen (Android 14)
+        timeout-minutes: 20
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 34
           target: google_apis
           arch: x86_64
-          profile: pixel_5
           disable-animations: true
           emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
           script: node tests/android-device.mjs apk/app-debug.apk apk/psychopfad.apk android-screenshots
