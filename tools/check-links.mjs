@@ -6,7 +6,11 @@
 //   --concurrency=<n>  parallele Anfragen (Standard 6, höchstens 2 pro Host)
 //   --strict           Exitcode 1, wenn defekte Links gefunden werden (z. B. für CI)
 //   --no-write         nur Konsolenausgabe, keine Dateien schreiben
-// Ergebnisse: reports/link-report.md, reports/link-report.json und data/link-status.js (zeigt Befunde in der App).
+//   --keep-unchanged   data/link-status.js nur neu schreiben, wenn sich ein Befund geändert hat (für den wöchentlichen Lauf)
+// Ergebnisse: reports/link-report.md, reports/link-report.json, reports/link-issue.md (Text für das GitHub-Issue)
+// und data/link-status.js (zeigt Befunde in der App).
+// DOI-Links werden über die DOI-Registrierung geprüft (doi.org/api/handles/…), nicht über die Verlagsseite,
+// weil Verlage automatische Abfragen meist abweisen.
 import fs from "fs";
 import path from "path";
 import { ROOT, loadData, collectLinks, isSearchUrl } from "./lib/load-data.mjs";
@@ -39,9 +43,25 @@ async function request(url, method, timeout) {
   } finally { clearTimeout(timer); }
 }
 
+/** DOI-Links → Abfrage der DOI-Registrierung; sonst null. */
+export function doiApiUrl(url) {
+  const m = String(url).match(/^https:\/\/(?:dx\.)?doi\.org\/(10\.\d{4,9}\/\S+)$/i);
+  return m ? "https://doi.org/api/handles/" + m[1] : null;
+}
+
 /** Prüft eine URL (HEAD, bei Ablehnung GET). */
 export async function checkUrl(url, { timeout = 15000 } = {}) {
   const out = { url };
+  const doiApi = doiApiUrl(url);
+  if (doiApi) {
+    try {
+      const r = await request(doiApi, "GET", timeout);
+      out.code = r.code; out.finalUrl = url;
+      if (r.code === 200) return Object.assign(out, { status: "ok", detail: "DOI registriert" });
+      if (r.code === 404) return Object.assign(out, { status: "defekt", detail: "DOI nicht registriert" });
+    } catch (e) { out.error = e.name === "AbortError" ? `Zeitüberschreitung nach ${timeout} ms` : (e.cause && (e.cause.code || e.cause.message)) || e.message; }
+    return Object.assign(out, classify(out));
+  }
   try {
     let r = await request(url, "HEAD", timeout);
     if ([403, 404, 405, 429, 500, 501, 503].includes(r.code)) r = await request(url, "GET", timeout);
@@ -70,6 +90,24 @@ export async function checkAll(urls, { concurrency = 6, perHost = 2, timeout = 1
   }
   await Promise.all(Array.from({ length: Math.min(concurrency, urls.length) }, worker));
   return results;
+}
+
+/** Gleiche URLs mit gleichem Befund? (Zeitstempel und Details zählen nicht) */
+export function sameStatus(a, b) {
+  const ka = Object.keys(a), kb = Object.keys(b);
+  return ka.length === kb.length && ka.every((u) => b[u] && b[u].status === a[u].status);
+}
+
+/** Text für das GitHub-Issue: defekte Links vollständig, unklare eingeklappt (GitHub erlaubt höchstens 65 536 Zeichen). */
+export function issueMarkdown({ checkedAt, summary, results }, runUrl = process.env.GITHUB_RUN_ID ? `${process.env.GITHUB_SERVER_URL}/${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID}` : "") {
+  const row = ([u, v]) => `| ${v.title.replace(/\|/g, "/").slice(0, 90)} | ${u} | ${v.where.join("; ").slice(0, 120)} | ${(v.detail || "").slice(0, 80)} |`;
+  const list = (st, max) => { const e = Object.entries(results).filter(([, v]) => v.status === st); return { n: e.length, md: e.slice(0, max).map(row).join("\n") + (e.length > max ? `\n| … und ${e.length - max} weitere (siehe Bericht) | | | |` : "") }; };
+  const bad = list("defekt", 200), unclear = list("unklar", 150);
+  return `Automatische Linkprüfung vom ${checkedAt.slice(0, 10)}: ${summary.total} URLs – **${summary.ok} erreichbar**, **${summary.defekt} defekt**, ${summary.unklar} unklar.\n\n` +
+    `## Defekte Links (${bad.n})\n\n| Titel | URL | Fundort | Befund |\n|---|---|---|---|\n${bad.md || "| – | | | |"}\n\n` +
+    `<details><summary>Unklare Links (${unclear.n}) – Server blockiert automatische Abfragen o. Ä., im Browser prüfen</summary>\n\n| Titel | URL | Fundort | Befund |\n|---|---|---|---|\n${unclear.md || "| – | | | |"}\n\n</details>\n\n` +
+    `Defekte Links in \`data/modules/*.js\` bzw. \`data/sources.js\` korrigieren. Dieses Issue wird bei jeder Prüfung aktualisiert und geschlossen, sobald keine defekten Links mehr gefunden werden.` +
+    (runUrl ? `\n\nBericht und Rohdaten: ${runUrl}` : "") + "\n";
 }
 
 async function main() {
@@ -102,8 +140,12 @@ async function main() {
     const md = `# Linkprüfung PsychoPfad Wien\n\nGeprüft am ${checkedAt.slice(0, 16).replace("T", " ")} – ${summary.total} URLs: **${summary.ok} erreichbar**, **${summary.defekt} defekt**, **${summary.unklar} unklar**.\n\n` +
       `## Defekt\n\n| Link | Fundort | Befund |\n|---|---|---|\n${rows("defekt") || "| – | | |"}\n\n## Manuell prüfen\n\n| Link | Fundort | Befund |\n|---|---|---|\n${rows("unklar") || "| – | | |"}\n`;
     fs.writeFileSync(path.join(ROOT, "reports/link-report.md"), md);
-    fs.writeFileSync(path.join(ROOT, "data/link-status.js"), `/* Ergebnisse der Linkprüfung – erzeugt von tools/check-links.mjs am ${checkedAt}. */\nPP.linkStatus = ${JSON.stringify({ checkedAt, summary, results: resMap })};\n`);
-    console.log("Geschrieben: reports/link-report.md, reports/link-report.json, data/link-status.js");
+    fs.writeFileSync(path.join(ROOT, "reports/link-issue.md"), issueMarkdown({ checkedAt, summary, results: resMap }));
+    const prev = PP.linkStatus && PP.linkStatus.results;
+    const same = prev && sameStatus(prev, resMap);
+    if (flag("keep-unchanged") && same) console.log("Befunde unverändert – data/link-status.js bleibt.");
+    else fs.writeFileSync(path.join(ROOT, "data/link-status.js"), `/* Ergebnisse der Linkprüfung – erzeugt von tools/check-links.mjs am ${checkedAt}. */\nPP.linkStatus = ${JSON.stringify({ checkedAt, summary, results: resMap })};\n`);
+    console.log("Geschrieben: reports/link-report.md, reports/link-report.json, reports/link-issue.md" + (flag("keep-unchanged") && same ? "" : ", data/link-status.js"));
   }
   if (flag("strict") && summary.defekt > 0) process.exit(1);
 }

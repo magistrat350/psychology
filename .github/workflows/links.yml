@@ -1,0 +1,73 @@
+name: Linkprüfung
+
+# Prüft wöchentlich alle Links der App (Materialien, Vorlesungen, Bibliotheken, Quellen der Lernthemen).
+# - Ändert sich ein Befund, wird data/link-status.js aktualisiert und committet (die App zeigt dann
+#   „Link defekt“ bzw. „Link prüfen“). Commits mit dem GITHUB_TOKEN lösen keinen neuen App-Build aus;
+#   die Befunde kommen mit dem nächsten Release in die App.
+# - Defekte Links landen in einem Issue mit dem Label „linkpruefung“, das bei jeder Prüfung aktualisiert
+#   und geschlossen wird, sobald alles erreichbar ist.
+on:
+  schedule:
+    - cron: '23 4 * * 1'   # montags 04:23 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  issues: write
+
+concurrency:
+  group: linkpruefung
+  cancel-in-progress: false
+
+jobs:
+  links:
+    name: Links prüfen
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Links prüfen
+        run: node tools/check-links.mjs --keep-unchanged --concurrency=8
+
+      - name: Bericht speichern
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: linkpruefung-${{ github.run_number }}
+          path: reports/
+          if-no-files-found: ignore
+
+      - name: Befunde committen
+        run: |
+          if git diff --quiet -- data/link-status.js; then
+            echo "Keine geänderten Befunde."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/link-status.js
+          git commit -m "Linkprüfung: Befunde vom $(date -u +%Y-%m-%d) aktualisiert"
+          git push || { git pull --rebase && git push; }
+
+      - name: Issue zu defekten Links aktualisieren
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          LABEL=linkpruefung
+          gh label create "$LABEL" --color D93F0B --description "Automatische Linkprüfung" 2>/dev/null || true
+          DEFEKT=$(node -e 'console.log(require("./reports/link-report.json").summary.defekt)')
+          NUM=$(gh issue list --label "$LABEL" --state open --json number --jq '.[0].number // empty')
+          TITLE="Linkprüfung: $DEFEKT defekte Links"
+          if [ "$DEFEKT" -gt 0 ]; then
+            if [ -n "$NUM" ]; then
+              gh issue edit "$NUM" --title "$TITLE" --body-file reports/link-issue.md
+            else
+              gh issue create --title "$TITLE" --label "$LABEL" --body-file reports/link-issue.md
+            fi
+          elif [ -n "$NUM" ]; then
+            gh issue close "$NUM" --comment "Bei der Prüfung vom $(date -u +%Y-%m-%d) waren alle Links erreichbar oder nur „unklar“ (siehe Bericht im Workflow-Lauf)."
+          fi

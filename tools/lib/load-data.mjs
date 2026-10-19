@@ -4,6 +4,8 @@ import fs from "fs";
 import path from "path";
 import vm from "vm";
 import { fileURLToPath } from "url";
+import { createRequire } from "module";
+const PPSources = createRequire(import.meta.url)("../../js/sources.js");
 
 export const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 
@@ -36,6 +38,7 @@ export function collectLinks(PP) {
   (PP.meta.officialLinks || []).forEach((l) => add(l.url, l.title, "Offizielle Quellen"));
   (PP.careerLinks || []).forEach((l) => add(l.url, l.title, "Nach dem Bachelor"));
   (PP.libraries || []).forEach((l) => { add(l.home, l.name, "Bibliotheken"); (l.links || []).forEach((x) => add(x.url, x.title, `Bibliotheken · ${l.short}`)); });
+  if (PP.sourceCatalog) PPSources.urls(PP).forEach((s) => add(s.url, s.title, s.where));
   return out;
 }
 
