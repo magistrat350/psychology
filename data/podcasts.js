@@ -37,7 +37,7 @@ PP.podcasts = [
 
   // URL: Suchtreffer scottbarrykaufman.com/podcast.html (offizielle Podcastseite)
   { id: "psychology-podcast", title: "The Psychology Podcast", by: "Scott Barry Kaufman", lang: "EN",
-    url: "https://scottbarrykaufman.com/podcast.html",
+    url: "https://scottbarrykaufman.com/podcast/",
     about: "Lange Gespräche mit Forschenden über Kreativität, Intelligenz, Wohlbefinden und Selbstverwirklichung. Lief 2014–2025; das Archiv mit 478 Folgen bleibt frei abrufbar.",
     modules: {
       A1: { hint: "Gespräche zur humanistischen Psychologie (Maslow, Selbstverwirklichung)", q: "humanistic psychology Maslow self-actualization" },
@@ -99,7 +99,7 @@ PP.podcasts = [
 
   // URL: Suchtreffer quantitudepod.org (Startseite, Episodes, About)
   { id: "quantitude", title: "Quantitude", by: "Greg Hancock, Patrick Curran", lang: "EN",
-    url: "https://quantitudepod.org/",
+    url: "https://quantitude.org/",
     about: "Zwei Methodenprofessoren erklären Statistik und Messung mit viel Humor; eine Syllabus-Seite ordnet die Folgen nach Themen. Ideal begleitend zu den Methoden- und Statistikmodulen.",
     modules: {
       C4: { hint: "Folgen zu Regression, Mediation, Moderation und Längsschnittmodellen", q: "regression mediation moderation growth models" },
@@ -164,7 +164,7 @@ PP.podcasts = [
 
   // URL: Suchtreffer developingchild.harvard.edu/resources/podcasts/
   { id: "brain-architects", title: "The Brain Architects", by: "Center on the Developing Child, Harvard University", lang: "EN",
-    url: "https://developingchild.harvard.edu/resources/podcasts/",
+    url: "https://developingchild.harvard.edu/news-insights/podcasts/",
     about: "Podcast des Harvard-Zentrums zur frühen Kindheit: Wissenschaft zu Gehirnentwicklung, Stress und Lebensbedingungen von Kindern, danach Expert:innen zur Praxis. Für Entwicklungspsychologie mit Anwendungsbezug.",
     modules: {
       A2: { hint: "Folgen zu früher Kindheit, Gehirnentwicklung und Bezugspersonen", q: "early childhood brain development serve and return" },
