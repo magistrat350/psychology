@@ -15,7 +15,7 @@
   // Android-App: Capacitor stellt die nativen Plugins bereit (js/capacitor.js wird nur in den APK-Build eingebunden)
   const CAP = window.Capacitor;
   const IS_NATIVE = !!(CAP && typeof CAP.isNativePlatform === "function" && CAP.isNativePlatform() && typeof CAP.registerPlugin === "function");
-  const native = IS_NATIVE ? { fs: CAP.registerPlugin("Filesystem"), share: CAP.registerPlugin("Share"), app: CAP.registerPlugin("App") } : null;
+  const native = IS_NATIVE ? { fs: CAP.registerPlugin("Filesystem"), share: CAP.registerPlugin("Share"), app: CAP.registerPlugin("App"), notif: CAP.registerPlugin("LocalNotifications") } : null;
   const V = window.PPVersion || { version: "dev", build: 0, commit: "", date: "", repo: PP.meta.repo };
   const U = window.PPUpdate, BK = window.PPBackup;
 
@@ -292,6 +292,56 @@
     syncUi = { busy: label, msg: "" }; keep(route);
     return fn().then(() => { syncUi = { busy: "", msg: "" }; }, (e) => { syncUi = { busy: "", msg: BK.errorText(e) }; })
       .then(() => { renderBanner(); if (location.hash.startsWith("#/einstellungen")) keep(route); });
+  }
+  // ---------- Tägliche Erinnerung (nur Android-App) ----------
+  // Geplant werden die nächsten 7 Tage mit der erwarteten Zahl fälliger Karten; bei jedem Start und beim Verlassen
+  // der App wird neu geplant, damit die Zahlen stimmen. Ein Tipp auf die Benachrichtigung öffnet die Wiederholung.
+  const REM_IDS = [1001, 1002, 1003, 1004, 1005, 1006, 1007];
+  let remUi = "";
+  function reminderPlan(now = new Date()) {
+    const r = state.settings.reminder || {}, [hh, mm] = String(r.time || "18:00").split(":").map(Number), d = today();
+    const fc = R.forecast(ITEMS, state.srs, d, 7), freshToday = srsQueue().fresh.length, next = upcomingExams()[0], out = [];
+    for (let i = 0; i < 7; i++) {
+      const day = R.addDays(d, i), at = parseDay(day); at.setHours(hh || 0, mm || 0, 0, 0);
+      if (at <= now) continue;
+      const due = fc[i], fresh = i === 0 ? freshToday : state.srsCfg.newPerDay;
+      if (i === 0 && !due && isActive(d)) continue; // heute schon gelernt und nichts mehr fällig
+      let body = due ? `${due} ${due === 1 ? "Karte" : "Karten"} fällig` : fresh ? `Nichts fällig – ${fresh} neue Karten warten` : "Zeit für eine kurze Runde";
+      if (next) { const left = R.daysBetween(day, next.date); if (left >= 0 && left <= 21) body += ` · ${examTitle(next)} ${left === 0 ? "heute" : `in ${left} ${left === 1 ? "Tag" : "Tagen"}`}`; }
+      out.push({ id: REM_IDS[i], title: "PsychoPfad – Wiederholen", body, schedule: { at, allowWhileIdle: true }, channelId: "erinnerung", extra: { route: "#/wiederholen" } });
+    }
+    return out;
+  }
+  async function scheduleReminders() {
+    if (!native || !native.notif) return;
+    try {
+      await native.notif.cancel({ notifications: REM_IDS.map((id) => ({ id })) });
+      if (!state.settings.reminder.on || (await native.notif.checkPermissions()).display !== "granted") return;
+      const list = reminderPlan(); if (list.length) await native.notif.schedule({ notifications: list });
+    } catch (e) { /* Erinnerungen sind Komfort – Fehler sollen die App nicht stören */ }
+  }
+  async function setReminder(on) {
+    try {
+      if (on) {
+        let p = await native.notif.checkPermissions();
+        if (p.display !== "granted") p = await native.notif.requestPermissions();
+        if (p.display !== "granted") {
+          state.settings.reminder.on = false; save();
+          remUi = "Benachrichtigungen sind nicht erlaubt. Gib sie in den Android-Einstellungen frei (Apps › PsychoPfad › Benachrichtigungen) und schalte die Erinnerung dann erneut ein.";
+          keep(route); return;
+        }
+      }
+      state.settings.reminder.on = on; save(); await scheduleReminders();
+      remUi = on ? "Erinnerung ist eingeschaltet." : "Erinnerung ist ausgeschaltet.";
+    } catch (e) { remUi = "Erinnerung konnte nicht eingerichtet werden: " + (e && e.message ? e.message : e); }
+    keep(route);
+  }
+  function reminderCard() {
+    const r = state.settings.reminder;
+    if (!IS_NATIVE) return `<div class="card"><h3>Tägliche Erinnerung</h3><p class="small muted">In der Android-App erinnert dich PsychoPfad auf Wunsch täglich an fällige Wiederholungen – etwa „14 Karten fällig · B1 in 5 Tagen“.</p></div>`;
+    return `<div class="card" id="reminderCard"><h3>Tägliche Erinnerung</h3>
+      <div class="form-row"><label><input type="checkbox" id="remOn" ${r.on ? "checked" : ""}> täglich erinnern</label><label>um <input type="time" id="remTime" value="${esc(r.time || "18:00")}"></label></div>
+      <p class="small muted" id="remMsg">${esc(remUi || "Die Benachrichtigung nennt die fälligen Karten und den nächsten Prüfungstermin; ein Tipp darauf öffnet die Wiederholung. Hast du an dem Tag schon alles erledigt, bleibt sie aus.")}</p></div>`;
   }
   function backupCard() {
     const days = +state.settings.backupDays;
@@ -1357,7 +1407,7 @@ npm run check-links</code></pre>
     return h;
   }
   function viewSettings() {
-    let h = `<h1>Einstellungen</h1>${versionCard()}${backupCard()}<div class="card"><h3>Farbschema</h3><select id="themeSel" aria-label="Farbschema">${[["auto", "System"], ["light", "Hell"], ["dark", "Dunkel"]].map(([v, l]) => `<option value="${v}" ${state.settings.theme === v ? "selected" : ""}>${l}</option>`).join("")}</select></div>
+    let h = `<h1>Einstellungen</h1>${versionCard()}${reminderCard()}${backupCard()}<div class="card"><h3>Farbschema</h3><select id="themeSel" aria-label="Farbschema">${[["auto", "System"], ["light", "Hell"], ["dark", "Dunkel"]].map(([v, l]) => `<option value="${v}" ${state.settings.theme === v ? "selected" : ""}>${l}</option>`).join("")}</select></div>
       <div class="card"><h3>Such-URLs der Bibliothekskataloge</h3><p class="small">Platzhalter <code>{q}</code> wird durch den Suchbegriff ersetzt. Im Katalog nach <code>TESTWORT</code> suchen, Adresse kopieren und <code>TESTWORT</code> durch <code>{q}</code> ersetzen. Leer = Suchbegriff wird kopiert und die Katalogstartseite geöffnet.</p>`;
     PP.libraries.forEach((l) => { h += `<p><label><b>${esc(l.name)}</b><br><input type="url" data-libtpl="${l.id}" value="${esc(libTemplate(l))}" placeholder="${esc(l.home)}…?q={q}" style="width:100%"></label></p>`; });
     return h + `<button class="btn primary" data-act="saveLibs">Speichern</button></div>`;
@@ -1645,6 +1695,8 @@ npm run check-links</code></pre>
     if (t.classList.contains("ankiKind")) { ankiSel.kinds = [...document.querySelectorAll(".ankiKind")].filter((c) => c.checked).map((c) => c.value); keep(route); }
     if (t.classList.contains("ankiMod")) { ankiSel.mods = [...document.querySelectorAll(".ankiMod")].filter((c) => c.checked).map((c) => c.value); keep(route); }
     if (t.id === "themeSel") { state.settings.theme = t.value; save(); applyTheme(); }
+    if (t.id === "remOn") setReminder(t.checked);
+    if (t.id === "remTime" && /^\d{2}:\d{2}$/.test(t.value)) { state.settings.reminder.time = t.value; save(); scheduleReminders(); }
     if (t.id === "backupDays") { state.settings.backupDays = +t.value; save(); renderBanner(); }
     if (t.id === "importFile" && t.files[0]) t.files[0].text().then(importState);
   });
@@ -1717,12 +1769,18 @@ npm run check-links</code></pre>
     }).catch(() => {});
   }
 
+  if (native && native.notif) {
+    native.notif.createChannel({ id: "erinnerung", name: "Tägliche Erinnerung", description: "Fällige Wiederholungen und Prüfungstermine", importance: 3 }).catch(() => {});
+    native.notif.addListener("localNotificationActionPerformed", (a) => { const r = a && a.notification && a.notification.extra && a.notification.extra.route; if (r) location.hash = r; }).catch(() => {});
+    document.addEventListener("visibilitychange", () => { if (document.visibilityState === "hidden") scheduleReminders(); });
+  }
+
   // Zugriff für automatische Tests
   // Beim Verlassen der App ausstehende Änderungen sofort hochladen
   document.addEventListener("visibilitychange", () => { if (document.visibilityState === "hidden" && syncDirtyFlag) syncPush(); });
 
   window.PPApp = { get state() { return state; }, get trainer() { return trainer; }, get review() { return rev; }, get update() { return upd; }, get sync() { return sync; },
-    syncNow: () => syncPush(), srsQueue, verifyItems, native: IS_NATIVE };
+    syncNow: () => syncPush(), srsQueue, verifyItems, reminderPlan, scheduleReminders, native: IS_NATIVE };
 
   applyTheme();
   initCloud();
@@ -1730,5 +1788,6 @@ npm run check-links</code></pre>
   route();
   autoUpdateCheck();
   syncStartup();
+  scheduleReminders();
   renderBanner();
 })();

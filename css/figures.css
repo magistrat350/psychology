@@ -1,0 +1,53 @@
+/* Abbildungen (inline-SVG aus js/figures.js).
+ * Farben ausschließlich über die Variablen aus style.css, damit Hell- und Dunkelmodus funktionieren.
+ * Reihenfolge beachten: Farb-/Flächenklassen stehen hinter .fig-line/.fig-label, damit Kombinationen greifen. */
+figure.fig-wrap { margin: 14px 0; padding: 0; }
+figure.fig-wrap figcaption { max-width: 640px; margin: 2px auto 0; font-size: .82rem; line-height: 1.45; color: var(--muted); text-align: center; }
+
+.fig { width: 100%; height: auto; max-width: 640px; display: block; margin: 8px auto; overflow: visible; }
+.fig text { font-family: inherit; stroke: none; }
+
+/* Linien und Text */
+.fig-line { fill: none; stroke: var(--text); stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+.fig-thin { stroke-width: 1; }
+.fig-thick { stroke-width: 2.4; }
+.fig-dash { stroke-dasharray: 6 4; }
+.fig-dot { stroke-dasharray: .5 4.5; }
+.fig-lead { fill: none; stroke: var(--muted); stroke-width: 1; }
+.fig-head { fill: var(--text); stroke: none; }
+.fig-label { fill: var(--text); font-size: 13px; }
+.fig-small { font-size: 11px; }
+.fig-big { font-size: 15px; }
+.fig-bold { font-weight: 600; }
+
+/* Flächen und Farben */
+.fig-bg { fill: var(--surface); }
+.fig-soft { fill: var(--surface-2); }
+.fig-ink { fill: var(--text); }
+.fig-accent { fill: var(--accent); stroke: var(--accent); }
+.fig-accent-soft { fill: var(--accent-soft); }
+.fig-muted { fill: var(--muted); stroke: var(--muted); }
+.fig-ok { fill: var(--ok); stroke: var(--ok); }
+.fig-bad { fill: var(--bad); stroke: var(--bad); }
+.fig-tint-accent { fill: var(--accent); fill-opacity: .16; }
+.fig-tint-strong { fill: var(--accent); fill-opacity: .5; }
+.fig-tint-ok { fill: var(--ok); fill-opacity: .2; }
+.fig-tint-muted { fill: var(--muted); fill-opacity: .16; }
+.fig-nd1 { fill: var(--accent); fill-opacity: .42; }
+.fig-nd2 { fill: var(--accent); fill-opacity: .24; }
+.fig-nd3 { fill: var(--accent); fill-opacity: .1; }
+.fig-pt { fill: var(--accent); stroke: var(--surface); stroke-width: 1; }
+.fig-hatch { fill: none; stroke: var(--muted); stroke-width: 1.1; }
+
+/* Konturfarben (nur stroke) */
+.fig-s-accent { stroke: var(--accent); }
+.fig-s-muted { stroke: var(--muted); }
+.fig-s-ok { stroke: var(--ok); }
+.fig-s-border { stroke: var(--border); }
+.fig-noline { stroke: none; }
+
+/* farbige Linien bleiben ungefüllt, Pfeilspitzen ohne Kontur */
+.fig-line.fig-accent, .fig-line.fig-muted, .fig-line.fig-ok, .fig-line.fig-bad { fill: none; }
+.fig-head.fig-accent, .fig-head.fig-muted, .fig-head.fig-ok, .fig-head.fig-bad { stroke: none; }
+/* Text mit Hintergrund-Rand, wenn er über Linien liegt */
+.fig .fig-halo { stroke: var(--surface); stroke-width: 4px; stroke-linejoin: round; paint-order: stroke fill; }

@@ -287,7 +287,7 @@ pre { background: var(--surface-2); border: 1px solid var(--border); border-radi
 .countdown b { display: block; font-size: 1.6rem; line-height: 1.1; color: var(--accent); }
 .form-row label:has(select), .form-row label:has(input[type="text"]) { max-width: 100%; min-width: 0; }
 .form-row select, .form-row input[type="text"] { max-width: 100%; min-width: 0; }
-.form-row input[type="date"], .form-row input[type="text"], .form-row select { padding: 7px 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface); color: var(--text); font: inherit; }
+.form-row input[type="date"], .form-row input[type="time"], .form-row input[type="text"], .form-row select { padding: 7px 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface); color: var(--text); font: inherit; }
 /* Software-Ausgabe (jamovi/SPSS-Stil) im Rechentrainer */
 .sw-output { margin-top: 12px; padding: 10px 14px 12px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); }
 .sw-label { font-size: .72rem; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); margin-bottom: 8px; }

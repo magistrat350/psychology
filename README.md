@@ -12,24 +12,27 @@ Selbstlern-App für das **Bachelorstudium Psychologie an der Universität Wien**
 | Wissen & Qualifikationen | Vorausgesetztes Wissen, Selbsteinschätzungsbogen, Arbeitstechniken |
 | Lernpfad | Themen-Zusammenfassungen mit Schlüsselbegriffen und **Quellen zum Nachprüfen** (238 Themen, 661 Quellenangaben) |
 | Materialien / Vorlesungen | 310 frei zugängliche Quellen (OER, MIT OCW, Yale, Coursera-Audit, YouTube) |
+| Podcasts | Empfehlungen aus 25 geprüften Podcasts (Deutsch/Englisch, u. a. Ö1, Deutschlandfunk Nova, SWR, BR, BBC, APA) mit Suchlink nach passenden Folgen |
 | Fachliteratur | 215 Bücher mit Suche in KIT-Bibliothek, UB Wien, Büchereien Wien, WorldCat, SpringerLink |
-| Karteikarten | Glossar mit Wiederholung in wachsenden Abständen |
+| Karteikarten | Glossar, geplant mit FSRS (wie die Wiederholung) |
 | Quiz / Prüfung | 430 MC-Fragen mit Erklärung, Prüfungssimulation mit Timer und 97 offenen Fragen samt Musterlösung |
 | Rechentrainer | (D1, D2, E1) generierte Rechenaufgaben mit Lösungsweg |
 | Notizen | eigene Notizen |
 
 **Modulübergreifend:**
 
-- **Wiederholen** – Begriffe und Quizfragen aus allen Modulen, verzahnt gemischt. Gewusstes kommt nach 1, 3, 7, 16, 35, 80 Tagen wieder, Falsches am nächsten Tag. Falsche Antworten aus Quiz, Prüfung und Mischquiz landen automatisch hier. Einstellbar: neue Karten pro Tag, Module, Kartentypen. Tastatur: Leertaste umdrehen, 1/2 bewerten, Ziffern für Antworten, Enter weiter.
+- **Wiederholen** – Begriffe und Quizfragen aus allen Modulen, verzahnt gemischt, geplant mit **FSRS-6** (dem Gedächtnismodell aus Anki; `js/srs.js`, im Test Schritt für Schritt gegen die Referenzimplementierung `ts-fsrs` geprüft). Bewertung in vier Stufen – Nochmal, Schwer, Gut, Leicht –, jeder Knopf zeigt den Abstand bis zur nächsten Wiederholung. Das Modell schätzt je Element Stabilität und Schwierigkeit und legt die Wiederholung so, dass die gewählte Behaltensquote (80–95 %, Standard 90 %) erreicht wird. Falsche Antworten aus Quiz, Prüfung und Mischquiz landen automatisch hier; alte Lernstände (Boxen) werden übernommen. Einstellbar: neue Karten pro Tag, Module, Kartentypen, Behaltensquote. Tastatur: Leertaste umdrehen, 1–4 bewerten, Ziffern für Antworten, Enter = Gut bzw. weiter.
+- **Lernverlauf & Prüfungstermine** – Lernkalender der letzten 26 Wochen, fällige Wiederholungen der nächsten 30 Tage, Trefferquote pro Woche, Stabilitätsverteilung (jeweils mit Tabellenansicht), Serie in Tagen. Prüfungstermine mit Countdown, Tagesziel (neue Elemente des Moduls gleichmäßig bis zum Vortag verteilt plus fällige), erwarteter Abrufanteil am Prüfungstag und Lernrunde nur für dieses Modul; der nächste Termin steht auch auf der Startseite.
+- **Podcasts** – Übersicht aller Empfehlungen (`data/podcasts.js`), sortiert nach Sprache, mit Modulzuordnung.
 - **Mischquiz** – Fragen aus mehreren Modulen (Voreinstellungen StEOP, Grundlagen, Methoden, Anwendung, Alles) mit Auswertung je Modul.
-- **Statistik-Rechentrainer** – 25 Aufgabentypen (Lage- und Streuungsmaße, z-/T-Werte, Normalverteilung, Korrelation, Regression, Bayes, Binomialverteilung, Konfidenzintervalle, t-Tests, ANOVA, χ², Effektgrößen, α-Kumulierung, Standardmessfehler, Spearman-Brown, Minderungskorrektur, Itemanalyse, Cronbachs α, Normwerte, Rasch-Modell, Cohens κ, Sensitivität/PPV). Neue Zahlen bei jedem Durchgang, Eingabe mit Komma oder Punkt, schrittweiser Lösungsweg. Jede Aufgabe hat eine Nummer und ist damit reproduzierbar (`#/rechentrainer/anova/1234`).
+- **Statistik-Rechentrainer** – 31 Aufgabentypen (Lage- und Streuungsmaße, z-/T-Werte, Normalverteilung, Korrelation, Regression, Bayes, Binomialverteilung, Konfidenzintervalle, t-Tests, ANOVA, χ², Effektgrößen, α-Kumulierung, Mann-Whitney-U und Wilcoxon mit exakten p-Werten, Teststärke, Stichprobenplanung, Konfidenzintervall für r über Fisher-z, Standardmessfehler, Spearman-Brown, Minderungskorrektur, Itemanalyse, Cronbachs α, Normwerte, Rasch-Modell, Cohens κ, Sensitivität/PPV) und **Software-Ausgaben lesen**: nachgebildete jamovi-/SPSS-Tabellen zu t-Test (mit Levene-Test), ANOVA, Korrelationsmatrix und multipler Regression aus simulierten Daten. Neue Zahlen bei jedem Durchgang, Eingabe mit Komma oder Punkt, schrittweiser Lösungsweg. Jede Aufgabe hat eine Nummer und ist damit reproduzierbar (`#/rechentrainer/anova/1234`).
 - **Übungsdatensätze** – 5 simulierte Datensätze als CSV (Lernstudie, Achtsamkeitstraining, Therapiestudie, Fragebogen/Skalenanalyse, Screening/Diagnostik) mit 17 Aufgaben, jamovi- und R-Hinweisen und Referenzergebnissen.
 - **Anki-Export** – Begriffe, Quizfragen und Prüfungsfragen als Anki-Importdatei, ein Unterstapel pro Modul.
 - **Prüfmodus** – Curriculum-Checkliste (106 Prüfpunkte, unsichere Angaben markiert), **fachliche Prüfung der Inhalte** (siehe unten), gesammelte Fehlermeldungen (Button „⚑ Fehler melden“ an Quizfragen, Prüfungsfragen, Lernthemen, Karteikarten, Links, Büchern und Rechenaufgaben) mit Export als Markdown oder GitHub-Issue, Ergebnisse der Linkprüfung.
 - **Sicherung des Lernstands** – Erinnerung nach einstellbarer Zeit mit „Jetzt sichern“ (Datei bzw. Teilen-Menü) und optional automatische Sicherung in einem geheimen GitHub-Gist mit Abgleich zwischen Geräten (siehe unten).
 - Semesterplan, Vorbereitung auf das Aufnahmeverfahren, Glossar, Volltextsuche, Fortschritt mit Export/Import, Hell/Dunkel-Modus.
 - **Installierbar und offline nutzbar** (PWA), wenn die App über http(s) ausgeliefert wird.
-- **Android-App (APK)** mit Update-Prüfung über GitHub Releases und Versionsnummern (siehe unten).
+- **Android-App (APK)** mit Update-Prüfung über GitHub Releases, Versionsnummern und **täglicher Erinnerung** (siehe unten).
 
 ## Starten
 
@@ -51,7 +54,7 @@ Der Lernfortschritt liegt im Browser bzw. in der App (localStorage). Unter **For
 
 ## Android-App & Updates über GitHub
 
-Bei jedem Push baut GitHub Actions (`.github/workflows/build.yml`) die App: erst laufen alle Tests, dann entsteht mit [Capacitor](https://capacitorjs.com) eine Android-APK, die anschließend **im Android-Emulator (Android 14) getestet** wird (`tests/android-device.mjs`): Start, Ansichten, Dateisystem und Teilen-Menü, Zurück-Taste, Update-Abfrage, externe Links; dazu Installation, Version und Start der signierten Release-APK.
+Bei jedem Push baut GitHub Actions (`.github/workflows/build.yml`) die App: erst laufen alle Tests, dann entsteht mit [Capacitor](https://capacitorjs.com) eine Android-APK, die anschließend **im Android-Emulator (Android 14) getestet** wird (`tests/android-device.mjs`): Start, Ansichten, Dateisystem und Teilen-Menü, Zurück-Taste, Update-Abfrage, geplante Erinnerungen und Anzeige einer Benachrichtigung, externe Links; dazu Installation, Version und Start der signierten Release-APK.
 Jeder Push ergibt nur einen **Testbuild** (APK als Artefakt am Workflow-Lauf). Ein **Release** – das installierte Apps als Update anbieten – entsteht nur auf dem Standard-Branch und nur, wenn
 - der Workflow von Hand gestartet wird: *Actions → App bauen & veröffentlichen → Run workflow* (Häkchen „Als Release veröffentlichen“), oder
 - eine Commit-Nachricht des Pushes `[release]` enthält (z. B. `git commit -m "Neue Module [release]"`),
@@ -61,6 +64,7 @@ und nur, wenn der Emulator-Test besteht. Das Release enthält die APK, Screensho
 - **Installieren:** https://github.com/magistrat350/psychology/releases/latest/download/psychopfad.apk auf dem Handy öffnen und installieren (einmalig „Installation aus unbekannten Quellen“ erlauben).
 - **Aktualisieren:** Die App sucht beim Start (höchstens alle 12 Stunden) nach einer neueren Veröffentlichung und zeigt oben einen Hinweis mit Download-Link. Manuell: **Einstellungen → App-Version & Updates → Nach Updates suchen** – dort stehen auch die Neuerungen der Version. Die neue APK einfach drüberinstallieren, der Lernstand bleibt erhalten.
 - **Web-Version:** Der Service Worker lädt neue Versionen im Hintergrund und zeigt dann „Neu laden“ an.
+- **Tägliche Erinnerung (nur App):** *Einstellungen → Tägliche Erinnerung* mit Uhrzeit. Geplant werden die nächsten 7 Tage als lokale Benachrichtigungen (`@capacitor/local-notifications`, kein Server) mit der erwarteten Zahl fälliger Karten und dem nächsten Prüfungstermin, z. B. „14 Karten fällig · B1 in 5 Tagen“; bei jedem Start und beim Verlassen der App wird neu geplant. Ist an einem Tag schon alles erledigt, bleibt sie aus. Ein Tipp öffnet die Wiederholung. Android 13+ fragt einmal nach der Erlaubnis für Benachrichtigungen.
 - **In der App:** Exporte (Anki, CSV, Fortschritt, Meldungen) öffnen das Teilen-Menü (z. B. „In Drive speichern“, an AnkiDroid oder per Mail senden); Links öffnen im Browser; die Zurück-Taste navigiert innerhalb der App.
 
 **Versionsschema:** `<major>.<minor>.<Build>` – `major.minor` aus `package.json`, die Build-Nummer ist die Laufnummer des Workflows (und der Android-`versionCode`), z. B. `2.0.17` mit Tag `v2.0.17`. Weil auch Testbuilds eine Laufnummer verbrauchen, haben die Release-Nummern Lücken. Für größere Inhaltsstände `npm version minor --no-git-tag-version` ausführen und committen (→ `2.1.<Build>`). Lokale Builds heißen `2.0.0-dev`. Die Version steht in den Einstellungen, unten in der Navigation und in jeder Fehlermeldung. Die Versionshinweise eines Releases entstehen aus den Commit-Nachrichten seit dem vorigen Release.
@@ -135,7 +139,7 @@ Alle Inhalte wurden mit KI-Unterstützung erstellt. Damit man sie nachprüfen ka
 
 ```
 index.html, manifest.webmanifest, sw.js, icons/   App-Shell und PWA
-capacitor.config.json, assets/, signing/   Android-App (Projekt wird im Workflow erzeugt)
+capacitor.config.json, assets/, signing/   Android-App (Projekt wird im Workflow erzeugt; assets/notification-icon.xml = Benachrichtigungssymbol)
 .github/workflows/build.yml   Tests, APK, Emulator-Test, Release, GitHub Pages
 .github/workflows/links.yml   wöchentliche Linkprüfung
 css/style.css
@@ -147,13 +151,14 @@ js/sources.js    Quellenangaben der Lernthemen auflösen
 js/review.js     Prüfvermerke (fachliche Prüfung)
 js/stats.js      Statistik-Bibliothek (Verteilungen, Tests, Reliabilität …)
 js/trainer.js    Aufgabengeneratoren des Rechentrainers
-js/srs.js        Wiederholungsplanung
+js/srs.js        Wiederholungsplanung (FSRS-6)
 js/anki.js       Anki-Export
 data/meta.js, data/modules/*.js   Studienstruktur und Modulinhalte
 data/datasets.js, data/datasets/*.csv   Übungsdatensätze (erzeugt)
 data/verify.js   Checkliste für den Curriculum-Abgleich
 data/sources.js, data/source-catalog.js   Quellen zu den Lernthemen
 data/review.js   gemeinsame Prüfvermerke
+data/podcasts.js Podcast-Empfehlungen je Modul
 data/link-status.js   Ergebnis der Linkprüfung (erzeugt)
 tools/           Build (auch www/ und Versionen), Server, Linkprüfer, Anki-Export, Datensatz- und Icon-Erzeugung
 tests/           validate.mjs, unit/*.test.mjs, smoke.mjs, pwa.mjs, native.mjs, backup.mjs, artifact.mjs, android-device.mjs (nur im Emulator)

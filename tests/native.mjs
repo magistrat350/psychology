@@ -1,5 +1,5 @@
 // Browser-Test der Android-Version: baut www/ wie für die APK und ersetzt die Capacitor-Laufzeit durch Attrappen
-// (Dateisystem, Teilen, Zurück-Taste). Die GitHub-API wird simuliert – geprüft werden Update-Hinweis,
+// (Dateisystem, Teilen, Zurück-Taste, Benachrichtigungen). Die GitHub-API wird simuliert – geprüft werden Update-Hinweis,
 // manuelle Prüfung, Prüfintervall, Dateiexport über das Teilen-Menü und die Zurück-Taste.
 import path from "path";
 import fs from "fs";
@@ -14,7 +14,15 @@ const capMock = `window.__cap = { calls: [], listeners: {} };
 window.Capacitor = { isNativePlatform: () => true, getPlatform: () => "android", registerPlugin: (name) => ({
   Filesystem: { writeFile: async (o) => { __cap.calls.push(["writeFile", o]); return { uri: "file:///data/cache/" + o.path }; } },
   Share: { share: async (o) => { __cap.calls.push(["share", o]); return {}; } },
-  App: { addListener: async (ev, fn) => { __cap.listeners[ev] = fn; return { remove: async () => {} }; }, exitApp: async () => { __cap.calls.push(["exitApp"]); } }
+  App: { addListener: async (ev, fn) => { __cap.listeners[ev] = fn; return { remove: async () => {} }; }, exitApp: async () => { __cap.calls.push(["exitApp"]); } },
+  LocalNotifications: {
+    checkPermissions: async () => ({ display: __cap.perm || "prompt" }),
+    requestPermissions: async () => { __cap.calls.push(["requestPermissions"]); __cap.perm = __cap.allow ? "granted" : "denied"; return { display: __cap.perm }; },
+    schedule: async (o) => { __cap.calls.push(["schedule", JSON.parse(JSON.stringify(o))]); return { notifications: o.notifications.map((n) => ({ id: n.id })) }; },
+    cancel: async (o) => { __cap.calls.push(["cancel", o]); },
+    createChannel: async (o) => { __cap.calls.push(["createChannel", o]); },
+    addListener: async (ev, fn) => { __cap.listeners[ev] = fn; return { remove: async () => {} }; }
+  }
 })[name] };`;
 fs.writeFileSync(path.join(out, "js/capacitor.js"), capMock);
 
@@ -107,6 +115,26 @@ try {
   if (!rep || rep.app !== "2.0.5") errors.push("Meldung ohne App-Version");
   if (await page.evaluate(() => navigator.serviceWorker.getRegistrations().then((r) => r.length))) errors.push("Service Worker in der Android-App registriert");
   step("Meldungen mit App-Version, kein Service Worker");
+
+  // 8) Tägliche Erinnerung: Erlaubnis abgelehnt → Hinweis; erlaubt → 7 Tage geplant, Tipp öffnet die Wiederholung
+  await go("#/einstellungen");
+  if (!(await page.evaluate(() => __cap.calls.some((c) => c[0] === "createChannel" && c[1].id === "erinnerung")))) errors.push("Benachrichtigungskanal nicht angelegt");
+  await page.click("#remOn"); await page.waitForTimeout(100);
+  if (!(await text("#remMsg")).includes("nicht erlaubt") || (await page.isChecked("#remOn"))) errors.push("Abgelehnte Erlaubnis wird nicht gemeldet");
+  await page.evaluate(() => { __cap.allow = true; __cap.calls.length = 0; });
+  await page.check("#remOn"); await page.waitForTimeout(100);
+  const sched = await page.evaluate(() => __cap.calls.filter((c) => c[0] === "schedule").pop());
+  const list = sched ? sched[1].notifications : [];
+  if (list.length < 6 || list.length > 7) errors.push(`Erinnerung: ${list.length} statt 6–7 Benachrichtigungen geplant`);
+  if (!list.every((n) => /Karten? fällig|neue Karten warten/.test(n.body) && n.channelId === "erinnerung" && n.extra.route === "#/wiederholen" && new Date(n.schedule.at) > new Date())) errors.push("Erinnerung: Inhalt/Zeitpunkt falsch: " + JSON.stringify(list[0]));
+  if (new Set(list.map((n) => new Date(n.schedule.at).getHours() + ":" + new Date(n.schedule.at).getMinutes())).size !== 1) errors.push("Erinnerung: unterschiedliche Uhrzeiten");
+  await page.fill("#remTime", "07:30"); await page.dispatchEvent("#remTime", "change"); await page.waitForTimeout(100);
+  const re = await page.evaluate(() => __cap.calls.filter((c) => c[0] === "schedule").pop()[1].notifications);
+  if (!re.every((n) => { const d = new Date(n.schedule.at); return d.getHours() === 7 && d.getMinutes() === 30; })) errors.push("Neue Uhrzeit wird nicht übernommen");
+  await go("#/plan");
+  await page.evaluate(() => __cap.listeners.localNotificationActionPerformed({ actionId: "tap", notification: { id: 1002, extra: { route: "#/wiederholen" } } })); await page.waitForTimeout(50);
+  if (!page.url().endsWith("#/wiederholen")) errors.push("Tipp auf die Erinnerung öffnet die Wiederholung nicht");
+  step(`Erinnerung: Erlaubnis, ${list.length} Tage geplant („${list[0] && list[0].body}“), Uhrzeit, Tipp öffnet Wiederholung`);
 } catch (e) { errors.push(e.message); }
 
 await browser.close();

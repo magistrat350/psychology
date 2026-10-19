@@ -49,6 +49,12 @@ test("Capacitor-Konfiguration passt zum Build", () => {
   const cfg = JSON.parse(fs.readFileSync(path.join(ROOT, "capacitor.config.json"), "utf8"));
   assert.equal(cfg.webDir, "www");
   assert.match(cfg.appId, /^[a-z][a-z0-9_]*(\.[a-z][a-z0-9_]*)+$/);
-  for (const p of ["@capacitor/app", "@capacitor/filesystem", "@capacitor/share", "@capacitor/android", "@capacitor/core"]) assert.ok(pkg.dependencies[p], `${p} fehlt`);
+  for (const p of ["@capacitor/app", "@capacitor/filesystem", "@capacitor/share", "@capacitor/local-notifications", "@capacitor/android", "@capacitor/core"]) assert.ok(pkg.dependencies[p], `${p} fehlt`);
   for (const f of ["icon-only.png", "icon-foreground.png", "icon-background.png", "splash.png", "splash-dark.png"]) assert.ok(fs.existsSync(path.join(ROOT, "assets", f)), `assets/${f} fehlt`);
+  // Benachrichtigungssymbol: im Workflow nach res/drawable kopiert, Name muss zur Konfiguration passen
+  assert.equal(cfg.plugins.LocalNotifications.smallIcon, "ic_stat_psychopfad");
+  const icon = fs.readFileSync(path.join(ROOT, "assets/notification-icon.xml"), "utf8");
+  assert.match(icon, /<vector[\s\S]*android:pathData="[^"]+"[\s\S]*<\/vector>/);
+  const wf = fs.readFileSync(path.join(ROOT, ".github/workflows/build.yml"), "utf8");
+  assert.ok(wf.includes("res/drawable/ic_stat_psychopfad.xml"), "Workflow kopiert das Benachrichtigungssymbol nicht");
 });

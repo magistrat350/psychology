@@ -89,6 +89,8 @@ jobs:
         run: |
           npx cap add android
           npx capacitor-assets generate --android
+          mkdir -p android/app/src/main/res/drawable
+          cp assets/notification-icon.xml android/app/src/main/res/drawable/ic_stat_psychopfad.xml
           npx cap sync android
 
       - name: Versionsnummer setzen
@@ -227,11 +229,11 @@ jobs:
         run: |
           mkdir files
           cp apk/psychopfad.apk "apk/psychopfad-$APP_VERSION.apk" files/
-          for f in start quiz lernpfad-quellen rechentrainer einstellungen; do
+          for f in start quiz lernpfad-quellen rechentrainer lernverlauf erinnerung einstellungen; do
             if [ -f "shots/$f.png" ]; then cp "shots/$f.png" "files/screenshot-$f.png"; fi
           done
           cp apk/release-notes.md notes.md
-          printf '\nGetestet im Android-Emulator (Android 14): Start, Ansichten, Update-Prüfung, Teilen-Menü, Zurück-Taste und Installation der signierten APK. Screenshots aus dem Test hängen an.\n' >> notes.md
+          printf '\nGetestet im Android-Emulator (Android 14): Start, Ansichten, Update-Prüfung, Erinnerungen, Teilen-Menü, Zurück-Taste und Installation der signierten APK. Screenshots aus dem Test hängen an.\n' >> notes.md
           ls -la files
 
       - uses: softprops/action-gh-release@v3

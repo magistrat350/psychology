@@ -61,15 +61,15 @@ async function debugTests() {
 
   await page.waitForFunction(() => window.PPApp && document.getElementById("app").innerText.length > 200, null, { timeout: 60000 });
   const info = await page.evaluate(() => ({ native: window.PPApp.native, platform: window.Capacitor && window.Capacitor.getPlatform(), version: window.PPVersion.version, build: window.PPVersion.build,
-    plugins: ["Filesystem", "Share", "App"].filter((p) => window.Capacitor.isPluginAvailable(p)), modules: PP.modules.length, ua: navigator.userAgent }));
+    plugins: ["Filesystem", "Share", "App", "LocalNotifications"].filter((p) => window.Capacitor.isPluginAvailable(p)), modules: PP.modules.length, ua: navigator.userAgent }));
   check("App startet, Inhalte geladen", info.modules >= 25, `${info.modules} Module, ${info.ua.match(/Chrome\/[\d.]+/) || ""}`);
   check("Android-Modus erkannt (Capacitor)", info.native && info.platform === "android", info.platform);
-  check("Native Plugins verfügbar", info.plugins.length === 3, info.plugins.join(", "));
+  check("Native Plugins verfügbar", info.plugins.length === 4, info.plugins.join(", "));
   if (process.env.APP_VERSION) check("Version in der App", info.version === process.env.APP_VERSION && String(info.build) === String(process.env.APP_BUILD), `${info.version} (Build ${info.build})`);
   screenshot("start");
 
   // Ansichten
-  const routes = ["#/plan", "#/modul/A1/lernpfad", "#/modul/B1/quiz", "#/modul/D1/rechnen", "#/rechentrainer/ttest_ind/42", "#/wiederholen", "#/mischquiz", "#/datensaetze", "#/pruefmodus/inhalte", "#/pruefmodus/inhalte/C1", "#/einstellungen", "#/suche/Bindung"];
+  const routes = ["#/plan", "#/modul/A1/lernpfad", "#/modul/B1/quiz", "#/modul/D1/rechnen", "#/rechentrainer/ttest_ind/42", "#/wiederholen", "#/verlauf", "#/podcasts", "#/modul/B1/podcasts", "#/rechentrainer/ausgabe_lesen/7", "#/mischquiz", "#/datensaetze", "#/pruefmodus/inhalte", "#/pruefmodus/inhalte/C1", "#/einstellungen", "#/suche/Bindung"];
   const empty = [];
   for (const r of routes) { await go(r); if ((await text("#app")).length < 80) empty.push(r); }
   check(`${routes.length} Ansichten gerendert`, !empty.length, empty.join(", "));
@@ -88,6 +88,17 @@ async function debugTests() {
   }
   check("Update-Abfrage bei GitHub", /neueste Version|verfügbar|Neueste veröffentlichte|Noch keine veröffentlichte|Abfragelimit/.test(upd), upd.split("\n")[0].slice(0, 120));
   screenshot("einstellungen");
+
+  // Tägliche Erinnerung: Erlaubnis (Android 13+) erteilen, einschalten, geplante Benachrichtigungen abfragen
+  try { sh(`pm grant ${PKG} android.permission.POST_NOTIFICATIONS`); } catch (e) { /* ältere Android-Versionen */ }
+  await go("#/einstellungen"); await click("#remOn");
+  const pending = await waitFor(() => page.evaluate(() => window.Capacitor.registerPlugin("LocalNotifications").getPending().then((r) => r.notifications).catch((e) => [])).then((l) => l.length ? l : null), 15000, 1000) || [];
+  check("Tägliche Erinnerung geplant", pending.length >= 6 && pending.length <= 7, `${pending.length} geplant, z. B. „${(pending[0] && pending[0].body) || ""}“`);
+  await page.evaluate(() => window.Capacitor.registerPlugin("LocalNotifications").schedule({ notifications: [{ id: 1999, title: "PsychoPfad – Test", body: "3 Karten fällig", channelId: "erinnerung", schedule: { at: new Date(Date.now() + 3000), allowWhileIdle: true }, extra: { route: "#/verlauf" } }] }).catch(() => {}));
+  const shown = await waitFor(() => { try { return /PsychoPfad – Test|3 Karten fällig/.test(sh("dumpsys notification --noredact")); } catch (e) { return false; } }, 30000, 2000);
+  check("Benachrichtigung wird angezeigt", shown, shown ? "Testbenachrichtigung in der Statusleiste" : "nicht gefunden (Zeitplanung im Emulator kann sich verzögern)", { soft: true });
+  if (shown) { sh("cmd statusbar expand-notifications"); await sleep(1500); screenshot("erinnerung"); sh("cmd statusbar collapse"); await sleep(800); }
+  await go("#/verlauf"); screenshot("lernverlauf");
 
   // Export über Dateisystem + Teilen-Menü
   await go("#/anki");

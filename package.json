@@ -14,7 +14,7 @@
     "test:e2e": "node tests/smoke.mjs && node tests/pwa.mjs && node tests/native.mjs && node tests/backup.mjs && node tools/build.mjs && node tests/artifact.mjs",
     "build": "node tools/build.mjs",
     "build:web": "node tools/build-web.mjs",
-    "android:add": "node tools/build-web.mjs --android && cap add android && capacitor-assets generate --android",
+    "android:add": "node tools/build-web.mjs --android && cap add android && capacitor-assets generate --android && node -e \"require('fs').mkdirSync('android/app/src/main/res/drawable',{recursive:true});require('fs').copyFileSync('assets/notification-icon.xml','android/app/src/main/res/drawable/ic_stat_psychopfad.xml')\"",
     "android:sync": "node tools/build-web.mjs --android && cap sync android",
     "version:info": "node tools/version.mjs",
     "serve": "node tools/serve.mjs",
