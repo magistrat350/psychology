@@ -1,7 +1,11 @@
 name: App bauen & veröffentlichen
 
-# Bei jedem Push: alle Tests, danach Android-APK bauen und im Android-Emulator testen.
-# Auf dem Standard-Branch zusätzlich (nur wenn der Emulator-Test bestanden ist):
+# Bei jedem Push: alle Tests, danach Android-APK bauen und im Android-Emulator testen (Testbuild, die APK liegt
+# als Artefakt am Workflow-Lauf).
+# Ein Release entsteht nur auf dem Standard-Branch und nur, wenn
+#   - der Workflow von Hand gestartet wird (Actions → „App bauen & veröffentlichen“ → Run workflow) oder
+#   - eine Commit-Nachricht des Pushes „[release]“ enthält,
+# und nur, wenn der Emulator-Test bestanden ist. Dann:
 #   - GitHub-Release v<major>.<minor>.<Laufnummer> mit der APK und Screenshots – die installierte App erkennt es
 #     und bietet das Update an
 #   - Web-Version auf GitHub Pages (sobald unter Settings → Pages die Quelle „GitHub Actions“ gewählt ist)
@@ -11,6 +15,11 @@ on:
     paths-ignore:
       - 'README.md'
   workflow_dispatch:
+    inputs:
+      release:
+        description: 'Als Release veröffentlichen (Update für die installierten Apps und die Web-Version)'
+        type: boolean
+        default: true
 
 permissions:
   contents: write
@@ -26,9 +35,9 @@ jobs:
     name: Tests
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: npm
@@ -50,16 +59,16 @@ jobs:
       version: ${{ steps.version.outputs.version }}
       build: ${{ steps.version.outputs.build }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0   # frühere Release-Tags für die Versionshinweise
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: npm
 
-      - uses: actions/setup-java@v4
+      - uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: 21
@@ -126,14 +135,14 @@ jobs:
           {
             echo "Änderungen${PREV:+ seit $PREV}:"
             echo
-            git log --no-merges -n 30 --pretty='- %s' ${PREV:+$PREV..}HEAD
+            git log --no-merges -n 30 --invert-grep --grep='^Linkprüfung: Befunde' --pretty='- %s' ${PREV:+$PREV..}HEAD | sed 's/ *\[release\]//g'
             echo
             echo "**Installieren:** psychopfad.apk auf dem Android-Handy herunterladen und öffnen. Schon installiert? Einfach drüberinstallieren – dein Lernstand bleibt erhalten."
           } > release-notes.md
           cat release-notes.md
 
       - name: APKs als Build-Artefakt speichern
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: apk-${{ env.APP_VERSION }}
           path: |
@@ -151,9 +160,9 @@ jobs:
       APP_VERSION: ${{ needs.android.outputs.version }}
       APP_BUILD: ${{ needs.android.outputs.build }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: npm
@@ -161,7 +170,7 @@ jobs:
       - name: Abhängigkeiten installieren
         run: npm ci
 
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           name: apk-${{ needs.android.outputs.version }}
           path: apk
@@ -187,7 +196,7 @@ jobs:
 
       - name: Screenshots speichern
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: screenshots-${{ needs.android.outputs.version }}
           path: android-screenshots
@@ -196,17 +205,20 @@ jobs:
   release:
     name: Release veröffentlichen
     needs: [android, emulator]
-    if: github.ref_name == github.event.repository.default_branch
+    if: >-
+      github.ref_name == github.event.repository.default_branch && (
+        (github.event_name == 'workflow_dispatch' && inputs.release) ||
+        (github.event_name == 'push' && contains(join(github.event.commits.*.message, ' '), '[release]')))
     runs-on: ubuntu-latest
     env:
       APP_VERSION: ${{ needs.android.outputs.version }}
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           name: apk-${{ needs.android.outputs.version }}
           path: apk
 
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           name: screenshots-${{ needs.android.outputs.version }}
           path: shots
@@ -222,7 +234,7 @@ jobs:
           printf '\nGetestet im Android-Emulator (Android 14): Start, Ansichten, Update-Prüfung, Teilen-Menü, Zurück-Taste und Installation der signierten APK. Screenshots aus dem Test hängen an.\n' >> notes.md
           ls -la files
 
-      - uses: softprops/action-gh-release@v2
+      - uses: softprops/action-gh-release@v3
         with:
           tag_name: v${{ env.APP_VERSION }}
           target_commitish: ${{ github.sha }}
@@ -233,8 +245,7 @@ jobs:
 
   pages:
     name: Web-Version (GitHub Pages)
-    needs: test
-    if: github.ref_name == github.event.repository.default_branch
+    needs: release   # nur zusammen mit einem Release, damit Web- und Android-Version gleich sind
     runs-on: ubuntu-latest
     # Veröffentlicht erst, wenn GitHub Pages unter Settings → Pages auf „GitHub Actions“ steht.
     # Bis dahin wird der Schritt übersprungen.
@@ -242,19 +253,19 @@ jobs:
       name: github-pages
       url: ${{ steps.deploy.outputs.page_url }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
       - name: Web-App zusammenstellen
         run: node tools/build-web.mjs
       - id: pages
-        uses: actions/configure-pages@v5
+        uses: actions/configure-pages@v6
         continue-on-error: true
       - if: steps.pages.outcome == 'success'
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@v5
         with:
           path: www
       - id: deploy
         if: steps.pages.outcome == 'success'
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
