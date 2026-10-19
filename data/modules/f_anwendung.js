@@ -104,7 +104,7 @@ PP.addModule({
       concepts: ["Adhärenz", "Krankheitsverarbeitung", "Gate-Control", "Angst-Vermeidungs-Modell", "Placebo/Nocebo", "Psychologengesetz 2013", "Berufsliste", "Psychotherapiegesetz 2024"] }
   ],
   materials: [
-    { title: "Abnormal Psychology – offenes Lehrbuch (Bridley & Daffin, Washington State University)", url: "https://opentext.wsu.edu/abnormalpsych/", type: "Lehrbuch (OER)", lang: "EN" },
+    { title: "Abnormal Psychology – offenes Lehrbuch (Bridley & Daffin, Washington State University)", url: "https://opentext.wsu.edu/abnormal-psych/", type: "Lehrbuch (OER)", lang: "EN" },
     { title: "OpenStax Psychology 2e – Kap. 14 (Stress, Lifestyle, Health), 15 (Psychological Disorders), 16 (Therapy)", url: "https://openstax.org/details/books/psychology-2e", type: "Lehrbuch (OER)", lang: "EN" },
     { title: "Noba Project – Module zu Angst, Depression, Schizophrenie, Stress, Health Psychology", url: "https://nobaproject.com/", type: "Lehrbuch (OER)", lang: "EN" },
     { title: "WHO – ICD-11 Browser, Kapitel 6", url: "https://icd.who.int/browse/2024-01/mms/en", type: "Klassifikation", lang: "EN" },
@@ -116,7 +116,7 @@ PP.addModule({
     { title: "Telefonseelsorge Österreich (142) – Krisenhilfe", url: "https://www.telefonseelsorge.at/", type: "Hilfsangebot", lang: "DE" }
   ],
   lectures: [
-    { title: "Yale PSYC 110 – Lectures „What Happens When Things Go Wrong? Mental Illness I & II“", url: "https://oyc.yale.edu/psychology/psyc-110", provider: "Yale Open Courses", lang: "EN" },
+    { title: "Yale PSYC 110 – Lectures „What Happens When Things Go Wrong? Mental Illness I & II“", url: "https://www.youtube.com/results?search_query=Paul+Bloom+PSYC+110+Mental+Illness", provider: "YouTube (YaleCourses)", lang: "EN" },
     { title: "Crash Course Psychology #28–#36 (Psychological Disorders, Treatment)", url: "https://www.youtube.com/results?search_query=Crash+Course+Psychology+psychological+disorders", provider: "YouTube", lang: "EN" },
     { title: "Coursera – Psychological First Aid (Johns Hopkins)", url: "https://www.coursera.org/learn/psychological-first-aid", provider: "Coursera", lang: "EN" },
     { title: "Robert Sapolsky – Depression (Stanford Lecture)", url: "https://www.youtube.com/results?search_query=Sapolsky+depression+lecture+Stanford", provider: "YouTube/Stanford", lang: "EN" },

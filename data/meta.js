@@ -67,7 +67,7 @@ PP.libraries = [
   { id: "ubw", name: "Universitätsbibliothek Wien (u:search)", short: "UB Wien", home: "https://usearch.univie.ac.at/", template: "",
     info: "Die Fachbereichsbibliothek Psychologie der UB Wien führt die Lehrbuchsammlung (oft viele Exemplare der Standardwerke). Externe Personen können in der Regel einen Bibliotheksausweis beantragen – Bedingungen auf der UB-Webseite prüfen.",
     links: [{ title: "Universitätsbibliothek Wien", url: "https://bibliothek.univie.ac.at/" }] },
-  { id: "bw", name: "Büchereien Wien (öffentlich)", short: "Büchereien Wien", home: "https://www.buechereien.wien.gv.at/", template: "",
+  { id: "bw", name: "Büchereien Wien (öffentlich)", short: "Büchereien Wien", home: "https://buechereien.wien.gv.at/", template: "",
     info: "Öffentliche Stadtbibliothek Wiens mit Hauptbücherei am Gürtel; gut sortiert bei populärwissenschaftlicher Psychologie, Ratgebern und Klassikern; E-Medien über die virtuelle Bücherei.",
     links: [] },
   { id: "kasb", name: "Stadtbibliothek Karlsruhe (öffentlich)", short: "Stadtbib. KA", home: "https://stadtbibliothek.karlsruhe.de/", template: "",
@@ -113,7 +113,7 @@ PP.general = {
     { title: "Anki – Karteikarten mit Spaced Repetition", url: "https://apps.ankiweb.net/", type: "Software" }
   ],
   courses: [
-    { title: "Yale Open Courses – PSYC 110 Introduction to Psychology (Paul Bloom)", url: "https://oyc.yale.edu/psychology/psyc-110", lang: "EN", provider: "Yale" },
+    { title: "Yale Open Courses – PSYC 110 Introduction to Psychology (Paul Bloom)", url: "https://www.youtube.com/results?search_query=Yale+PSYC+110+Paul+Bloom+Introduction+to+Psychology", lang: "EN", provider: "YouTube (YaleCourses)" },
     { title: "MIT OpenCourseWare – 9.00SC Introduction to Psychology", url: "https://ocw.mit.edu/courses/9-00sc-introduction-to-psychology-fall-2011/", lang: "EN", provider: "MIT" },
     { title: "Coursera – Introduction to Psychology (Yale, gratis im Audit-Modus)", url: "https://www.coursera.org/learn/introduction-psychology", lang: "EN", provider: "Coursera/Yale" },
     { title: "Crash Course Psychology (YouTube-Playlist, 40 Folgen)", url: "https://www.youtube.com/results?search_query=Crash+Course+Psychology+playlist", lang: "EN", provider: "YouTube" },

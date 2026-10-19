@@ -133,7 +133,7 @@ PP.addModule({
     { title: "APA Ethical Principles of Psychologists and Code of Conduct", url: "https://www.apa.org/ethics/code", type: "Richtlinie", lang: "EN" }
   ],
   lectures: [
-    { title: "Yale PSYC 110 – Lecture 2 (Foundations: This is your brain) und Lecture 3 (Freud)", url: "https://oyc.yale.edu/psychology/psyc-110", provider: "Yale Open Courses", lang: "EN" },
+    { title: "Yale PSYC 110 – Lecture 2 (Foundations: This is your brain) und Lecture 3 (Freud)", url: "https://www.youtube.com/results?search_query=Paul+Bloom+PSYC+110+Foundations+Freud", provider: "YouTube (YaleCourses)", lang: "EN" },
     { title: "Crash Course Psychology #1 – Intro to Psychology", url: "https://www.youtube.com/results?search_query=Crash+Course+Psychology+1+Intro+to+Psychology", provider: "YouTube", lang: "EN" },
     { title: "Crash Course Psychology #2 – Psychological Research", url: "https://www.youtube.com/results?search_query=Crash+Course+Psychology+2+Psychological+Research", provider: "YouTube", lang: "EN" },
     { title: "Wissenschaftstheorie: Popper & Falsifikation (Vorlesungen, YouTube-Suche)", url: "https://www.youtube.com/results?search_query=Popper+Falsifikation+Vorlesung+Wissenschaftstheorie", provider: "YouTube", lang: "DE" },
@@ -339,7 +339,7 @@ PP.addModule({
   ],
   lectures: [
     { title: "Coursera – Social Psychology (Wesleyan University, Scott Plous; Audit gratis)", url: "https://www.coursera.org/learn/social-psychology", provider: "Coursera", lang: "EN", note: "Sehr empfehlenswerter, umfassender Einführungskurs." },
-    { title: "Yale PSYC 110 – Lectures zu „What Makes Us Social?“ und Entwicklung", url: "https://oyc.yale.edu/psychology/psyc-110", provider: "Yale Open Courses", lang: "EN" },
+    { title: "Yale PSYC 110 – Lectures zu „What Makes Us Social?“ und Entwicklung", url: "https://www.youtube.com/results?search_query=Paul+Bloom+PSYC+110+What+Makes+Us+Social", provider: "YouTube (YaleCourses)", lang: "EN" },
     { title: "MIT 9.85 Infant and Early Childhood Cognition", url: "https://ocw.mit.edu/courses/9-85-infant-and-early-childhood-cognition-fall-2012/", provider: "MIT OCW", lang: "EN" },
     { title: "Crash Course Psychology – Development (#18–#20) und Social Thinking/Influence (#37–#39)", url: "https://www.youtube.com/results?search_query=Crash+Course+Psychology+Social+Influence", provider: "YouTube", lang: "EN" },
     { title: "Piaget – Erhaltungsversuche (Originalaufnahmen, YouTube-Suche)", url: "https://www.youtube.com/results?search_query=Piaget+conservation+task", provider: "YouTube", lang: "EN" },

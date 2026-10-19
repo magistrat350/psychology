@@ -95,7 +95,7 @@ PP.addModule({
   ],
   lectures: [
     { title: "MIT 9.00SC Introduction to Psychology – Sitzungen zu Perception, Learning, Memory, Emotion", url: "https://ocw.mit.edu/courses/9-00sc-introduction-to-psychology-fall-2011/", provider: "MIT OCW", lang: "EN" },
-    { title: "Yale PSYC 110 – Lectures „Foundations: Skinner“, „What Is It Like to Be a Baby“, „How Do We Communicate?“, „Memory“", url: "https://oyc.yale.edu/psychology/psyc-110", provider: "Yale Open Courses", lang: "EN" },
+    { title: "Yale PSYC 110 – Lectures „Foundations: Skinner“, „What Is It Like to Be a Baby“, „How Do We Communicate?“, „Memory“", url: "https://www.youtube.com/results?search_query=Paul+Bloom+PSYC+110+Skinner+Memory", provider: "YouTube (YaleCourses)", lang: "EN" },
     { title: "Crash Course Psychology – Sensation & Perception, Learning, Memory, Emotion (#5–#13, #25)", url: "https://www.youtube.com/results?search_query=Crash+Course+Psychology+memory+learning+perception", provider: "YouTube", lang: "EN" },
     { title: "Simons & Chabris – Selective Attention Test (Gorilla-Video)", url: "https://www.youtube.com/results?search_query=selective+attention+test+Simons", provider: "YouTube", lang: "EN" },
     { title: "Allgemeine Psychologie Vorlesung (deutschsprachig, YouTube-Suche)", url: "https://www.youtube.com/results?search_query=Allgemeine+Psychologie+Vorlesung", provider: "YouTube", lang: "DE" },

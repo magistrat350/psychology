@@ -93,7 +93,7 @@ PP.addModule({
     { title: "Anki – Karteikarten-App für Vokabeln & Begriffe", url: "https://apps.ankiweb.net/", type: "Software", lang: "EN/DE" }
   ],
   lectures: [
-    { title: "Yale PSYC 110 – Introduction to Psychology (Paul Bloom), 20 Vorlesungen", url: "https://oyc.yale.edu/psychology/psyc-110", provider: "Yale Open Courses", lang: "EN", note: "Klassiker, sehr zugänglich – ideal zum Hineinschnuppern." },
+    { title: "Yale PSYC 110 – Introduction to Psychology (Paul Bloom), 20 Vorlesungen", url: "https://www.youtube.com/results?search_query=Yale+PSYC+110+Paul+Bloom+Introduction+to+Psychology", provider: "YouTube (YaleCourses)", lang: "EN", note: "Klassiker, sehr zugänglich – ideal zum Hineinschnuppern." },
     { title: "Crash Course Psychology (40 kurze Folgen)", url: "https://www.youtube.com/results?search_query=Crash+Course+Psychology", provider: "YouTube", lang: "EN" },
     { title: "MIT 9.00SC Introduction to Psychology", url: "https://ocw.mit.edu/courses/9-00sc-introduction-to-psychology-fall-2011/", provider: "MIT OCW", lang: "EN" },
     { title: "Erfahrungsberichte zum Psychologie-Aufnahmetest Uni Wien (YouTube-Suche)", url: "https://www.youtube.com/results?search_query=Psychologie+Aufnahmetest+Uni+Wien", provider: "YouTube", lang: "DE", note: "Inoffiziell – Inhalte ändern sich jährlich." },

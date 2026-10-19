@@ -78,7 +78,7 @@ PP.addModule({
   ],
   lectures: [
     { title: "Coursera – Social Psychology (Wesleyan, Scott Plous)", url: "https://www.coursera.org/learn/social-psychology", provider: "Coursera", lang: "EN" },
-    { title: "Yale PSYC 110 – Lectures „Why Are People Different?“ und „Liking, Love, and Lust“", url: "https://oyc.yale.edu/psychology/psyc-110", provider: "Yale Open Courses", lang: "EN" },
+    { title: "Yale PSYC 110 – Lectures „Why Are People Different?“ und „Liking, Love, and Lust“", url: "https://www.youtube.com/results?search_query=Paul+Bloom+PSYC+110+Why+Are+People+Different+Love", provider: "YouTube (YaleCourses)", lang: "EN" },
     { title: "Coursera – Moralities of Everyday Life (Yale, Paul Bloom & Molly Crockett)", url: "https://www.coursera.org/learn/moralities", provider: "Coursera", lang: "EN" },
     { title: "Crash Course Psychology #37–#40 (Social Thinking, Influence, Prejudice, Aggression vs. Altruism)", url: "https://www.youtube.com/results?search_query=Crash+Course+Psychology+prejudice+discrimination", provider: "YouTube", lang: "EN" },
     { title: "Sozialpsychologie-Vorlesungen deutschsprachig (YouTube-Suche)", url: "https://www.youtube.com/results?search_query=Sozialpsychologie+Vorlesung+Selbst+Attraktion", provider: "YouTube", lang: "DE" }
@@ -219,7 +219,7 @@ PP.addModule({
     { title: "Watts, Duncan & Quan (2018): Revisiting the marshmallow test – Volltext suchen", url: "https://scholar.google.com/scholar?q=Watts+Duncan+Quan+2018+Revisiting+the+marshmallow+test", type: "Artikel", lang: "EN" }
   ],
   lectures: [
-    { title: "Yale PSYC 110 – Lectures „What Is It Like to Be a Baby“ & „Why Are People Different?“", url: "https://oyc.yale.edu/psychology/psyc-110", provider: "Yale Open Courses", lang: "EN" },
+    { title: "Yale PSYC 110 – Lectures „What Is It Like to Be a Baby“ & „Why Are People Different?“", url: "https://www.youtube.com/results?search_query=Paul+Bloom+PSYC+110+What+Is+It+Like+to+Be+a+Baby", provider: "YouTube (YaleCourses)", lang: "EN" },
     { title: "Crash Course Psychology #18–#20 (Development)", url: "https://www.youtube.com/results?search_query=Crash+Course+Psychology+adolescence+adulthood", provider: "YouTube", lang: "EN" },
     { title: "Harvard Center on the Developing Child – Videos (YouTube-Suche)", url: "https://www.youtube.com/results?search_query=Center+on+the+Developing+Child+Harvard", provider: "YouTube", lang: "EN" },
     { title: "Laura Carstensen – Older people are happier (TED)", url: "https://www.youtube.com/results?search_query=Laura+Carstensen+older+people+are+happier", provider: "YouTube/TED", lang: "EN" },
@@ -359,7 +359,7 @@ PP.addModule({
     { title: "Hyde (2005): The gender similarities hypothesis – Volltext suchen", url: "https://scholar.google.com/scholar?q=Hyde+2005+gender+similarities+hypothesis", type: "Artikel", lang: "EN" }
   ],
   lectures: [
-    { title: "Yale PSYC 110 – Lecture „Why Are People Different? Differences“", url: "https://oyc.yale.edu/psychology/psyc-110", provider: "Yale Open Courses", lang: "EN" },
+    { title: "Yale PSYC 110 – Lecture „Why Are People Different? Differences“", url: "https://www.youtube.com/results?search_query=Paul+Bloom+PSYC+110+Why+Are+People+Different+Differences", provider: "YouTube (YaleCourses)", lang: "EN" },
     { title: "Crash Course Psychology #21–#23 (Personality, Measuring Personality, Intelligence)", url: "https://www.youtube.com/results?search_query=Crash+Course+Psychology+measuring+personality", provider: "YouTube", lang: "EN" },
     { title: "Persönlichkeitspsychologie – Vorlesungsaufzeichnungen (englisch, YouTube-Suche)", url: "https://www.youtube.com/results?search_query=personality+psychology+lecture+Big+Five+traits", provider: "YouTube", lang: "EN", note: "Universitätsvorlesungen auswählen; Quellen kritisch prüfen." },
     { title: "Persönlichkeitspsychologie Vorlesung (deutschsprachig, YouTube-Suche)", url: "https://www.youtube.com/results?search_query=Pers%C3%B6nlichkeitspsychologie+Vorlesung+Big+Five", provider: "YouTube", lang: "DE" }
