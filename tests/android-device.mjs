@@ -93,8 +93,9 @@ async function debugTests() {
   try { sh(`pm grant ${PKG} android.permission.POST_NOTIFICATIONS`); } catch (e) { /* ältere Android-Versionen */ }
   await go("#/einstellungen"); await click("#remOn");
   const pending = await waitFor(() => page.evaluate(() => window.Capacitor.registerPlugin("LocalNotifications").getPending().then((r) => r.notifications).catch((e) => [])).then((l) => l.length ? l : null), 15000, 1000) || [];
-  check("Tägliche Erinnerung geplant", pending.length >= 6 && pending.length <= 7, `${pending.length} geplant, z. B. „${(pending[0] && pending[0].body) || ""}“`);
-  await page.evaluate(() => window.Capacitor.registerPlugin("LocalNotifications").schedule({ notifications: [{ id: 1999, title: "PsychoPfad – Test", body: "3 Karten fällig", channelId: "erinnerung", schedule: { at: new Date(Date.now() + 3000), allowWhileIdle: true }, extra: { route: "#/verlauf" } }] }).catch(() => {}));
+  check("Tägliche Erinnerung geplant", pending.length >= 6 && pending.length <= 7, pending.length ? `${pending.length} geplant, z. B. „${pending[0].body}“` : `0 geplant – ${await text("#remMsg")} · Vordergrund: ${resumed().slice(0, 100)}`);
+  if (!resumed().includes(PKG)) { await back(); launch(); await sleep(1500); } // falls eine Systemeinstellung geöffnet wurde
+  await page.evaluate(() => window.Capacitor.registerPlugin("LocalNotifications").schedule({ notifications: [{ id: 1999, title: "PsychoPfad – Test", body: "3 Karten fällig", channelId: "erinnerung", schedule: { at: new Date(Date.now() + 3000), allowWhileIdle: true }, isExactNotification: false, extra: { route: "#/verlauf" } }] }).catch(() => {}));
   const shown = await waitFor(() => { try { return /PsychoPfad – Test|3 Karten fällig/.test(sh("dumpsys notification --noredact")); } catch (e) { return false; } }, 30000, 2000);
   check("Benachrichtigung wird angezeigt", shown, shown ? "Testbenachrichtigung in der Statusleiste" : "nicht gefunden (Zeitplanung im Emulator kann sich verzögern)", { soft: true });
   if (shown) { sh("cmd statusbar expand-notifications"); await sleep(1500); screenshot("erinnerung"); sh("cmd statusbar collapse"); await sleep(800); }

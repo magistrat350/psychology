@@ -296,6 +296,8 @@
   // ---------- Tägliche Erinnerung (nur Android-App) ----------
   // Geplant werden die nächsten 7 Tage mit der erwarteten Zahl fälliger Karten; bei jedem Start und beim Verlassen
   // der App wird neu geplant, damit die Zahlen stimmen. Ein Tipp auf die Benachrichtigung öffnet die Wiederholung.
+  // Nicht exakt (isExactNotification: false): sonst öffnet das Plugin unter Android 12+ die Einstellung
+  // „Wecker & Erinnerungen“ – für eine tägliche Erinnerung reicht die ungefähre Uhrzeit.
   const REM_IDS = [1001, 1002, 1003, 1004, 1005, 1006, 1007];
   let remUi = "";
   function reminderPlan(now = new Date()) {
@@ -308,7 +310,7 @@
       if (i === 0 && !due && isActive(d)) continue; // heute schon gelernt und nichts mehr fällig
       let body = due ? `${due} ${due === 1 ? "Karte" : "Karten"} fällig` : fresh ? `Nichts fällig – ${fresh} neue Karten warten` : "Zeit für eine kurze Runde";
       if (next) { const left = R.daysBetween(day, next.date); if (left >= 0 && left <= 21) body += ` · ${examTitle(next)} ${left === 0 ? "heute" : `in ${left} ${left === 1 ? "Tag" : "Tagen"}`}`; }
-      out.push({ id: REM_IDS[i], title: "PsychoPfad – Wiederholen", body, schedule: { at, allowWhileIdle: true }, channelId: "erinnerung", extra: { route: "#/wiederholen" } });
+      out.push({ id: REM_IDS[i], title: "PsychoPfad – Wiederholen", body, schedule: { at, allowWhileIdle: true }, isExactNotification: false, channelId: "erinnerung", extra: { route: "#/wiederholen" } });
     }
     return out;
   }
@@ -318,7 +320,8 @@
       await native.notif.cancel({ notifications: REM_IDS.map((id) => ({ id })) });
       if (!state.settings.reminder.on || (await native.notif.checkPermissions()).display !== "granted") return;
       const list = reminderPlan(); if (list.length) await native.notif.schedule({ notifications: list });
-    } catch (e) { /* Erinnerungen sind Komfort – Fehler sollen die App nicht stören */ }
+      return "";
+    } catch (e) { return (e && e.message) || String(e); } // Erinnerungen sind Komfort – Fehler nur melden, nicht stören
   }
   async function setReminder(on) {
     try {
@@ -331,8 +334,9 @@
           keep(route); return;
         }
       }
-      state.settings.reminder.on = on; save(); await scheduleReminders();
-      remUi = on ? "Erinnerung ist eingeschaltet." : "Erinnerung ist ausgeschaltet.";
+      state.settings.reminder.on = on; save();
+      const err = await scheduleReminders();
+      remUi = err ? "Erinnerung konnte nicht geplant werden: " + err : on ? "Erinnerung ist eingeschaltet." : "Erinnerung ist ausgeschaltet.";
     } catch (e) { remUi = "Erinnerung konnte nicht eingerichtet werden: " + (e && e.message ? e.message : e); }
     keep(route);
   }

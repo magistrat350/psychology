@@ -126,7 +126,7 @@ try {
   const sched = await page.evaluate(() => __cap.calls.filter((c) => c[0] === "schedule").pop());
   const list = sched ? sched[1].notifications : [];
   if (list.length < 6 || list.length > 7) errors.push(`Erinnerung: ${list.length} statt 6–7 Benachrichtigungen geplant`);
-  if (!list.every((n) => /Karten? fällig|neue Karten warten/.test(n.body) && n.channelId === "erinnerung" && n.extra.route === "#/wiederholen" && new Date(n.schedule.at) > new Date())) errors.push("Erinnerung: Inhalt/Zeitpunkt falsch: " + JSON.stringify(list[0]));
+  if (!list.every((n) => /Karten? fällig|neue Karten warten/.test(n.body) && n.isExactNotification === false && n.channelId === "erinnerung" && n.extra.route === "#/wiederholen" && new Date(n.schedule.at) > new Date())) errors.push("Erinnerung: Inhalt/Zeitpunkt falsch: " + JSON.stringify(list[0]));
   if (new Set(list.map((n) => new Date(n.schedule.at).getHours() + ":" + new Date(n.schedule.at).getMinutes())).size !== 1) errors.push("Erinnerung: unterschiedliche Uhrzeiten");
   await page.fill("#remTime", "07:30"); await page.dispatchEvent("#remTime", "change"); await page.waitForTimeout(100);
   const re = await page.evaluate(() => __cap.calls.filter((c) => c[0] === "schedule").pop()[1].notifications);
