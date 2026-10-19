@@ -14,7 +14,7 @@ if (!debugApk || !releaseApk) { console.error("Aufruf: node tests/android-device
 const PKG = "io.github.magistrat350.psychopfad";
 const results = [], screenshots = [];
 // Notbremse: hängt eine Verbindung zum Gerät, bricht der Test nach 8 Minuten mit Fehler ab (statt den Job zu blockieren)
-setTimeout(() => { console.error("FEHLER: Zeitlimit von 8 Minuten überschritten"); finish(1); }, 8 * 60 * 1000).unref();
+setTimeout(() => { console.error("FEHLER: Zeitlimit von 8 Minuten überschritten"); console.log(logcatTail()); finish(1); }, 8 * 60 * 1000).unref();
 fs.mkdirSync(outDir, { recursive: true });
 
 const adb = (...args) => execFileSync("adb", args, { encoding: "utf8", maxBuffer: 64 * 1024 * 1024 });
@@ -38,12 +38,19 @@ function screenshot(name) {
   fs.writeFileSync(file, execFileSync("adb", ["exec-out", "screencap", "-p"], { maxBuffer: 64 * 1024 * 1024 }));
   screenshots.push(file);
 }
+/** Letzte Logcat-Zeilen zu App, Capacitor und Benachrichtigungen (zur Fehlersuche im Workflow-Protokoll). */
+function logcatTail() {
+  try { return "--- logcat ---\n" + sh("logcat -d -t 3000").split("\n").filter((l) => /Capacitor|LocalNotif|AndroidRuntime|psychopfad|chromium.*Console|NotificationService|AlarmManager/i.test(l)).slice(-60).join("\n"); }
+  catch (e) { return "logcat nicht lesbar: " + e.message; }
+}
 const within = (promise, ms, fallback) => Promise.race([promise.catch(() => fallback), sleep(ms).then(() => fallback)]);
 async function waitFor(fn, ms, step = 500) { const end = Date.now() + ms; for (;;) { const v = await fn(); if (v || Date.now() > end) return v; await sleep(step); } }
 
 async function debugTests() {
   console.log("Teil 1: Debug-APK");
   adb("install", "-r", debugApk);
+  // Benachrichtigungen erlauben (Android 13+), bevor die App startet – sonst erscheint der Systemdialog
+  try { sh(`pm grant ${PKG} android.permission.POST_NOTIFICATIONS`); } catch (e) { console.log("pm grant: " + String(e.message).slice(0, 120)); }
   if (!(await startApp())) throw new Error("Debug-App startet nicht: " + sh("logcat -d -b crash").slice(-400));
   const pw = loadPlaywright();
   const [device] = (await within(pw._android.devices(), 60000, null)) || [];
@@ -89,13 +96,19 @@ async function debugTests() {
   check("Update-Abfrage bei GitHub", /neueste Version|verfügbar|Neueste veröffentlichte|Noch keine veröffentlichte|Abfragelimit/.test(upd), upd.split("\n")[0].slice(0, 120));
   screenshot("einstellungen");
 
-  // Tägliche Erinnerung: Erlaubnis (Android 13+) erteilen, einschalten, geplante Benachrichtigungen abfragen
-  try { sh(`pm grant ${PKG} android.permission.POST_NOTIFICATIONS`); } catch (e) { /* ältere Android-Versionen */ }
-  await go("#/einstellungen"); await click("#remOn");
-  const pending = await waitFor(() => page.evaluate(() => window.Capacitor.registerPlugin("LocalNotifications").getPending().then((r) => r.notifications).catch((e) => [])).then((l) => l.length ? l : null), 15000, 1000) || [];
-  check("Tägliche Erinnerung geplant", pending.length >= 6 && pending.length <= 7, pending.length ? `${pending.length} geplant, z. B. „${pending[0].body}“` : `0 geplant – ${await text("#remMsg")} · Vordergrund: ${resumed().slice(0, 100)}`);
-  if (!resumed().includes(PKG)) { await back(); launch(); await sleep(1500); } // falls eine Systemeinstellung geöffnet wurde
-  await page.evaluate(() => window.Capacitor.registerPlugin("LocalNotifications").schedule({ notifications: [{ id: 1999, title: "PsychoPfad – Test", body: "3 Karten fällig", channelId: "erinnerung", schedule: { at: new Date(Date.now() + 3000), allowWhileIdle: true }, isExactNotification: false, extra: { route: "#/verlauf" } }] }).catch(() => {}));
+  // Tägliche Erinnerung: einschalten, geplante Benachrichtigungen abfragen (Erlaubnis wurde nach der Installation erteilt).
+  // Alle Aufrufe mit Zeitlimit: hängt ein Plugin-Aufruf (z. B. weil ein Systemdialog die App pausiert), soll der Test
+  // das melden statt bis zur Notbremse zu warten.
+  const notif = (fn, ms = 8000) => within(page.evaluate(fn), ms, "Zeitüberschreitung");
+  const perm = await notif(() => window.Capacitor.registerPlugin("LocalNotifications").checkPermissions().then((r) => r.display).catch((e) => "Fehler: " + e.message));
+  await go("#/einstellungen"); await click("#remOn"); await sleep(2000);
+  const fg = resumed();
+  const pending = await waitFor(async () => { const l = await notif(() => window.Capacitor.registerPlugin("LocalNotifications").getPending().then((r) => r.notifications).catch((e) => "Fehler: " + e.message), 5000); return Array.isArray(l) && l.length ? l : null; }, 20000, 1000) || [];
+  const remMsg = await within(text("#remMsg"), 5000, "?");
+  check("Tägliche Erinnerung geplant", pending.length >= 6 && pending.length <= 7, pending.length ? `${pending.length} geplant, z. B. „${pending[0].body}“` : `0 geplant – Erlaubnis: ${perm} · Meldung: ${remMsg} · Vordergrund: ${fg.slice(0, 120)}`);
+  if (!pending.length) console.log(logcatTail());
+  if (!resumed().includes(PKG)) { await back(); launch(); await sleep(1500); } // falls ein Systemdialog geöffnet wurde
+  await notif(() => window.Capacitor.registerPlugin("LocalNotifications").schedule({ notifications: [{ id: 1999, title: "PsychoPfad – Test", body: "3 Karten fällig", channelId: "erinnerung", schedule: { at: new Date(Date.now() + 3000), allowWhileIdle: true }, isExactNotification: false, extra: { route: "#/verlauf" } }] }).then(() => "ok").catch((e) => "Fehler: " + e.message));
   const shown = await waitFor(() => { try { return /PsychoPfad – Test|3 Karten fällig/.test(sh("dumpsys notification --noredact")); } catch (e) { return false; } }, 30000, 2000);
   check("Benachrichtigung wird angezeigt", shown, shown ? "Testbenachrichtigung in der Statusleiste" : "nicht gefunden (Zeitplanung im Emulator kann sich verzögern)", { soft: true });
   if (shown) { sh("cmd statusbar expand-notifications"); await sleep(1500); screenshot("erinnerung"); sh("cmd statusbar collapse"); await sleep(800); }
