@@ -2,13 +2,13 @@
  * Routen (Hash): #/  #/plan  #/modul/<ID>/<tab>  #/wiederholen  #/verlauf  #/mischquiz  #/rechentrainer[/<gen>[/<seed>]]
  *                #/datensaetze  #/anki  #/pruefmodus[/<bereich>]  #/bibliothek  #/ressourcen  #/podcasts  #/karriere
  *                #/glossar  #/fortschritt  #/einstellungen  #/suche/<begriff>
- * Benötigt: data/*.js, js/version.js, js/update.js, js/backup.js, js/stats.js, js/trainer.js, js/srs.js, js/sources.js, js/review.js, js/anki.js
+ * Benötigt: data/*.js (inkl. figures.js), js/figures.js, js/version.js, js/update.js, js/backup.js, js/stats.js, js/trainer.js, js/srs.js, js/sources.js, js/review.js, js/anki.js
  * In der Android-App zusätzlich js/capacitor.js (vom Build eingebunden). */
 (function () {
   "use strict";
 
   const STORE_KEY = "psychopfad_wien_v1";
-  const S = window.PPStats, T = window.PPTrainer, R = window.PPSrs, A = window.PPAnki, SRC = window.PPSources, RV = window.PPReview;
+  const S = window.PPStats, T = window.PPTrainer, R = window.PPSrs, A = window.PPAnki, SRC = window.PPSources, RV = window.PPReview, FIG = window.PPFigures;
   const $app = document.getElementById("app");
   const $side = document.getElementById("sidebar");
   const IN_ARTIFACT = !!(window.claude && typeof window.claude.use === "function");
@@ -650,13 +650,18 @@
     return h;
   }
 
+  // Abbildungen zu einem Lernthema (js/figures.js, Zuordnung in data/figures.js)
+  function topicFigures(m, t) {
+    const ids = FIG && PP.topicFigures ? (PP.topicFigures[m.id] || {})[t.title] : null;
+    return ids ? ids.map((id) => FIG.html(id)).join("") : "";
+  }
   function tabTopics(m) {
     const r = state.read[m.id] || {}, n = (m.topics || []).length, done = Object.values(r).filter(Boolean).length;
     const rc = reviewCount(m.id, "topic");
     let h = `<p class="muted">Arbeite die Themen der Reihe nach durch und hake ab, was du verstanden hast. (${done}/${n}) · Fachlich geprüft: ${rc.ok}/${rc.total} – <a href="#/pruefmodus/inhalte/${esc(m.id)}">prüfen</a></p>
       <div class="btn-row"><button class="btn small" data-expand="1">Alle aufklappen</button><button class="btn small" data-expand="0">Alle zuklappen</button></div>`;
     (m.topics || []).forEach((t, i) => {
-      h += `<details class="topic"><summary><span>${i + 1}. ${esc(t.title)}</span>${r[i] ? '<span class="pill ok">✓</span>' : ""}</summary><div class="t-body">${rich(t.text)}`;
+      h += `<details class="topic"><summary><span>${i + 1}. ${esc(t.title)}</span>${r[i] ? '<span class="pill ok">✓</span>' : ""}</summary><div class="t-body">${rich(t.text)}${topicFigures(m, t)}`;
       if (t.concepts && t.concepts.length) h += `<div class="concepts">${t.concepts.map((c) => `<span class="pill">${esc(c)}</span>`).join("")}</div>`;
       if (t.read) h += `<p class="small" style="margin-top:10px"><b>Lesen/Ansehen:</b> ${esc(t.read)}</p>`;
       h += sourcesHtml(m, t);

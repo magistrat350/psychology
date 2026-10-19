@@ -172,7 +172,7 @@
       s += line(56, Y(0), 420, Y(0), "fig-line fig-thin fig-dot fig-s-muted");
       s += line(56, Y(-55), 420, Y(-55), "fig-line fig-thin fig-dash fig-s-muted") + line(56, Y(-70), 420, Y(-70), "fig-line fig-thin fig-dash fig-s-muted");
       s += S(420, Y(-55) - 5, "Schwelle ≈ −55 mV", { a: "end" }) + S(420, Y(-70) - 5, "Ruhepotenzial ≈ −70 mV", { a: "end" });
-      const P = [[0, -70], [0.8, -70], [1.05, -66], [1.25, -60], [1.38, -55], [1.5, -35], [1.6, 0], [1.7, 28], [1.8, 35], [1.92, 25], [2.1, -5],
+      const P = [[0, -70], [0.8, -70], [1.1, -65], [1.33, -57], [1.47, -40], [1.6, 0], [1.7, 28], [1.8, 35], [1.92, 25], [2.1, -5],
         [2.35, -45], [2.55, -68], [2.75, -78], [3.0, -81], [3.4, -78], [3.9, -73], [4.5, -70.5], [5, -70]];
       s += path(smooth(P.map(([t, v]) => [X(t), Y(v)])), "fig-line fig-thick fig-accent");
       s += arrow(X(0.8), 226, X(0.8), Y(-70) + 6, { head: 6 }) + S(X(0.8) - 6, 230, "Reiz", { a: "end" });
@@ -222,7 +222,7 @@
   });
 
   def({
-    id: "gehirn-limbisch", title: "Medianschnitt: subkortikale Strukturen", w: 440, h: 342,
+    id: "gehirn-limbisch", title: "Medianschnitt: subkortikale Strukturen", w: 440, h: 356,
     caption: "Schematischer Medianschnitt (Stirn links) mit Balken, Thalamus, Hypothalamus und Hypophyse, Hirnstamm und Kleinhirn; Hippocampus und Amygdala liegen tiefer im Temporallappen und sind nur in ihrer ungefähren Lage gestrichelt eingezeichnet.",
     alt: "Längsschnitt durch die Mitte des Gehirns, Stirn links. Über der Mitte wölbt sich der Balken (Corpus callosum). Darunter liegt der Thalamus, davor und darunter der Hypothalamus, an dem über einen Stiel die Hypophyse hängt. Nach unten folgt der Hirnstamm mit Mittelhirn, Brücke (Pons) und verlängertem Mark (Medulla oblongata), dahinter das Kleinhirn. Gestrichelt und als schematische Lage: Amygdala vorne unten und der nach hinten oben gebogene Hippocampus; beide liegen nicht in der Mittelebene, sondern im Temporallappen.",
     draw() {
@@ -230,7 +230,7 @@
       s += path("M176,200 C150,208 124,210 100,200 C72,188 58,170 60,146 C62,96 112,52 190,50 C268,48 318,90 320,146 C322,176 306,194 284,196 C266,198 250,190 238,186 C220,190 200,196 176,200 Z", "fig-line fig-soft");
       s += ell(290, 234, 34, 26, "fig-line fig-soft");
       s += path("M266,236 L300,214 M266,236 L314,226 M266,236 L316,242 M266,236 L300,256 M290,229 L300,220 M292,243 L304,252", "fig-line fig-thin");
-      s += path("M214,166 L244,162 C246,176 246,186 248,194 C254,210 252,224 246,234 C242,252 240,276 238,316 L220,316 C220,286 218,262 216,244 C200,240 192,226 194,214 C196,202 206,198 210,194 C210,186 210,176 214,166 Z", "fig-line fig-soft");
+      s += path("M214,160 L236,158 C244,170 246,184 248,194 C254,210 252,224 246,234 C242,252 240,276 238,316 L220,316 C220,286 218,262 216,244 C200,240 192,226 194,214 C196,202 206,198 210,194 C210,184 210,172 214,160 Z", "fig-line fig-soft");
       s += line(209, 196, 249, 196, "fig-line fig-thin") + line(215, 240, 246, 238, "fig-line fig-thin");
       s += path("M120,140 C112,110 150,96 190,96 C232,96 268,104 272,128 C274,142 264,150 254,144 C248,124 222,112 190,112 C156,112 134,122 134,140 C134,150 128,156 122,154 C118,152 119,146 120,140 Z", "fig-line fig-accent-soft");
       s += ell(214, 148, 24, 14, "fig-line fig-tint-ok");
@@ -239,16 +239,16 @@
       s += ell(196, 222, 11, 8, "fig-line fig-dash fig-tint-muted");
       s += path("M206,213 C222,208 238,198 246,186 Q252,180 256,188 C248,204 230,220 209,226 Q202,220 206,213 Z", "fig-line fig-dash fig-tint-muted");
       s += T(190, 82, "Balken (Corpus callosum)") + lead(190, 86, 190, 96);
-      s += T(244, 152, "Thalamus", { a: "start" });
-      s += T(112, 178, "Hypothalamus", { a: "middle" }) + lead(154, 175, 164, 175);
-      s += T(332, 180, "Mittelhirn", { a: "start" }) + lead(328, 176, 247, 182);
+      s += T(254, 153, "Thalamus", { a: "start" });
+            s += T(332, 180, "Mittelhirn", { a: "start" }) + lead(328, 176, 247, 182);
       s += T(332, 236, "Kleinhirn", { a: "start" }) + lead(328, 232, 323, 232);
       s += T(332, 290, ["Medulla", "oblongata"], { a: "start" }) + lead(328, 290, 241, 290);
-      s += T(140, 232, "Hypophyse", { a: "end" }) + lead(144, 228, 156, 214);
-      s += T(140, 256, "Amygdala*", { a: "end" }) + lead(144, 252, 188, 226);
-      s += T(140, 280, "Hippocampus*", { a: "end" }) + lead(144, 276, 224, 218);
-      s += T(140, 304, "Pons (Brücke)", { a: "end" }) + lead(144, 300, 200, 230);
-      s += S(8, 326, "* schematisch: liegen nicht in der Mittelebene, sondern im Temporallappen", { a: "start" });
+      s += T(130, 232, "Hypothalamus", { a: "end" }) + lead(134, 226, 167, 181);
+      s += T(130, 256, "Hypophyse", { a: "end" }) + lead(134, 251, 157, 213);
+      s += T(130, 280, "Amygdala*", { a: "end" }) + lead(134, 275, 187, 226);
+      s += T(130, 304, "Hippocampus*", { a: "end" }) + lead(134, 299, 222, 220);
+      s += T(130, 328, "Pons (Brücke)", { a: "end" }) + lead(134, 323, 200, 232);
+      s += S(8, 348, "* schematisch: liegen nicht in der Mittelebene, sondern im Temporallappen", { a: "start" });
       return s;
     },
   });
@@ -269,7 +269,7 @@
       s += arrow(378, 184, 378, 120) + T(386, 156, "Abruf", { a: "start" });
       s += box(270, 186, 156, 52, [["Langzeitgedächtnis", "fig-bold"], ["nahezu unbegrenzt", "fig-small"]]);
       s += arrow(74, 120, 74, 152, { tone: "muted", cls: "fig-dash" }) + S(74, 168, ["vergessen", "(Zerfall)"], { c: "fig-muted" });
-      s += arrow(270, 110, 214, 146, { tone: "muted", cls: "fig-dash" }) + S(196, 164, ["vergessen", "(Verdrängung, Zerfall)"], { c: "fig-muted" });
+      s += arrow(270, 110, 206, 138, { tone: "muted", cls: "fig-dash" }) + S(180, 154, ["vergessen", "(Verdrängung, Zerfall)"], { c: "fig-muted" });
       s += arrow(270, 226, 226, 226, { tone: "muted", cls: "fig-dash" }) + S(220, 214, ["vergessen", "(Interferenz,", "Abrufversagen)"], { a: "end", c: "fig-muted" });
       return s;
     },
@@ -357,10 +357,10 @@
       s += path(areaPath(N, c, 3.5, X, Y, 210), "fig-tint-strong");
       s += line(10, 210, 430, 210);
       s += path(fnPath(N, -3.5, 3.5, X, Y), "fig-line fig-thick fig-dash") + path(fnPath(SN, -1.5, 5.5, X, Y), "fig-line fig-thick fig-accent");
-      s += line(X(c), 62, X(c), 220, "fig-line fig-thick");
-      s += line(X(0), 48, X(0), 66, "fig-line fig-thin fig-dot fig-s-muted") + line(X(2), 48, X(2), 66, "fig-line fig-thin fig-dot fig-s-muted");
-      s += arrow(X(0), 48, X(2), 48, { both: true, head: 6 }) + T(X(1), 40, "d′", { c: "fig-bold" });
-      s += T(244, 76, "Kriterium", { a: "start" });
+      s += line(X(c), 64, X(c), 220, "fig-line fig-thick");
+      s += line(X(0), 34, X(0), 66, "fig-line fig-thin fig-dot fig-s-muted") + line(X(2), 34, X(2), 66, "fig-line fig-thin fig-dot fig-s-muted");
+      s += arrow(X(0), 34, X(2), 34, { both: true, head: 6 }) + T(X(1), 26, "d′", { c: "fig-bold" });
+      s += T(X(c), 58, "Kriterium", { c: "fig-halo" });
       s += T(140, 84, "Rauschen (N)", { a: "end" }) + T(312, 84, ["Signal +", "Rauschen (S+N)"], { a: "start" });
       s += T(300, 162, "Treffer", { c: "fig-bold" });
       s += T(116, 108, ["korrekte", "Zurückweisung"], { a: "end" }) + lead(118, 118, 160, 168);
@@ -414,7 +414,7 @@
         s += S(X(z), rowsY[0], fmt(z)) + S(X(z), rowsY[1], String(50 + 10 * z)) + S(X(z), rowsY[2], String(100 + 15 * z));
       });
       [[1, "68,3 %", 262], [2, "95,4 %", 280], [3, "99,7 %", 298]].forEach(([k, lab, y]) => {
-        s += pl([[X(-k), y - 5], [X(-k), y], [X(k), y], [X(k), y - 5]], "fig-line fig-thin") + T(X(0), y + 4, lab, { c: "fig-small fig-bold fig-halo" });
+        s += pl([[X(-k), y - 5], [X(-k), y], [X(0) - 26, y]], "fig-line fig-thin") + pl([[X(0) + 26, y], [X(k), y], [X(k), y - 5]], "fig-line fig-thin") + T(X(0), y + 4, lab, { c: "fig-small fig-bold" });
       });
       return s;
     },
@@ -559,12 +559,12 @@
       s += S(334, 160, ["alle Bedingungen, Reihenfolge", "ausbalanciert (AB / BA)"]);
       s += line(8, 194, 432, 194, "fig-line fig-thin fig-s-border");
       s += T(220, 214, "Prä-Post-Kontrollgruppenplan (Campbell-Notation)", { c: "fig-bold" });
-      const cx = [186, 240, 294, 348];
+      const cx = [180, 244, 308, 372];
       s += S(cx[1], 234, "Vortest", { c: "fig-muted" }) + S(cx[2], 234, "Treatment", { c: "fig-muted" }) + S(cx[3], 234, "Nachtest", { c: "fig-muted" });
       s += T(10, 256, "Experimentalgruppe", { a: "start" }) + T(10, 284, "Kontrollgruppe", { a: "start" });
       ["R", "O₁", "X", "O₂"].forEach((t, i) => { s += T(cx[i], 257, t, { c: "fig-big fig-bold" }); });
       ["R", "O₃", "", "O₄"].forEach((t, i) => { if (t) s += T(cx[i], 285, t, { c: "fig-big fig-bold" }); });
-      s += arrow(176, 300, 380, 300, { head: 6 }) + S(386, 304, "Zeit", { a: "start" });
+      s += arrow(170, 300, 396, 300, { head: 6 }) + S(402, 304, "Zeit", { a: "start" });
       s += S(220, 324, "R = randomisierte Zuweisung · O = Messung · X = Treatment", { c: "fig-muted" });
       return s;
     },
@@ -644,7 +644,7 @@
       let s = "";
       s += circ(160, 124, 104, "fig-line fig-tint-accent fig-s-accent") + circ(280, 124, 104, "fig-line fig-tint-ok fig-s-ok") + circ(220, 224, 104, "fig-line fig-tint-muted fig-s-muted");
       s += T(116, 70, "biologisch", { c: "fig-bold" }) + S(116, 88, ["Gene, Hormone,", "Neurotransmitter,", "Erkrankungen"], { lh: 14 });
-      s += T(324, 70, "psychologisch", { c: "fig-bold" }) + S(324, 88, ["Gedanken, Gefühle,", "Bewältigung,", "Verhalten"], { lh: 14 });
+      s += T(316, 70, "psychologisch", { c: "fig-bold" }) + S(316, 88, ["Gedanken, Gefühle,", "Bewältigung,", "Verhalten"], { lh: 14 });
       s += T(220, 264, "sozial", { c: "fig-bold" }) + S(220, 282, ["Beziehungen, Familie,", "Arbeit, Kultur,", "sozialer Status"], { lh: 14 });
       s += T(220, 152, ["Gesundheit /", "Krankheit"], { c: "fig-small fig-bold", lh: 13 });
       return s;

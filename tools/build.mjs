@@ -10,7 +10,7 @@ import { versionInfo, versionJs } from "./lib/version.mjs";
 
 const read = (p) => fs.readFileSync(path.join(ROOT, p), "utf8");
 const html = read("index.html");
-const css = read("css/style.css");
+const css = read("css/style.css") + "\n" + read("css/figures.css");
 const info = versionInfo();
 const script = (src) => (src === "js/version.js" ? versionJs(info) : read(src));
 const inlineScripts = (s) => s.replace(/<script src="([^"]+)"><\/script>/g, (_, src) => `<script>\n${script(src).replace(/<\/script/gi, "<\\/script")}\n</script>`);
@@ -19,7 +19,8 @@ const standalone = inlineScripts(html)
   .replace(/\s*<link rel="manifest"[^>]*>/, "")
   .replace(/\s*<link rel="apple-touch-icon"[^>]*>/, "")
   .replace(/<link rel="icon" href="icons\/icon.svg"[^>]*>/, `<link rel="icon" href="data:image/svg+xml;base64,${Buffer.from(read("icons/icon.svg")).toString("base64")}">`)
-  .replace(/<link rel="stylesheet" href="css\/style.css">/, `<style>\n${css}\n</style>`);
+  .replace(/<link rel="stylesheet" href="css\/style.css">/, `<style>\n${css}\n</style>`)
+  .replace(/\s*<link rel="stylesheet" href="css\/figures.css">/, "");
 
 const title = html.match(/<title>.*?<\/title>/)[0];
 const desc = html.match(/<meta name="description"[^>]*>/)[0];

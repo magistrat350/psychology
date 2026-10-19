@@ -10,7 +10,7 @@ Selbstlern-App für das **Bachelorstudium Psychologie an der Universität Wien**
 |---|---|
 | Überblick | Lehrveranstaltungen, Lernziele, Prüfungsform, Lernstrategie, eigener Stand |
 | Wissen & Qualifikationen | Vorausgesetztes Wissen, Selbsteinschätzungsbogen, Arbeitstechniken |
-| Lernpfad | Themen-Zusammenfassungen mit Schlüsselbegriffen und **Quellen zum Nachprüfen** (238 Themen, 661 Quellenangaben) |
+| Lernpfad | Themen-Zusammenfassungen mit Schlüsselbegriffen, **Quellen zum Nachprüfen** (238 Themen, 661 Quellenangaben) und **21 Abbildungen** (Neuron, Synapse, Aktionspotenzial, Gehirn, Gedächtnismodelle, Konditionierung, Signalentdeckung, Verteilungen, α/β-Fehler, Streudiagramme, Interaktion, Versuchspläne u. a.; SVG, hell/dunkel) |
 | Materialien / Vorlesungen | 310 frei zugängliche Quellen (OER, MIT OCW, Yale, Coursera-Audit, YouTube) |
 | Podcasts | Empfehlungen aus 25 geprüften Podcasts (Deutsch/Englisch, u. a. Ö1, Deutschlandfunk Nova, SWR, BR, BBC, APA) mit Suchlink nach passenden Folgen |
 | Fachliteratur | 215 Bücher mit Suche in KIT-Bibliothek, UB Wien, Büchereien Wien, WorldCat, SpringerLink |
@@ -153,6 +153,7 @@ js/stats.js      Statistik-Bibliothek (Verteilungen, Tests, Reliabilität …)
 js/trainer.js    Aufgabengeneratoren des Rechentrainers
 js/srs.js        Wiederholungsplanung (FSRS-6)
 js/anki.js       Anki-Export
+js/figures.js    Abbildungen als SVG (css/figures.css, Zuordnung zu Lernthemen in data/figures.js)
 data/meta.js, data/modules/*.js   Studienstruktur und Modulinhalte
 data/datasets.js, data/datasets/*.csv   Übungsdatensätze (erzeugt)
 data/verify.js   Checkliste für den Curriculum-Abgleich

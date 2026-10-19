@@ -47,7 +47,11 @@ for (const seed of [1, 4, 7, 12]) {
   await go(`#/rechentrainer/ausgabe_lesen/${seed}`);
   if (!(await page.$(".sw-output .sw-table table td"))) errors.push(`Software-Ausgabe fehlt (Aufgabe ${seed})`);
 }
-step("Podcasts in allen Modulen, Software-Ausgaben im Rechentrainer");
+let nFig = 0;
+const expectedFig = await page.evaluate(() => Object.values(PP.topicFigures).reduce((n, m) => n + Object.values(m).reduce((k, l) => k + l.length, 0), 0));
+for (const id of ids) { await go(`#/modul/${id}/lernpfad`); nFig += await page.$$eval("figure.fig-wrap svg.fig title", (x) => x.length); }
+if (!expectedFig || nFig !== expectedFig) errors.push(`Abbildungen im Lernpfad: ${nFig} statt ${expectedFig}`);
+step(`Podcasts in allen Modulen, Software-Ausgaben im Rechentrainer, ${nFig} Abbildungen im Lernpfad`);
 
 // 2) Modul-Quiz komplett: falsche Antworten landen in der Wiederholung
 await go(`#/modul/A1/quiz`);
