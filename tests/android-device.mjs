@@ -21,7 +21,13 @@ const adb = (...args) => execFileSync("adb", args, { encoding: "utf8", maxBuffer
 const sh = (cmd) => adb("shell", cmd);
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const resumed = () => (sh("dumpsys activity activities").match(/(?:topResumedActivity|mResumedActivity)[=:][^\n]*/g) || []).join(" ");
-const launch = () => sh(`monkey -p ${PKG} -c android.intent.category.LAUNCHER 1`);
+const pidOf = () => { try { return sh(`pidof ${PKG}`).trim(); } catch (e) { return ""; } };
+const launch = () => { try { sh(`am start -W -n ${PKG}/.MainActivity`); } catch (e) { /* unten geprüft */ } };
+/** Startet die App und wartet auf ihren Prozess; direkt nach der Installation braucht Android manchmal einen zweiten Anlauf. */
+async function startApp() {
+  for (let i = 0; i < 3; i++) { launch(); await sleep(3000); if (pidOf()) return true; }
+  return false;
+}
 const back = async () => { sh("input keyevent 4"); await sleep(1200); };
 function check(name, ok, detail = "", { soft = false } = {}) {
   results.push({ name, ok: !!ok, soft, detail });
@@ -38,7 +44,7 @@ async function waitFor(fn, ms, step = 500) { const end = Date.now() + ms; for (;
 async function debugTests() {
   console.log("Teil 1: Debug-APK");
   adb("install", "-r", debugApk);
-  launch();
+  if (!(await startApp())) throw new Error("Debug-App startet nicht: " + sh("logcat -d -b crash").slice(-400));
   const pw = loadPlaywright();
   const [device] = (await within(pw._android.devices(), 60000, null)) || [];
   if (!device) throw new Error("Kein Gerät über adb erreichbar");
@@ -120,7 +126,7 @@ async function debugTests() {
 
   // Beenden: frisch starten, Zurück auf der ersten Seite schließt die App
   try { sh("am force-stop com.android.chrome"); } catch (e) { /* kein Browser */ }
-  sh(`am force-stop ${PKG}`); launch(); await sleep(6000);
+  sh(`am force-stop ${PKG}`); await startApp(); await sleep(4000);
   await back(); await sleep(1000);
   check("Zurück auf der Startseite beendet die App", !resumed().includes(PKG), resumed().slice(0, 140));
 }
@@ -135,11 +141,11 @@ async function releaseTests() {
   const vName = (pkgInfo.match(/versionName=(\S+)/) || [])[1], vCode = (pkgInfo.match(/versionCode=(\d+)/) || [])[1];
   if (process.env.APP_VERSION) check("Versionsangaben der APK", vName === process.env.APP_VERSION && vCode === String(process.env.APP_BUILD), `versionName=${vName}, versionCode=${vCode}`);
   sh("logcat -c");
-  launch();
-  await sleep(12000);
-  const pid = sh(`pidof ${PKG}`).trim();
-  const crash = sh("logcat -d -b crash");
-  check("Release-App startet ohne Absturz", !!pid && resumed().includes(PKG) && !crash.includes(PKG), `pid ${pid || "–"}${crash.includes(PKG) ? ", Absturz im Log" : ""}`);
+  const started = await startApp();
+  await sleep(9000);
+  const pid = pidOf(), crash = sh("logcat -d -b crash");
+  check("Release-App startet ohne Absturz", started && !!pid && resumed().includes(PKG) && !crash.includes(PKG),
+    `pid ${pid || "–"}${crash.includes(PKG) ? ", Absturz: " + crash.slice(-300).replace(/\s+/g, " ") : ""}${pid ? "" : ", " + resumed().slice(0, 120)}`);
   screenshot("release-start");
 }
 
