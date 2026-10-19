@@ -1,8 +1,9 @@
 name: App bauen & veröffentlichen
 
-# Bei jedem Push: alle Tests, danach Android-APK bauen.
-# Auf dem Standard-Branch zusätzlich:
-#   - GitHub-Release v<major>.<minor>.<Laufnummer> mit der APK – die installierte App erkennt es und bietet das Update an
+# Bei jedem Push: alle Tests, danach Android-APK bauen und im Android-Emulator testen.
+# Auf dem Standard-Branch zusätzlich (nur wenn der Emulator-Test bestanden ist):
+#   - GitHub-Release v<major>.<minor>.<Laufnummer> mit der APK und Screenshots – die installierte App erkennt es
+#     und bietet das Update an
 #   - Web-Version auf GitHub Pages (sobald unter Settings → Pages die Quelle „GitHub Actions“ gewählt ist)
 # Versionsschema: tools/lib/version.mjs (major.minor aus package.json, Build-Nummer = Laufnummer = Android-versionCode).
 on:
@@ -45,6 +46,9 @@ jobs:
     name: Android-APK
     needs: test
     runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      build: ${{ steps.version.outputs.build }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -64,8 +68,9 @@ jobs:
         run: npm ci
 
       - name: Version bestimmen
+        id: version
         run: |
-          node tools/version.mjs --env >> "$GITHUB_ENV"
+          node tools/version.mjs --env | tee -a "$GITHUB_ENV" | sed 's/^APP_VERSION=/version=/; s/^APP_BUILD=/build=/' >> "$GITHUB_OUTPUT"
           node tools/version.mjs
 
       - name: Web-App zusammenstellen
@@ -87,7 +92,7 @@ jobs:
 
       - name: APK kompilieren
         working-directory: android
-        run: ./gradlew assembleRelease --no-daemon --stacktrace
+        run: ./gradlew assembleRelease assembleDebug --no-daemon --stacktrace
 
       - name: APK signieren
         env:
@@ -112,6 +117,7 @@ jobs:
           grep -o "versionCode='[0-9]*' versionName='[^']*'" badging.txt
           grep -q "versionCode='$APP_BUILD' versionName='$APP_VERSION'" badging.txt
           cp psychopfad.apk "psychopfad-$APP_VERSION.apk"
+          cp android/app/build/outputs/apk/debug/app-debug.apk app-debug.apk
           rm -f release.jks aligned.apk badging.txt
 
       - name: Versionshinweise
@@ -126,24 +132,103 @@ jobs:
           } > release-notes.md
           cat release-notes.md
 
-      - name: APK als Build-Artefakt speichern
+      - name: APKs als Build-Artefakt speichern
         uses: actions/upload-artifact@v4
         with:
-          name: psychopfad-${{ env.APP_VERSION }}
-          path: psychopfad.apk
+          name: apk-${{ env.APP_VERSION }}
+          path: |
+            psychopfad.apk
+            psychopfad-${{ env.APP_VERSION }}.apk
+            app-debug.apk
+            release-notes.md
 
-      - name: Release veröffentlichen
-        if: github.ref_name == github.event.repository.default_branch
-        uses: softprops/action-gh-release@v2
+  emulator:
+    name: Test im Android-Emulator
+    needs: android
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      APP_VERSION: ${{ needs.android.outputs.version }}
+      APP_BUILD: ${{ needs.android.outputs.build }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Abhängigkeiten installieren
+        run: npm ci
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: apk-${{ needs.android.outputs.version }}
+          path: apk
+
+      - name: Hardware-Beschleunigung (KVM) aktivieren
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      # Debug-APK: WebView per Playwright steuerbar (Ansichten, Plugins, Teilen, Zurück-Taste, Update-Abfrage);
+      # Release-APK: Installation, Version, Start ohne Absturz. Details: tests/android-device.mjs
+      - name: App im Emulator testen (Android 14)
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          target: google_apis
+          arch: x86_64
+          disable-animations: true
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+          script: node tests/android-device.mjs apk/app-debug.apk apk/psychopfad.apk android-screenshots
+
+      - name: Screenshots speichern
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: screenshots-${{ needs.android.outputs.version }}
+          path: android-screenshots
+          if-no-files-found: ignore
+
+  release:
+    name: Release veröffentlichen
+    needs: [android, emulator]
+    if: github.ref_name == github.event.repository.default_branch
+    runs-on: ubuntu-latest
+    env:
+      APP_VERSION: ${{ needs.android.outputs.version }}
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: apk-${{ needs.android.outputs.version }}
+          path: apk
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: screenshots-${{ needs.android.outputs.version }}
+          path: shots
+
+      - name: Dateien und Text zusammenstellen
+        run: |
+          mkdir files
+          cp apk/psychopfad.apk "apk/psychopfad-$APP_VERSION.apk" files/
+          for f in start quiz lernpfad-quellen rechentrainer einstellungen; do
+            if [ -f "shots/$f.png" ]; then cp "shots/$f.png" "files/screenshot-$f.png"; fi
+          done
+          cp apk/release-notes.md notes.md
+          printf '\nGetestet im Android-Emulator (Android 14): Start, Ansichten, Update-Prüfung, Teilen-Menü, Zurück-Taste und Installation der signierten APK. Screenshots aus dem Test hängen an.\n' >> notes.md
+          ls -la files
+
+      - uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ env.APP_VERSION }}
           target_commitish: ${{ github.sha }}
           name: PsychoPfad Wien ${{ env.APP_VERSION }}
           make_latest: true
-          body_path: release-notes.md
-          files: |
-            psychopfad.apk
-            psychopfad-${{ env.APP_VERSION }}.apk
+          body_path: notes.md
+          files: files/*
 
   pages:
     name: Web-Version (GitHub Pages)
