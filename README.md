@@ -26,6 +26,7 @@ Selbstlern-App für das **Bachelorstudium Psychologie an der Universität Wien**
 - **Übungsdatensätze** – 5 simulierte Datensätze als CSV (Lernstudie, Achtsamkeitstraining, Therapiestudie, Fragebogen/Skalenanalyse, Screening/Diagnostik) mit 17 Aufgaben, jamovi- und R-Hinweisen und Referenzergebnissen.
 - **Anki-Export** – Begriffe, Quizfragen und Prüfungsfragen als Anki-Importdatei, ein Unterstapel pro Modul.
 - **Prüfmodus** – Curriculum-Checkliste (106 Prüfpunkte, unsichere Angaben markiert), **fachliche Prüfung der Inhalte** (siehe unten), gesammelte Fehlermeldungen (Button „⚑ Fehler melden“ an Quizfragen, Prüfungsfragen, Lernthemen, Karteikarten, Links, Büchern und Rechenaufgaben) mit Export als Markdown oder GitHub-Issue, Ergebnisse der Linkprüfung.
+- **Sicherung des Lernstands** – Erinnerung nach einstellbarer Zeit mit „Jetzt sichern“ (Datei bzw. Teilen-Menü) und optional automatische Sicherung in einem geheimen GitHub-Gist mit Abgleich zwischen Geräten (siehe unten).
 - Semesterplan, Vorbereitung auf das Aufnahmeverfahren, Glossar, Volltextsuche, Fortschritt mit Export/Import, Hell/Dunkel-Modus.
 - **Installierbar und offline nutzbar** (PWA), wenn die App über http(s) ausgeliefert wird.
 - **Android-App (APK)** mit Update-Prüfung über GitHub Releases und Versionsnummern (siehe unten).
@@ -40,19 +41,29 @@ npm run serve        # http://localhost:8080 – im Browser „Installieren“ b
 
 Auf einem Webserver (z. B. GitHub Pages) funktioniert das genauso – alle Pfade sind relativ.
 
-Der Lernfortschritt liegt im Browser (localStorage). Unter **Fortschritt** lässt er sich als Datei speichern oder über die Zwischenablage auf ein anderes Gerät übertragen.
+Der Lernfortschritt liegt im Browser bzw. in der App (localStorage). Unter **Fortschritt** lässt er sich als Datei speichern oder über die Zwischenablage auf ein anderes Gerät übertragen.
+
+### Sicherung des Lernstands
+
+- **Erinnerung** (Einstellungen → *Sicherung des Lernstands*): Nach 7, 14 oder 30 Tagen ohne Sicherung erscheint oben ein Hinweis mit *Jetzt sichern*. In der Android-App geht die Datei ins Teilen-Menü (z. B. *In Drive speichern*), im Browser in den Download-Ordner. Laden: *Fortschritt → Datei importieren*.
+- **Automatisch in einem GitHub-Gist** (optional): Auf GitHub einen klassischen Zugangsschlüssel nur mit der Berechtigung `gist` erstellen und in den Einstellungen einfügen. Die App legt einen *geheimen* Gist an (nicht gelistet, aber mit dem Link für alle lesbar – Notizen stehen mit drin) und lädt den Lernstand kurz nach Änderungen sowie beim Verlassen der App hoch. Auf einem weiteren Gerät mit demselben Schlüssel verbinden – der Lernstand wird übernommen. Hat ein anderes Gerät zwischendurch gesichert, fragt die App nach (*Übernehmen* oder *Dieses Gerät behalten*), statt zu überschreiben. Der Schlüssel bleibt nur auf dem Gerät und steht nicht in Exporten.
+- Eine direkte Google-Drive-Anbindung gibt es nicht (dafür bräuchte die App ein eigenes Google-Cloud-Projekt); über das Teilen-Menü lässt sich die Sicherungsdatei aber in Drive ablegen. Ob Android den Lernstand zusätzlich über die Google-Sicherung mitnimmt, hängt von den Geräteeinstellungen ab und ist nicht getestet.
 
 ## Android-App & Updates über GitHub
 
 Bei jedem Push baut GitHub Actions (`.github/workflows/build.yml`) die App: erst laufen alle Tests, dann entsteht mit [Capacitor](https://capacitorjs.com) eine Android-APK, die anschließend **im Android-Emulator (Android 14) getestet** wird (`tests/android-device.mjs`): Start, Ansichten, Dateisystem und Teilen-Menü, Zurück-Taste, Update-Abfrage, externe Links; dazu Installation, Version und Start der signierten Release-APK.
-Nur wenn dieser Test besteht, wird die APK auf dem Standard-Branch als **GitHub-Release** veröffentlicht – mit Screenshots aus dem Emulator. Zusätzlich die Web-Version auf GitHub Pages (sobald unter *Settings → Pages* die Quelle „GitHub Actions“ gewählt ist).
+Jeder Push ergibt nur einen **Testbuild** (APK als Artefakt am Workflow-Lauf). Ein **Release** – das installierte Apps als Update anbieten – entsteht nur auf dem Standard-Branch und nur, wenn
+- der Workflow von Hand gestartet wird: *Actions → App bauen & veröffentlichen → Run workflow* (Häkchen „Als Release veröffentlichen“), oder
+- eine Commit-Nachricht des Pushes `[release]` enthält (z. B. `git commit -m "Neue Module [release]"`),
+
+und nur, wenn der Emulator-Test besteht. Das Release enthält die APK, Screenshots aus dem Emulator und die Commit-Nachrichten seit dem vorigen Release; gleichzeitig wird die Web-Version auf GitHub Pages aktualisiert (sobald unter *Settings → Pages* die Quelle „GitHub Actions“ gewählt ist).
 
 - **Installieren:** https://github.com/magistrat350/psychology/releases/latest/download/psychopfad.apk auf dem Handy öffnen und installieren (einmalig „Installation aus unbekannten Quellen“ erlauben).
 - **Aktualisieren:** Die App sucht beim Start (höchstens alle 12 Stunden) nach einer neueren Veröffentlichung und zeigt oben einen Hinweis mit Download-Link. Manuell: **Einstellungen → App-Version & Updates → Nach Updates suchen** – dort stehen auch die Neuerungen der Version. Die neue APK einfach drüberinstallieren, der Lernstand bleibt erhalten.
 - **Web-Version:** Der Service Worker lädt neue Versionen im Hintergrund und zeigt dann „Neu laden“ an.
 - **In der App:** Exporte (Anki, CSV, Fortschritt, Meldungen) öffnen das Teilen-Menü (z. B. „In Drive speichern“, an AnkiDroid oder per Mail senden); Links öffnen im Browser; die Zurück-Taste navigiert innerhalb der App.
 
-**Versionsschema:** `<major>.<minor>.<Build>` – `major.minor` aus `package.json`, die Build-Nummer ist die Laufnummer des Workflows (und der Android-`versionCode`), z. B. `2.0.17` mit Tag `v2.0.17`. Für größere Inhaltsstände `npm version minor --no-git-tag-version` ausführen und committen (→ `2.1.<Build>`). Lokale Builds heißen `2.0.0-dev`. Die Version steht in den Einstellungen, unten in der Navigation und in jeder Fehlermeldung. Die Versionshinweise eines Releases entstehen aus den Commit-Nachrichten seit dem vorigen Release.
+**Versionsschema:** `<major>.<minor>.<Build>` – `major.minor` aus `package.json`, die Build-Nummer ist die Laufnummer des Workflows (und der Android-`versionCode`), z. B. `2.0.17` mit Tag `v2.0.17`. Weil auch Testbuilds eine Laufnummer verbrauchen, haben die Release-Nummern Lücken. Für größere Inhaltsstände `npm version minor --no-git-tag-version` ausführen und committen (→ `2.1.<Build>`). Lokale Builds heißen `2.0.0-dev`. Die Version steht in den Einstellungen, unten in der Navigation und in jeder Fehlermeldung. Die Versionshinweise eines Releases entstehen aus den Commit-Nachrichten seit dem vorigen Release.
 
 **Signaturschlüssel:** Updates lassen sich nur drüberinstallieren, wenn jede APK mit demselben Schlüssel signiert ist. Dafür liegt `signing/psychopfad.jks` im Repository (Alias `psychopfad`, Passwort `psychopfad-wien`). Da das Repository öffentlich ist, kann diesen Schlüssel jeder lesen. Sicherer ist ein eigener Schlüssel als Repository-Secret: `ANDROID_KEYSTORE_BASE64` (Keystore als Base64), `ANDROID_KEYSTORE_PASSWORD` und optional `ANDROID_KEY_ALIAS` (Standard `psychopfad`). Der Workflow nutzt die Secrets automatisch, wenn sie gesetzt sind. Achtung: Ein Schlüsselwechsel erfordert eine einmalige Neuinstallation – vorher unter **Fortschritt** den Lernstand sichern.
 
@@ -70,6 +81,10 @@ npm run android:add          # www/ bauen, Android-Projekt und Icons erzeugen (e
 npm run android:sync         # nach Änderungen: www/ neu bauen und ins Android-Projekt kopieren
 cd android && ./gradlew assembleDebug
 ```
+
+## Branches
+
+Der Standard-Branch heißt `main` (Umbenennen des bisherigen Standard-Branches: *Settings → General → Default branch → ✎ „Rename branch“* – GitHub leitet alte Links weiter und passt offene Pull Requests an). Änderungen entstehen auf eigenen Branches und kommen per Pull Request nach `main`; jeder Push baut und testet die App, ein Release entsteht erst auf `main` per Knopfdruck oder mit `[release]` (siehe oben). Die wöchentliche Linkprüfung läuft auf `main` und committet ihre Befunde dorthin.
 
 ## Befehle
 
@@ -127,6 +142,7 @@ css/style.css
 js/app.js        Oberfläche, Router, alle Ansichten
 js/version.js    Versionsangaben (beim Build ersetzt)
 js/update.js     Versionsvergleich und Update-Prüfung über GitHub Releases
+js/backup.js     Sicherungs-Erinnerung und Gist-Sicherung
 js/sources.js    Quellenangaben der Lernthemen auflösen
 js/review.js     Prüfvermerke (fachliche Prüfung)
 js/stats.js      Statistik-Bibliothek (Verteilungen, Tests, Reliabilität …)
@@ -140,7 +156,7 @@ data/sources.js, data/source-catalog.js   Quellen zu den Lernthemen
 data/review.js   gemeinsame Prüfvermerke
 data/link-status.js   Ergebnis der Linkprüfung (erzeugt)
 tools/           Build (auch www/ und Versionen), Server, Linkprüfer, Anki-Export, Datensatz- und Icon-Erzeugung
-tests/           validate.mjs, unit/*.test.mjs, smoke.mjs, pwa.mjs, native.mjs, artifact.mjs, android-device.mjs (nur im Emulator)
+tests/           validate.mjs, unit/*.test.mjs, smoke.mjs, pwa.mjs, native.mjs, backup.mjs, artifact.mjs, android-device.mjs (nur im Emulator)
 ```
 
 Neues Modul: in einer Datei unter `data/modules/` `PP.addModule({...})` aufrufen (Schema siehe vorhandene Module), bei Bedarf Prüfpunkte in `data/verify.js` ergänzen und `npm test` ausführen. Neue Datei? Dann auch in `index.html` und in die Liste in `sw.js` eintragen (ein Test prüft das). Ordner, die in die App gehören, zusätzlich in `tools/build-web.mjs`.

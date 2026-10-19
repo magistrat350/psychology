@@ -3,7 +3,7 @@
  * sofort aus dem Cache antworten und im Hintergrund aktualisieren.
  * Bei Änderungen an der Dateiliste VERSION erhöhen (tests/unit/pwa.test.mjs prüft die Liste).
  * Builds (tools/build-web.mjs) setzen VERSION auf die App-Version, damit ein Release den Cache erneuert. */
-const VERSION = "psychopfad-v4";
+const VERSION = "psychopfad-v5";
 const ASSETS = [
   "./",
   "index.html",
@@ -37,6 +37,7 @@ const ASSETS = [
   "data/datasets/screening.csv",
   "js/version.js",
   "js/update.js",
+  "js/backup.js",
   "js/stats.js",
   "js/trainer.js",
   "js/srs.js",

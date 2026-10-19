@@ -2,7 +2,7 @@
  * Routen (Hash): #/  #/plan  #/modul/<ID>/<tab>  #/wiederholen  #/mischquiz  #/rechentrainer[/<gen>[/<seed>]]
  *                #/datensaetze  #/anki  #/pruefmodus[/<bereich>]  #/bibliothek  #/ressourcen  #/karriere
  *                #/glossar  #/fortschritt  #/einstellungen  #/suche/<begriff>
- * Benötigt: data/*.js, js/version.js, js/update.js, js/stats.js, js/trainer.js, js/srs.js, js/sources.js, js/review.js, js/anki.js
+ * Benötigt: data/*.js, js/version.js, js/update.js, js/backup.js, js/stats.js, js/trainer.js, js/srs.js, js/sources.js, js/review.js, js/anki.js
  * In der Android-App zusätzlich js/capacitor.js (vom Build eingebunden). */
 (function () {
   "use strict";
@@ -17,16 +17,21 @@
   const IS_NATIVE = !!(CAP && typeof CAP.isNativePlatform === "function" && CAP.isNativePlatform() && typeof CAP.registerPlugin === "function");
   const native = IS_NATIVE ? { fs: CAP.registerPlugin("Filesystem"), share: CAP.registerPlugin("Share"), app: CAP.registerPlugin("App") } : null;
   const V = window.PPVersion || { version: "dev", build: 0, commit: "", date: "", repo: PP.meta.repo };
-  const U = window.PPUpdate;
+  const U = window.PPUpdate, BK = window.PPBackup;
 
   // ---------- Zustand ----------
   const emptyState = () => ({
     comp: {}, quiz: {}, exam: {}, notes: {}, done: {}, cards: {}, read: {},
     srs: {}, srsCfg: { newPerDay: 15, modules: null, kinds: ["card", "quiz"], introduced: { day: "", count: 0 } },
-    reports: {}, verify: {}, review: {}, trainer: {}, mix: [],
-    settings: { theme: "auto", libTemplates: {}, reviewer: "" }
+    reports: {}, verify: {}, review: {}, trainer: {}, mix: [], backup: { last: "", snoozeUntil: "" },
+    settings: { theme: "auto", libTemplates: {}, reviewer: "", backupDays: 7 }
   });
   let state = load();
+  // Automatische Sicherung im GitHub-Gist: Zugangsschlüssel und Abgleich-Stand getrennt vom Lernstand (nicht im Export)
+  const SYNC_KEY = "psychopfad_sync";
+  let sync = loadSync(), syncTimer = null, syncDirtyFlag = false, syncBusy = false, syncUi = { busy: "", msg: "" };
+  function loadSync() { try { return JSON.parse(localStorage.getItem(SYNC_KEY)) || {}; } catch (e) { return {}; } }
+  function saveSync() { try { localStorage.setItem(SYNC_KEY, JSON.stringify(sync)); } catch (e) { /* privater Modus */ } }
   function load() {
     let st;
     try { const raw = localStorage.getItem(STORE_KEY); st = raw ? JSON.parse(raw) : {}; } catch (e) { st = {}; }
@@ -34,10 +39,11 @@
     st = Object.assign(base, st);
     st.srsCfg = Object.assign(emptyState().srsCfg, st.srsCfg || {});
     st.settings = Object.assign(emptyState().settings, st.settings || {});
+    st.backup = Object.assign(emptyState().backup, st.backup || {});
     if (st.cards && Object.keys(st.cards).length && !st.cardsMigrated) { R.migrateCards(st.cards, PP.modules, st.srs, R.today()); st.cardsMigrated = true; }
     return st;
   }
-  function save() { try { localStorage.setItem(STORE_KEY, JSON.stringify(state)); } catch (e) { /* privater Modus */ } }
+  function save() { try { localStorage.setItem(STORE_KEY, JSON.stringify(state)); } catch (e) { /* privater Modus */ } syncDirty(); }
 
   // ---------- Hilfen ----------
   const esc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
@@ -121,27 +127,28 @@
   const pushVerify = docPusher("verify/checklist", () => state.verify);
   const pushReview = docPusher("review/marks", () => state.review);
   /** Datei anbieten: lokal als Download, auf der veröffentlichten Seite über die Speicherfunktion des Viewers,
-   *  in der Android-App über das Teilen-Menü (WebViews können keine Blob-Downloads). */
+   *  in der Android-App über das Teilen-Menü (WebViews können keine Blob-Downloads).
+   *  Ergebnis: Promise<boolean> – true, wenn die Datei (vermutlich) gespeichert bzw. geteilt wurde. */
   function saveFile(filename, data, mime) {
     if (native) {
-      native.fs.writeFile({ path: filename, data, directory: "CACHE", encoding: "utf8" })
+      return native.fs.writeFile({ path: filename, data, directory: "CACHE", encoding: "utf8" })
         .then((r) => native.share.share({ title: filename, files: [r.uri], dialogTitle: "Datei speichern oder teilen" }))
-        .catch((e) => { if (!/cancel/i.test(String(e && e.message))) copyText(data, "Teilen nicht möglich – Inhalt stattdessen in die Zwischenablage kopiert."); });
-      return;
+        .then(() => true, (e) => { if (!/cancel/i.test(String(e && e.message))) copyText(data, "Teilen nicht möglich – Inhalt stattdessen in die Zwischenablage kopiert."); return false; });
     }
     if (cloud.dl) {
-      cloud.dl.save({ filename, data }).then(() => toast(`„${filename}“ gespeichert.`)).catch((e) => {
+      return cloud.dl.save({ filename, data }).then(() => { toast(`„${filename}“ gespeichert.`); return true; }, (e) => {
         if (e && e.code === "declined") toast("Speichern abgebrochen.");
         else if (e && e.code === "rate_limited") toast("Bitte kurz warten und erneut versuchen.");
         else copyText(data, "Speichern nicht möglich – Inhalt stattdessen in die Zwischenablage kopiert.");
+        return false;
       });
-      return;
     }
-    if (IN_ARTIFACT) { copyText(data, "Datei-Speichern ist hier nicht verfügbar – Inhalt in die Zwischenablage kopiert."); return; }
+    if (IN_ARTIFACT) { copyText(data, "Datei-Speichern ist hier nicht verfügbar – Inhalt in die Zwischenablage kopiert."); return Promise.resolve(false); }
     const a = document.createElement("a");
     a.href = URL.createObjectURL(new Blob([data], { type: mime || "text/plain;charset=utf-8" }));
     a.download = filename; document.body.appendChild(a); a.click();
     setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+    return Promise.resolve(true);
   }
 
   // ---------- Version & Updates (GitHub Releases) ----------
@@ -175,6 +182,13 @@
       bar.innerHTML = `<span>🆕 Version <b>${esc(i.version)}</b> ist verfügbar.</span>
         <a class="btn small primary" href="${esc(i.apk || i.url)}" target="_blank" rel="noopener noreferrer">Herunterladen</a>
         <a class="btn small" href="#/einstellungen">Was ist neu?</a><button class="icon-btn" data-upd="dismiss" aria-label="Hinweis ausblenden" title="Ausblenden">✕</button>`;
+    } else if (sync.conflict) {
+      bar.innerHTML = `<span>☁️ Auf GitHub liegt eine neuere Sicherung (${esc(fmtTime(sync.conflict.updatedAt))}) – vermutlich von einem anderen Gerät.</span>
+        <button class="btn small primary" data-sync="take">Übernehmen</button><button class="btn small" data-sync="keep">Dieses Gerät behalten</button>`;
+    } else if (backupDue()) {
+      const n = BK.daysSince(state.backup.last, Date.now());
+      bar.innerHTML = `<span>💾 Dein Lernstand ist ${state.backup.last ? `seit ${n} Tagen nicht` : "noch nie"} gesichert worden. Er liegt nur auf diesem Gerät.</span>
+        <button class="btn small primary" data-backup="now">Jetzt sichern</button><button class="btn small" data-backup="later">Später</button>`;
     } else { bar.hidden = true; bar.innerHTML = ""; return; }
     bar.hidden = false;
   }
@@ -207,6 +221,99 @@
       <div id="updResult">${updateResult()}</div>
       <div class="btn-row">${IN_ARTIFACT ? "" : `<button class="btn${updateAvailable() ? "" : " primary"}" data-upd="check">Nach Updates suchen</button>`}<a class="btn" href="${esc(releasesUrl())}" target="_blank" rel="noopener noreferrer">Alle Versionen</a>${IS_NATIVE ? "" : `<a class="btn" href="${esc(apkLatestUrl())}" target="_blank" rel="noopener noreferrer">Android-App (APK)</a>`}</div>
       <p class="small muted">${how}</p></div>`;
+  }
+
+  // ---------- Sicherung des Lernstands ----------
+  // 1) Erinnerung: nach einstellbarer Zeit ohne Sicherung oben ein Hinweis mit „Jetzt sichern“ (Datei bzw. Teilen-Menü).
+  // 2) Optional automatisch in einem geheimen GitHub-Gist: hochladen kurz nach Änderungen und beim Verlassen der App;
+  //    hat ein anderes Gerät inzwischen gesichert, wird nicht überschrieben, sondern nachgefragt.
+  const SYNC_DELAY = 30000;
+  const fmtTime = (iso) => (iso ? new Date(iso).toLocaleString("de-AT", { dateStyle: "short", timeStyle: "short" }) : "–");
+  const backupMeta = () => ({ savedAt: new Date().toISOString(), version: V.version, device: platformName() });
+  const syncOn = () => !!(sync.token && sync.gistId) && !IN_ARTIFACT;
+  const syncClient = () => BK.gistClient({ token: sync.token });
+  function backupDue() { return !IN_ARTIFACT && BK.reminderDue({ state, days: +state.settings.backupDays, lastAuto: syncOn() && !sync.error ? sync.lastPush : "" }); }
+  function backupNow() {
+    return saveFile(`psychopfad-lernstand-${today()}.json`, BK.payload(state, backupMeta()), "application/json").then((ok) => {
+      if (!ok) return;
+      state.backup.last = new Date().toISOString(); state.backup.snoozeUntil = ""; save();
+      renderBanner(); if (location.hash.startsWith("#/einstellungen") || location.hash.startsWith("#/fortschritt")) keep(route);
+    });
+  }
+  function syncDirty() {
+    if (!syncOn() || sync.conflict) return;
+    syncDirtyFlag = true; clearTimeout(syncTimer); syncTimer = setTimeout(() => syncPush(), SYNC_DELAY);
+  }
+  function syncRefresh() { saveSync(); renderBanner(); if (location.hash.startsWith("#/einstellungen")) keep(route); }
+  function setConflict(gist) { sync.conflict = { updatedAt: gist.updated_at }; clearTimeout(syncTimer); syncRefresh(); }
+  /** Hochladen. force: auch ohne Änderungen und trotz neuerer Sicherung auf GitHub (Konflikt „dieses Gerät behalten“). */
+  async function syncPush(force) {
+    if (!syncOn() || syncBusy || (sync.conflict && !force) || (!force && !syncDirtyFlag)) return;
+    syncBusy = true; syncDirtyFlag = false; clearTimeout(syncTimer);
+    try {
+      const c = syncClient();
+      if (!force) { const g = await c.get(sync.gistId); if (BK.remoteNewer(g.updated_at, sync.lastPush)) { syncBusy = false; setConflict(g); return; } }
+      const res = await c.update(sync.gistId, BK.payload(state, backupMeta()));
+      sync.lastPush = res.updated_at; sync.conflict = null; sync.error = "";
+    } catch (e) { sync.error = BK.errorText(e); syncDirtyFlag = true; }
+    syncBusy = false; syncRefresh();
+  }
+  /** Sicherung von GitHub in dieses Gerät übernehmen. */
+  async function syncRestore() {
+    const c = syncClient(), g = await c.get(sync.gistId), text = await c.content(g);
+    if (!text) { const e = new Error("leer"); e.status = 404; throw e; }
+    const { state: st } = BK.parsePayload(text);
+    applyState(st);
+    clearTimeout(syncTimer); syncDirtyFlag = false;
+    sync.lastPush = g.updated_at; sync.conflict = null; sync.error = ""; syncRefresh();
+  }
+  async function syncConnect(token) {
+    sync = { token };
+    const c = syncClient();
+    await c.user();   // prüft den Schlüssel
+    const found = await c.find();
+    if (found) {
+      sync.gistId = found.id; sync.gistUrl = found.html_url;
+      if (BK.hasProgress(state)) setConflict(found); else await syncRestore();
+    } else {
+      const g = await c.create(BK.payload(state, backupMeta()));
+      sync.gistId = g.id; sync.gistUrl = g.html_url; sync.lastPush = g.updated_at;
+    }
+    syncRefresh();
+  }
+  function syncStartup() {
+    if (!syncOn()) return;
+    syncClient().get(sync.gistId).then((g) => { sync.error = ""; if (BK.remoteNewer(g.updated_at, sync.lastPush)) setConflict(g); else saveSync(); },
+      (e) => { sync.error = BK.errorText(e); saveSync(); });
+  }
+  function runSync(label, fn) {
+    syncUi = { busy: label, msg: "" }; keep(route);
+    return fn().then(() => { syncUi = { busy: "", msg: "" }; }, (e) => { syncUi = { busy: "", msg: BK.errorText(e) }; })
+      .then(() => { renderBanner(); if (location.hash.startsWith("#/einstellungen")) keep(route); });
+  }
+  function backupCard() {
+    const days = +state.settings.backupDays;
+    let h = `<div class="card" id="backupCard"><h3>Sicherung des Lernstands</h3>
+      <p>Dein Lernstand liegt nur auf diesem Gerät. Bei Deinstallation, Gerätewechsel oder gelöschten Browserdaten ist er sonst weg.</p>
+      <p class="small">Letzte Sicherung als Datei: <b>${state.backup.last ? esc(fmtTime(state.backup.last)) : "noch keine"}</b></p>
+      <div class="form-row"><label for="backupDays">An die Sicherung erinnern</label><select id="backupDays">${[[0, "nie"], [7, "nach 7 Tagen"], [14, "nach 14 Tagen"], [30, "nach 30 Tagen"]].map(([v, l]) => `<option value="${v}" ${days === v ? "selected" : ""}>${l}</option>`).join("")}</select></div>
+      <div class="btn-row"><button class="btn primary" data-backup="now">Jetzt als Datei sichern</button><a class="btn" href="#/fortschritt">Sicherung laden</a></div>
+      <p class="small muted">${IS_NATIVE ? "Die Datei geht ins Teilen-Menü – z. B. „In Drive speichern“ oder in die Dateien-App." : "Die Datei landet im Download-Ordner."} Laden lässt sie sich unter <a href="#/fortschritt">Fortschritt</a>.</p>`;
+    if (IN_ARTIFACT) return h + `</div>`;
+    h += `<h4>Automatisch sichern in einem GitHub-Gist (optional)</h4>`;
+    if (!syncOn()) {
+      h += `<p class="small">Die App lädt den Lernstand dann kurz nach Änderungen in einen <b>geheimen Gist</b> deines GitHub-Kontos und gleicht ihn zwischen Geräten ab.
+          Geheime Gists sind nicht gelistet, aber für alle lesbar, die den Link kennen – deine Notizen stehen mit drin. Der Zugangsschlüssel bleibt nur auf diesem Gerät.</p>
+        <ol class="small"><li><a href="https://github.com/settings/tokens/new?scopes=gist&amp;description=PsychoPfad%20Sicherung" target="_blank" rel="noopener noreferrer">Zugangsschlüssel auf GitHub erstellen</a> (klassischer Token, nur Berechtigung „gist“).</li><li>Schlüssel hier einfügen und verbinden. Auf weiteren Geräten denselben Schlüssel verwenden.</li></ol>
+        <div class="form-row"><label for="syncToken">Zugangsschlüssel</label><input type="password" id="syncToken" autocomplete="off" spellcheck="false" placeholder="ghp_…"></div>
+        <div class="btn-row"><button class="btn" data-sync="connect" ${syncUi.busy ? "disabled" : ""}>${syncUi.busy === "connect" ? "Verbinde …" : "Verbinden"}</button></div>`;
+    } else {
+      h += `<p class="small">Verbunden – <a href="${esc(sync.gistUrl || "https://gist.github.com/")}" target="_blank" rel="noopener noreferrer">Sicherung auf GitHub</a> · zuletzt hochgeladen: <b>${esc(fmtTime(sync.lastPush))}</b>${syncDirtyFlag ? " · Änderungen werden gleich hochgeladen" : ""}</p>
+        ${sync.error ? `<p class="notice small">${esc(sync.error)}</p>` : ""}
+        <div class="btn-row"><button class="btn" data-sync="push" ${syncUi.busy ? "disabled" : ""}>${syncUi.busy === "push" ? "Lade hoch …" : "Jetzt hochladen"}</button><button class="btn" data-sync="restore" ${syncUi.busy ? "disabled" : ""}>Von GitHub wiederherstellen</button><button class="btn" data-sync="disconnect">Trennen</button></div>`;
+    }
+    if (syncUi.msg) h += `<p class="notice small">${esc(syncUi.msg)}</p>`;
+    return h + `<p class="small muted">Ob Android den Lernstand zusätzlich über die Google-Sicherung mitnimmt, hängt von den Geräteeinstellungen ab – verlassen sollte man sich darauf nicht.</p></div>`;
   }
 
   // ---------- Fortschritt ----------
@@ -1009,14 +1116,14 @@ npm run check-links</code></pre>
       h += `<tr><td><a href="#/modul/${m.id}">${esc(m.id)} ${esc(m.short || m.title)}</a></td><td class="num">${m.ects || "–"}</td><td style="min-width:120px"><div class="progress"><span style="width:${pct(moduleProgress(m))}%"></span></div></td>
         <td class="num">${pct(compScore(m))} %</td><td class="num">${state.quiz[m.id] ? pct(state.quiz[m.id].best) + " %" : "–"}</td><td class="num">${state.exam[m.id] ? pct(state.exam[m.id].best) + " %" : "–"}</td><td class="num">${learned}/${items.length}</td><td>${state.done[m.id] ? "✓" : ""}</td></tr>`;
     });
-    h += `</tbody></table></div><h2>Sichern & Übertragen</h2><p>Alle Daten liegen nur in diesem Browser. Sichere sie regelmäßig.</p>
+    h += `</tbody></table></div><h2>Sichern & Übertragen</h2><p>Alle Daten liegen nur auf diesem Gerät. Sichere sie regelmäßig – oder richte in den <a href="#/einstellungen">Einstellungen</a> eine Erinnerung bzw. die automatische Sicherung ein.</p>
       <div class="btn-row"><button class="btn primary" data-act="export">Als Datei speichern (JSON)</button><button class="btn" data-act="copyState">In Zwischenablage kopieren</button><label class="btn">Datei importieren <input type="file" id="importFile" accept="application/json" hidden></label><button class="btn" data-act="reset">Alles zurücksetzen</button></div>
       <label class="small muted" for="importText">Oder exportierten Text hier einfügen und übernehmen:</label><textarea id="importText" placeholder="{ … exportierter Fortschritt … }" style="min-height:80px"></textarea>
       <div class="btn-row"><button class="btn" data-act="importText">Eingefügten Fortschritt übernehmen</button></div>`;
     return h;
   }
   function viewSettings() {
-    let h = `<h1>Einstellungen</h1>${versionCard()}<div class="card"><h3>Farbschema</h3><select id="themeSel" aria-label="Farbschema">${[["auto", "System"], ["light", "Hell"], ["dark", "Dunkel"]].map(([v, l]) => `<option value="${v}" ${state.settings.theme === v ? "selected" : ""}>${l}</option>`).join("")}</select></div>
+    let h = `<h1>Einstellungen</h1>${versionCard()}${backupCard()}<div class="card"><h3>Farbschema</h3><select id="themeSel" aria-label="Farbschema">${[["auto", "System"], ["light", "Hell"], ["dark", "Dunkel"]].map(([v, l]) => `<option value="${v}" ${state.settings.theme === v ? "selected" : ""}>${l}</option>`).join("")}</select></div>
       <div class="card"><h3>Such-URLs der Bibliothekskataloge</h3><p class="small">Platzhalter <code>{q}</code> wird durch den Suchbegriff ersetzt. Im Katalog nach <code>TESTWORT</code> suchen, Adresse kopieren und <code>TESTWORT</code> durch <code>{q}</code> ersetzen. Leer = Suchbegriff wird kopiert und die Katalogstartseite geöffnet.</p>`;
     PP.libraries.forEach((l) => { h += `<p><label><b>${esc(l.name)}</b><br><input type="url" data-libtpl="${l.id}" value="${esc(libTemplate(l))}" placeholder="${esc(l.home)}…?q={q}" style="width:100%"></label></p>`; });
     return h + `<button class="btn primary" data-act="saveLibs">Speichern</button></div>`;
@@ -1225,8 +1332,28 @@ npm run check-links</code></pre>
     }
     if (d.upd === "dismiss") { upd.dismissed = upd.info && upd.info.version; saveUpd(); renderBanner(); return; }
     if (d.upd === "reload") { location.reload(); return; }
+    // Sicherung
+    if (d.backup === "now") { backupNow(); return; }
+    if (d.backup === "later") { state.backup.snoozeUntil = new Date(Date.now() + 2 * 864e5).toISOString(); save(); renderBanner(); return; }
+    if (d.sync === "connect") {
+      const tok = (document.getElementById("syncToken") || {}).value || "";
+      if (!tok.trim()) { toast("Bitte zuerst den Zugangsschlüssel einfügen."); return; }
+      runSync("connect", () => syncConnect(tok.trim()).catch((e) => { sync = {}; saveSync(); throw e; })).then(() => { if (syncOn()) toast(sync.conflict ? "Verbunden – auf GitHub liegt schon eine Sicherung." : "Verbunden – der Lernstand wird jetzt automatisch gesichert."); });
+      return;
+    }
+    if (d.sync === "push") { runSync("push", () => { syncDirtyFlag = true; return syncPush(true); }); return; }
+    if (d.sync === "restore" || d.sync === "take") {
+      if (d.sync === "restore" && !t.dataset.armed) { t.dataset.armed = "1"; t.textContent = "Lernstand auf diesem Gerät ersetzen? Erneut tippen"; return; }
+      runSync("restore", syncRestore).then(() => { if (!syncUi.msg) toast("Sicherung von GitHub übernommen."); });
+      return;
+    }
+    if (d.sync === "keep") { sync.conflict = null; runSync("push", () => syncPush(true)); return; }
+    if (d.sync === "disconnect") {
+      if (!t.dataset.armed) { t.dataset.armed = "1"; t.textContent = "Wirklich trennen? Erneut tippen"; return; }
+      clearTimeout(syncTimer); sync = {}; saveSync(); renderBanner(); keep(route); toast("Getrennt – die Sicherung auf GitHub bleibt erhalten."); return;
+    }
     // Fortschritt & Einstellungen
-    if (d.act === "export") { saveFile("psychopfad-fortschritt.json", JSON.stringify(state, null, 2), "application/json"); return; }
+    if (d.act === "export") { backupNow(); return; }
     if (d.act === "copyState") { copyText(JSON.stringify(state), "Fortschritt kopiert – z. B. in einer Notiz sichern."); return; }
     if (d.act === "importText") { importState(document.getElementById("importText").value); return; }
     if (d.act === "reset") {
@@ -1243,8 +1370,11 @@ npm run check-links</code></pre>
     }
   });
   function importState(txt) {
-    try { const parsed = JSON.parse(txt); if (typeof parsed !== "object" || !parsed) throw new Error(); localStorage.removeItem(STORE_KEY); state = Object.assign(emptyState(), parsed); save(); state = load(); applyTheme(); route(); toast("Import erfolgreich."); }
+    try { applyState(BK.parsePayload(txt).state); toast("Import erfolgreich."); }
     catch (e) { toast("Das ist kein gültiger Export."); }
+  }
+  function applyState(obj) {
+    localStorage.removeItem(STORE_KEY); state = Object.assign(emptyState(), obj); save(); state = load(); applyTheme(); route();
   }
 
   document.addEventListener("submit", (ev) => {
@@ -1262,6 +1392,7 @@ npm run check-links</code></pre>
     if (t.classList.contains("ankiKind")) { ankiSel.kinds = [...document.querySelectorAll(".ankiKind")].filter((c) => c.checked).map((c) => c.value); keep(route); }
     if (t.classList.contains("ankiMod")) { ankiSel.mods = [...document.querySelectorAll(".ankiMod")].filter((c) => c.checked).map((c) => c.value); keep(route); }
     if (t.id === "themeSel") { state.settings.theme = t.value; save(); applyTheme(); }
+    if (t.id === "backupDays") { state.settings.backupDays = +t.value; save(); renderBanner(); }
     if (t.id === "importFile" && t.files[0]) t.files[0].text().then(importState);
   });
   document.addEventListener("input", (ev) => {
@@ -1329,11 +1460,17 @@ npm run check-links</code></pre>
   }
 
   // Zugriff für automatische Tests
-  window.PPApp = { get state() { return state; }, get trainer() { return trainer; }, get review() { return rev; }, get update() { return upd; }, srsQueue, verifyItems, native: IS_NATIVE };
+  // Beim Verlassen der App ausstehende Änderungen sofort hochladen
+  document.addEventListener("visibilitychange", () => { if (document.visibilityState === "hidden" && syncDirtyFlag) syncPush(); });
+
+  window.PPApp = { get state() { return state; }, get trainer() { return trainer; }, get review() { return rev; }, get update() { return upd; }, get sync() { return sync; },
+    syncNow: () => syncPush(), srsQueue, verifyItems, native: IS_NATIVE };
 
   applyTheme();
   initCloud();
   lastHash = location.hash;
   route();
   autoUpdateCheck();
+  syncStartup();
+  renderBanner();
 })();

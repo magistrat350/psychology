@@ -11,7 +11,7 @@
     "test": "npm run test:data && npm run test:unit && npm run test:e2e",
     "test:data": "node tests/validate.mjs",
     "test:unit": "node --test tests/unit/*.test.mjs",
-    "test:e2e": "node tests/smoke.mjs && node tests/pwa.mjs && node tests/native.mjs && node tools/build.mjs && node tests/artifact.mjs",
+    "test:e2e": "node tests/smoke.mjs && node tests/pwa.mjs && node tests/native.mjs && node tests/backup.mjs && node tools/build.mjs && node tests/artifact.mjs",
     "build": "node tools/build.mjs",
     "build:web": "node tools/build-web.mjs",
     "android:add": "node tools/build-web.mjs --android && cap add android && capacitor-assets generate --android",
