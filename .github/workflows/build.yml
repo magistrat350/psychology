@@ -135,7 +135,7 @@ jobs:
           {
             echo "Änderungen${PREV:+ seit $PREV}:"
             echo
-            git log --no-merges -n 30 --invert-grep --grep='^Linkprüfung: Befunde' --pretty='- %s' ${PREV:+$PREV..}HEAD | sed 's/ *\[release\]//g'
+            git log --no-merges -n 30 --invert-grep --grep='^Linkprüfung: Befunde' --pretty='- %s' ${PREV:+$PREV..}HEAD | sed 's/ *\[release\]$//'
             echo
             echo "**Installieren:** psychopfad.apk auf dem Android-Handy herunterladen und öffnen. Schon installiert? Einfach drüberinstallieren – dein Lernstand bleibt erhalten."
           } > release-notes.md
